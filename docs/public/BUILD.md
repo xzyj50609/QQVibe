@@ -17,7 +17,8 @@ py -3.14 -m venv .venv
 构建输出由命令给出，在忽略的 `QQVibeData/portable-builds/build-*/release/win-unpacked`；manifest 检查精确 runtime/client/asar 文件和哈希。新目录保留失败现场，不覆写旧包。标准包无需模型目录。若需要完整包，先自行准备固定模型，再使用 `--models-dir C:/your-laya`。
 
 ```powershell
-.venv\Scripts\python.exe scripts/build-windows-release.py --input QQVibeData/portable-builds/build-REPLACE/release/win-unpacked --version 0.1.0 --output-dir QQVibeData/releases/local-candidate --node-exe .local/build-runtime/node-24.11.1/node.exe
+$releaseVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+.venv\Scripts\python.exe scripts/build-windows-release.py --input QQVibeData/portable-builds/build-REPLACE/release/win-unpacked --version $releaseVersion --output-dir QQVibeData/releases/local-candidate --node-exe .local/build-runtime/node-24.11.1/node.exe
 # 完整包：追加 --with-model
 ```
 
