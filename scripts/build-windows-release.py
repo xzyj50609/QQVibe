@@ -65,6 +65,13 @@ ALLOWED_APP_IMAGES = {
     ("resources", "client", "chatui", "assets", "wechatvibe-icon.ico"),
     ("resources", "client", "chatui", "assets", "qqvibe-icon.png"),
     ("resources", "client", "chatui", "assets", "qqvibe-icon.ico"),
+    ("resources", "client", "docs", "public", "images", "overview.png"),
+    ("resources", "client", "docs", "public", "images", "single-chat.png"),
+    ("resources", "client", "docs", "public", "images", "group-chat.png"),
+    ("resources", "client", "docs", "public", "images", "settings.png"),
+    ("resources", "client", "docs", "public", "images", "first-run.png"),
+    ("resources", "client", "docs", "public", "images", "settings-connection.png"),
+    ("resources", "client", "docs", "public", "images", "group-labels.png"),
 }
 DEPENDENCY_IMAGE_ROOTS = (
     ("resources", "client", "runtime", "python", "lib", "site-packages", "win32com"),

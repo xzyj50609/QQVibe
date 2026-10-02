@@ -39,6 +39,9 @@
       "filter": ["**/*"]
     }
   ],
+  "extraFiles": [
+    {"from": "__CLEAN_STAGE_GUIDE__", "to": "使用说明.html"}
+  ],
   "win": {
     "target": ["dir"],
     "icon": "__PRODUCT_ICON_ICO__",

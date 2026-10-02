@@ -397,7 +397,7 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
         show: !selfTest,
         resizable: true,
         titleBarStyle: "hidden",
-        titleBarOverlay: THEMES.dark,
+        titleBarOverlay: THEMES.light,
         webPreferences: {
           preload: path.join(__dirname, "real-client-preload.cjs"),
           contextIsolation: true,

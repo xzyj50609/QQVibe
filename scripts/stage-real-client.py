@@ -87,6 +87,11 @@ PUBLIC_FILES = (
     "docs/public/SETUP.md", "docs/public/COMPATIBILITY.md", "docs/public/KNOWN-ISSUES.md",
     "docs/public/BACKUP-UPGRADE.md", "docs/public/FEEDBACK.md", "docs/public/RELEASE-NOTES.md",
     "docs/public/R9-TRIAL.md", "docs/public/MODEL-LICENSE.md", "docs/public/BUILD.md",
+    "docs/public/USER-GUIDE.md", "docs/public/USER-GUIDE.html",
+    "docs/public/images/overview.png", "docs/public/images/single-chat.png",
+    "docs/public/images/group-chat.png", "docs/public/images/settings.png",
+    "docs/public/images/first-run.png", "docs/public/images/settings-connection.png",
+    "docs/public/images/group-labels.png",
     "docs/migration/upstream/WechatVibe-1.2.2-THIRD_PARTY_NOTICES.md",
     "licenses/laya-model-mlx-LICENSE", "licenses/laya-model-mlx-NOTICE",
     "licenses/laya-model-mlx-README.txt", "licenses/laya-model-original-README.txt",
@@ -265,7 +270,7 @@ def stage_public(source: Path, models: Path, output: Path, *, with_model: bool =
     if source_commit:
         release = output / "release-manifest.json"
         release.write_text(json.dumps({"schema": 1, "product": "QQVibe", "version": version,
-            "candidate": "R8-20261001-rc2", "sourceCommit": source_commit,
+            "candidate": version + "-light-guide", "sourceCommit": source_commit,
             "variant": "full" if with_model else "standard",
             "modelIncluded": with_model, "dataDirectory": "resources/client/QQVibeData",
             "automaticUpdates": False, "releaseIntent": "friends-pre-release",

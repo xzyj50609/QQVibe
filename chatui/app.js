@@ -64,7 +64,7 @@ function getVisibleUnreadCount(session) {
   if (hasNewTime || hasNewPreview) return serverUnread;
   return 0;
 }
-const defaults = { theme: "dark", zoom: "1.0", intent: true, labelDetails: false };
+const defaults = { theme: "light", zoom: "1.0", intent: true, labelDetails: false };
 const CURRENT_LABEL_SCHEMA = "generic-v9";
 const GENERIC_INTENT_LABELS = Object.freeze({
   small_talk: "闲聊", share_news: "分享", ask_question: "提问", seek_help: "求助", deny: "否认",
@@ -98,7 +98,7 @@ settingsState.settings = undefined;
 try { settingsState.settings = { ...defaults, ...JSON.parse(localStorage.getItem("real-ui-settings-1") || "{}") }; }
 catch { settingsState.settings = { ...defaults }; }
 delete settingsState.settings.historyLimit;
-if (!["dark", "light"].includes(settingsState.settings.theme)) settingsState.settings.theme = "dark";
+if (!["dark", "light"].includes(settingsState.settings.theme)) settingsState.settings.theme = defaults.theme;
 if (!["0.9", "1.0", "1.1", "1.25", "1.5"].includes(settingsState.settings.zoom)) settingsState.settings.zoom = "1.0";
 if (typeof settingsState.settings.intent !== "boolean") settingsState.settings.intent = true;
 if (typeof settingsState.settings.labelDetails !== "boolean") settingsState.settings.labelDetails = false;

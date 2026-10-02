@@ -174,6 +174,7 @@ class CleanPortableBuildTests(unittest.TestCase):
         self.assertEqual(config["win"]["icon"], builder.current_product().icon_ico)
         self.assertEqual(config["extraResources"][0]["from"], str(self.client))
         self.assertEqual(config["extraResources"][1]["from"], str(self.client / "node_modules"))
+        self.assertEqual(config["extraFiles"], [{"from": str(self.client / "docs/public/USER-GUIDE.html"), "to": "使用说明.html"}])
         template = json.loads((self.source / "electron-builder.real-client.json").read_text())
         self.assertEqual(template["extraResources"][0]["from"], builder.PLACEHOLDERS["stage"])
 

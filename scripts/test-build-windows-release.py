@@ -103,6 +103,15 @@ class BuildReleaseTests(unittest.TestCase):
                                              with_model=True, internal_preview=True)
         self.assertEqual(archive_path.name, builder.PRODUCT.product_name + "-1.0.2-windows-x64-internal-preview-full.zip")
 
+    def test_reviewed_public_demo_image_and_offline_manual_survive_packaging(self):
+        image = "resources/client/docs/public/images/overview.png"
+        self.add_file(image, b"synthetic reviewed demonstration image")
+        self.add_file("使用说明.html", b"<html>offline manual</html>")
+        archive_path = builder.build_release(self.source, self.root / "public-guide", "1.0.2")
+        with zipfile.ZipFile(archive_path) as archive:
+            self.assertEqual(archive.read("win-unpacked/" + image), b"synthetic reviewed demonstration image")
+            self.assertEqual(archive.read("win-unpacked/使用说明.html"), b"<html>offline manual</html>")
+
     def test_version_and_required_artifacts(self):
         for version in ("1.0.2-preview.1", "v1.0.2", "01.0.2", "1.0.2+build", "1.0.2.3", "1.٠.2"):
             with self.subTest(version=version), self.assertRaisesRegex(ValueError, "stable SemVer"):
@@ -140,6 +149,7 @@ class BuildReleaseTests(unittest.TestCase):
 
     def test_private_and_unreviewed_files_are_rejected(self):
         private_paths = (
+            "resources/client/docs/public/images/private.png",
             ".local/history.json", "resources/client/account-cache/state.json",
             "resources/client/chats/history.txt", "resources/client/history.db",
             "resources/client/history.sqlite-wal", "resources/client/history.db-journal",

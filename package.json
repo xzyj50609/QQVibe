@@ -1,9 +1,9 @@
 {
   "name": "qqvibe",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
-  "description": "QQVibe 本机单聊分析桌面客户端（预览开发版）",
+  "description": "QQVibe：QQ 单聊与群聊的情绪、意图和人物画像分析客户端",
   "license": "Apache-2.0",
   "main": "scripts/desktop-main.cjs",
   "engines": {

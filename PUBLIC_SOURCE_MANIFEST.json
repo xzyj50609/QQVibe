@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "product": "QQVibe",
-  "sourceCommit": "c27303bd65a83b3df952aa9f8ec0a149827fe685",
+  "sourceCommit": "12bb1f7b13c76036f4a22ea7da0dd6ef590a7de7",
   "upstreamBaseline": "02b770821a1cf46b8ecc46b4f874ac6f922bd586",
   "gitHistoryExported": false,
   "allowlistReviewed": true,
@@ -9,8 +9,8 @@
     {
       "file": ".gitignore",
       "source": ".gitignore",
-      "bytes": 565,
-      "sha256": "5e5cba2ed029fc7c2ee2b2e412114ba37e982b4625b8e5eab469884b32a57910"
+      "bytes": 642,
+      "sha256": "5c46e6859df2c34695adae191a2260f9a987ece3f75537a9c53b585a80943ad2"
     },
     {
       "file": "LICENSE",
@@ -27,8 +27,8 @@
     {
       "file": "README.md",
       "source": "README.md",
-      "bytes": 3364,
-      "sha256": "c1473418cdcc16958e3ea0d41f95e714520722d14fbabf3c9fb6920ca1718dbb"
+      "bytes": 6562,
+      "sha256": "660d4f382d3d6d9a70e01bae038491bfe6894ea96185917d54936afe423055a2"
     },
     {
       "file": "THIRD_PARTY_NOTICES.md",
@@ -729,8 +729,8 @@
     {
       "file": "chatui/app.js",
       "source": "chatui/app.js",
-      "bytes": 280818,
-      "sha256": "eafe41ccf7f1a03480f5fd894dfc6df28756ea76439b95096c24b9da7953731f"
+      "bytes": 280827,
+      "sha256": "9b3f6a9bc59abc0df0a4b089ebefef54d7b88210fc5d17b97ee9b637216393f1"
     },
     {
       "file": "chatui/assets/qqvibe-icon.ico",
@@ -771,8 +771,8 @@
     {
       "file": "chatui/index.html",
       "source": "chatui/index.html",
-      "bytes": 45293,
-      "sha256": "71837cfe324c79626087559014b9b440f7d5058542702ac23d8c48ca1d3c8e7e"
+      "bytes": 45301,
+      "sha256": "110fae5b8bd6c46af4a01e725a26ab09bcec6c42ef280d6dd1f38a5291e1d05f"
     },
     {
       "file": "chatui/kaomoji.js",
@@ -808,7 +808,7 @@
       "file": "chatui/qq-startup.js",
       "source": "chatui/qq-startup.js",
       "bytes": 4803,
-      "sha256": "ed5c4ff6af74948e71fb7c194913c94442d6a009fbcf698151c80be457054f79"
+      "sha256": "700cb9c1b10bd4cdaff75e09c88626069a5ffaac23afa7bec7e14d766f996963"
     },
     {
       "file": "chatui/qq-support-ui.js",
@@ -861,8 +861,8 @@
     {
       "file": "docs/public/BACKUP-UPGRADE.md",
       "source": "docs/public/BACKUP-UPGRADE.md",
-      "bytes": 1422,
-      "sha256": "ec0bb4ba383a651b4967b21779cac925e08e06ba5d4ff3928c83a1ccfce23793"
+      "bytes": 2099,
+      "sha256": "dde42e63db3492f49c3058b874942dd5a89ec8092b2e59cacc020bb2e5079d04"
     },
     {
       "file": "docs/public/BUILD.md",
@@ -873,20 +873,20 @@
     {
       "file": "docs/public/COMPATIBILITY.md",
       "source": "docs/public/COMPATIBILITY.md",
-      "bytes": 1266,
-      "sha256": "1ea192e74c28d88ce0641f5a3fce3a450572b07ec1b4b52b26165bd97229e45c"
+      "bytes": 3309,
+      "sha256": "adb59e02b4d4fe50d81afb7dbd3451f214b74555a1dd4d4b02a2ac9e61209261"
     },
     {
       "file": "docs/public/FEEDBACK.md",
       "source": "docs/public/FEEDBACK.md",
-      "bytes": 1095,
-      "sha256": "b519ab986e19648b90fcfcb633c1b0d6f240dcb32cd7a3dd0f3cb0b5c2be346e"
+      "bytes": 2215,
+      "sha256": "3ad9acee122c25ebdcaeb308d6b5873dcd636bb1b954fd5cfe41ad595bd1b275"
     },
     {
       "file": "docs/public/KNOWN-ISSUES.md",
       "source": "docs/public/KNOWN-ISSUES.md",
-      "bytes": 1174,
-      "sha256": "b054466e5b905a095ce4202084745b27fa828a84d54cea6e7d4c142fa57eed33"
+      "bytes": 4642,
+      "sha256": "f8a70b76bdbcedfe8fe6376b674422cff076dfadfc8d6b60e27276198292b335"
     },
     {
       "file": "docs/public/MODEL-LICENSE.md",
@@ -897,26 +897,26 @@
     {
       "file": "docs/public/R9-TRIAL.md",
       "source": "docs/public/R9-TRIAL.md",
-      "bytes": 2969,
-      "sha256": "4400f094a27ddeb68714682ecebd45ec9e08bb9a751874b1510cb2b0b113840e"
+      "bytes": 4057,
+      "sha256": "52d1f93dcb18fbdbf14f361ef6c6b3cbb6e31ad7b15b7ee416b835a674d2bb63"
     },
     {
       "file": "docs/public/RELEASE-NOTES.md",
       "source": "docs/public/RELEASE-NOTES.md",
-      "bytes": 1911,
-      "sha256": "f7003920d484554ef5b7c8a7619ed80b5a73b6fd32b72624ca5c4f1cb83283ee"
+      "bytes": 4642,
+      "sha256": "18fecbdc533f8d403d262ec0b4bcc83a46e379e063992baab6a2c3141c18a8b0"
     },
     {
       "file": "docs/public/SETUP.md",
       "source": "docs/public/SETUP.md",
-      "bytes": 4250,
-      "sha256": "8d6ca62e6ef2d948710da43c262701d4195921cb3d700404d426ee3496a39210"
+      "bytes": 10657,
+      "sha256": "c241ae12c4e070b89300aabb89fc72d9796cc08a91dc995b3eed8529486457f3"
     },
     {
       "file": "electron-builder.real-client.json",
       "source": "electron-builder.real-client.json",
-      "bytes": 1271,
-      "sha256": "43ce53ab7ffb81fa03760088c8de8710c8ec35bdbc60ce16637561119cf3ebef"
+      "bytes": 1359,
+      "sha256": "73d1c576ec23fdf9698c9e62ddb5d34d6e1a47f7072990ef891a6e012ff12971"
     },
     {
       "file": "electron/analysis.ts",
@@ -1270,13 +1270,13 @@
       "file": "package-lock.json",
       "source": "package-lock.json",
       "bytes": 176980,
-      "sha256": "051ec9451d13fb71bada1361f8f05b5504646d55723c71b2d27ac3d9da1eef70"
+      "sha256": "8174844f773ca7e1cc58ea1ac82189161660857058a50e293acacb89e28cb378"
     },
     {
       "file": "package.json",
       "source": "package.json",
-      "bytes": 1885,
-      "sha256": "bacc6bcabdf8bbe812701281f492703f8752b163b5482f7a1414c80c76793ce6"
+      "bytes": 1899,
+      "sha256": "e6b42a756926df43dc00e39b87624db06b44dc79d5f8dc16eee93be34a0b9750"
     },
     {
       "file": "probes/fake_qce_server.py",
@@ -1347,8 +1347,8 @@
     {
       "file": "scripts/build-portable-clean.py",
       "source": "scripts/build-portable-clean.py",
-      "bytes": 12665,
-      "sha256": "c61149c0a6792beb950677c3163d221734d5288f67361e337410b6fc8f22239d"
+      "bytes": 13232,
+      "sha256": "6381deee22b45c1572050e752569af2ee53e0e6868e721e577b28f1853eb5acd"
     },
     {
       "file": "scripts/build-prerequisites.py",
@@ -1365,8 +1365,8 @@
     {
       "file": "scripts/build-windows-release.py",
       "source": "scripts/build-windows-release.py",
-      "bytes": 19122,
-      "sha256": "74af70e537d535d2d333c216b1c0036face7c068b35662cba34ef68336bcd771"
+      "bytes": 19654,
+      "sha256": "1573e50816e814340876a991ad3b799726c9f5ecc593d1e9cb21faed1df24bab"
     },
     {
       "file": "scripts/check-public-source.py",
@@ -1437,8 +1437,8 @@
     {
       "file": "scripts/public-source-allowlist.json",
       "source": "scripts/public-source-allowlist.json",
-      "bytes": 35867,
-      "sha256": "174dc3a429eecf77737394c620f3ee3fc9f833564772719561da9ca3c8f34f39"
+      "bytes": 37249,
+      "sha256": "a1ae7f20b07f120499ed28eef7def88d87cfc928897c867737683f01d7a61c38"
     },
     {
       "file": "scripts/public-source-gitattributes.txt",
@@ -1467,8 +1467,8 @@
     {
       "file": "scripts/real-client-shell.cjs",
       "source": "scripts/real-client-shell.cjs",
-      "bytes": 27623,
-      "sha256": "304ddb07fe16f76f9109b849fbf8642d9bc3c4df448c0aa79df7923fd221ddb5"
+      "bytes": 27624,
+      "sha256": "df8fe0af9680cf864c2712fcc40c6bcb11e99069bec90357c3c84159f0bfb4c6"
     },
     {
       "file": "scripts/real-client-update-controller.cjs",
@@ -1545,8 +1545,8 @@
     {
       "file": "scripts/stage-real-client.py",
       "source": "scripts/stage-real-client.py",
-      "bytes": 16702,
-      "sha256": "1e668d0f25b42fbbc65c1f385dda49aa3f617dc8fe7e91b336a2868f11749ce5"
+      "bytes": 17055,
+      "sha256": "f77082f2496542c2f47e8478a51a7df66941fb7a83ad74bf2b70dc530ba3f5cc"
     },
     {
       "file": "scripts/stage-real-runtime.py",
@@ -1575,8 +1575,8 @@
     {
       "file": "scripts/test-build-portable-clean.py",
       "source": "scripts/test-build-portable-clean.py",
-      "bytes": 16132,
-      "sha256": "1f910ed7cbd38d535b78e3059a24063d907480f0d3445b2a693dc3ca9c19989c"
+      "bytes": 16268,
+      "sha256": "36587ea12eb84d07a3c795f56024b6dc9b076cf5b33d9ad30b6dce8930a29cf6"
     },
     {
       "file": "scripts/test-build-prerequisites.py",
@@ -1587,8 +1587,8 @@
     {
       "file": "scripts/test-build-windows-release.py",
       "source": "scripts/test-build-windows-release.py",
-      "bytes": 13987,
-      "sha256": "b0f32bba2b17ed451c8b94c31253264fe04d313ad9c6246375be865b5ac90ba9"
+      "bytes": 14719,
+      "sha256": "f17351ead6057eef00dae420a74bfb825aaeeaa3fa22a3a583d1d3eb43d87bbe"
     },
     {
       "file": "scripts/test-desktop-main.cjs",
@@ -1965,14 +1965,86 @@
     {
       "file": "scripts/verify-r8-first-run.cjs",
       "source": "scripts/verify-r8-first-run.cjs",
-      "bytes": 6583,
-      "sha256": "31b37a5869bc92f2ad57e8f293d6373d0f678f27753f792828fa41d90923d118"
+      "bytes": 6693,
+      "sha256": "fc76a66ee1d844dd965fe3c79698345e4c73563636753bf9b96082d6e1f7398c"
     },
     {
       "file": "scripts/verify-r8-native-picker.cjs",
       "source": "scripts/verify-r8-native-picker.cjs",
       "bytes": 3170,
       "sha256": "1afcdce6da858ebbe50375eea61cf1c7efc2081895bbb0e5e0216a2db75db2ab"
+    },
+    {
+      "file": "scripts/build-user-guide.py",
+      "source": "scripts/build-user-guide.py",
+      "bytes": 8942,
+      "sha256": "a4e614631920b66882b2d425348150687bfed51bdd23797953b477358d2c61ba"
+    },
+    {
+      "file": "scripts/capture-public-demo.cjs",
+      "source": "scripts/capture-public-demo.cjs",
+      "bytes": 15875,
+      "sha256": "c46d350334efce3e010a0bbfe08189becdd3ad01fb72f88e24fd8cfebf9a0d21"
+    },
+    {
+      "file": "docs/public/USER-GUIDE.md",
+      "source": "docs/public/USER-GUIDE.md",
+      "bytes": 8250,
+      "sha256": "cb0364ad005087c8c1f910769ade983309a7a7ac1ebc580a936f6a276835f9a7"
+    },
+    {
+      "file": "docs/public/USER-GUIDE.html",
+      "source": "docs/public/USER-GUIDE.html",
+      "bytes": 772009,
+      "sha256": "b5c4a8d8a878ed08755c83f44d670cc882c5d4a4690c9541c9df8d83e35aebf7"
+    },
+    {
+      "file": "tests/qq-theme-default.test.cjs",
+      "source": "tests/qq-theme-default.test.cjs",
+      "bytes": 4399,
+      "sha256": "5e666ff3c5b60078a1f0168105f0452729fc19a5571767773a8584d6040dca74"
+    },
+    {
+      "file": "docs/public/images/overview.png",
+      "source": "docs/public/images/overview.png",
+      "bytes": 78035,
+      "sha256": "8e3653b6e31940b14753cc7863d5b717529e778174e0c3f99bb4d8ad92375ffc"
+    },
+    {
+      "file": "docs/public/images/single-chat.png",
+      "source": "docs/public/images/single-chat.png",
+      "bytes": 84913,
+      "sha256": "e62ea256e9ddce6306dbaf6b21aa5eaebf37937c67b776fc1a3881da590c0f58"
+    },
+    {
+      "file": "docs/public/images/group-chat.png",
+      "source": "docs/public/images/group-chat.png",
+      "bytes": 77272,
+      "sha256": "3f029e0fa1b7514f427ce55f071ae7fc357dc4d06847b2ac6e4f3e0f90c9fc11"
+    },
+    {
+      "file": "docs/public/images/settings.png",
+      "source": "docs/public/images/settings.png",
+      "bytes": 86786,
+      "sha256": "63496c2f7a8cfcb6c9924188909e9185b321a9e0f4b69b56a5c763c2f3fd210d"
+    },
+    {
+      "file": "docs/public/images/first-run.png",
+      "source": "docs/public/images/first-run.png",
+      "bytes": 32436,
+      "sha256": "1e453ec364feb1ae4c45112b2f66d4d3641f0a98c2584cce5367914c02913a8c"
+    },
+    {
+      "file": "docs/public/images/settings-connection.png",
+      "source": "docs/public/images/settings-connection.png",
+      "bytes": 104381,
+      "sha256": "21010f5a301ed69c8e3ef9d4d137488957c4331f1d09430c45d2eb19f23cf40e"
+    },
+    {
+      "file": "docs/public/images/group-labels.png",
+      "source": "docs/public/images/group-labels.png",
+      "bytes": 82098,
+      "sha256": "4bdfa401eed9aa9c2b91483fe8ae76bc7d451e234ef01d11e11c4c29303c0db3"
     }
   ]
 }

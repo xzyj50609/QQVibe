@@ -43,3 +43,6 @@ CURRENT_TASKS.md
 SOURCE_MANIFEST.json
 docs/migration/reviews/**/ui*port.json
 tools/sync-source.ps1
+
+# Isolated local synthetic capture/build work, never public source
+/.zwork/

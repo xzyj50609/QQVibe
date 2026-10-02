@@ -81,7 +81,7 @@
         document.getElementById("btnConnectStandardQQ").focus();
       });
       list.appendChild(setup);
-      list.appendChild(node("p", "发布候选：连接本机 QQ / QCE，并选择下载/定位 Laya 或 API 接入；没有 Laya 也可先配置 API。再添加一个单聊或群聊，群画像需要选择具体成员。", "qq-startup-hint"));
+      list.appendChild(node("p", "开始使用：连接本机 QQ / QCE，并选择下载/定位 Laya 或 API 接入；没有 Laya 也可先配置 API。再添加一个单聊或群聊，群画像需要选择具体成员。", "qq-startup-hint"));
     } catch {
       if (request !== serial) return;
       list.replaceChildren(node("p", "本地账号列表读取失败，请重试。"));

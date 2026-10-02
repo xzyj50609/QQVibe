@@ -136,6 +136,10 @@ def generate_config(root: Path, build_dir: Path, electron_dist: Path) -> Path:
     config["electronDist"] = str(electron_dist)
     resources[0]["from"] = str(stage)
     resources[1]["from"] = str(stage / "node_modules")
+    guide_files = config.get("extraFiles", [])
+    if guide_files != [{"from": "__CLEAN_STAGE_GUIDE__", "to": "使用说明.html"}]:
+        raise ValueError("offline manual template differs from reviewed path")
+    guide_files[0]["from"] = str(stage / "docs/public/USER-GUIDE.html")
     output = build_dir / "electron-builder.generated.json"
     output.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return output
@@ -182,6 +186,10 @@ def verify_package(root: Path, build_dir: Path, node_exe: Path) -> dict:
     if packaged_version != version:
         raise ValueError("packaged client version differs from source")
     verify_asar(root, unpacked, node_exe, version, expected)
+    if "docs/public/user-guide.html" in expected:
+        guide = unpacked / "使用说明.html"
+        if not guide.is_file() or digest(guide) != expected["docs/public/user-guide.html"]["sha256"]:
+            raise ValueError("root offline user manual differs from staged manual")
     return {"buildDirectory": str(build_dir), "preview": str(unpacked),
             "version": version, "verifiedFiles": len(expected),
             "sourcePackageSha256": client["sourcePackageSha256"]}

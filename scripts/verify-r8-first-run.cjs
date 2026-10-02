@@ -35,7 +35,8 @@ async function main(){
   const base='http://127.0.0.1:'+fake.address().port+'/v1';
   session=await openPackage(root,playwright,39438,true);
   let {page,api}=session;
-  assert.equal(await page.evaluate(()=>window.desktopHost.getAppVersion()),'0.1.0');
+  const expectedVersion=JSON.parse(fs.readFileSync(path.join(client,'package.json'),'utf8')).version;
+  assert.equal(await page.evaluate(()=>window.desktopHost.getAppVersion()),expectedVersion);
   assert.equal((await api('/api/qq/connection')).enabled,false,'no implicit QQ read');
   assert.equal((await api('/api/accounts')).accounts.length,0);
   report.firstWindowOpened=true;report.firstRunNoSavedAccounts=true;

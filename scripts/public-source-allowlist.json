@@ -1314,6 +1314,54 @@
     {
       "source": "scripts/verify-r8-native-picker.cjs",
       "target": "scripts/verify-r8-native-picker.cjs"
+    },
+    {
+      "source": "scripts/build-user-guide.py",
+      "target": "scripts/build-user-guide.py"
+    },
+    {
+      "source": "scripts/capture-public-demo.cjs",
+      "target": "scripts/capture-public-demo.cjs"
+    },
+    {
+      "source": "docs/public/USER-GUIDE.md",
+      "target": "docs/public/USER-GUIDE.md"
+    },
+    {
+      "source": "docs/public/USER-GUIDE.html",
+      "target": "docs/public/USER-GUIDE.html"
+    },
+    {
+      "source": "tests/qq-theme-default.test.cjs",
+      "target": "tests/qq-theme-default.test.cjs"
+    },
+    {
+      "source": "docs/public/images/overview.png",
+      "target": "docs/public/images/overview.png"
+    },
+    {
+      "source": "docs/public/images/single-chat.png",
+      "target": "docs/public/images/single-chat.png"
+    },
+    {
+      "source": "docs/public/images/group-chat.png",
+      "target": "docs/public/images/group-chat.png"
+    },
+    {
+      "source": "docs/public/images/settings.png",
+      "target": "docs/public/images/settings.png"
+    },
+    {
+      "source": "docs/public/images/first-run.png",
+      "target": "docs/public/images/first-run.png"
+    },
+    {
+      "source": "docs/public/images/settings-connection.png",
+      "target": "docs/public/images/settings-connection.png"
+    },
+    {
+      "source": "docs/public/images/group-labels.png",
+      "target": "docs/public/images/group-labels.png"
     }
   ]
 }
