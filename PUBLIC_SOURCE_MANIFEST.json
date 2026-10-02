@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "product": "QQVibe",
-  "sourceCommit": "3ef3418aa0de81b68017db2e69fa8778082578b6",
+  "sourceCommit": "c27303bd65a83b3df952aa9f8ec0a149827fe685",
   "upstreamBaseline": "02b770821a1cf46b8ecc46b4f874ac6f922bd586",
   "gitHistoryExported": false,
   "allowlistReviewed": true,
@@ -27,8 +27,8 @@
     {
       "file": "README.md",
       "source": "README.md",
-      "bytes": 3348,
-      "sha256": "c98111ad057d649b4f4da48222c3c247a50e78228ccfe027c868e0ecdb454c27"
+      "bytes": 3364,
+      "sha256": "c1473418cdcc16958e3ea0d41f95e714520722d14fbabf3c9fb6920ca1718dbb"
     },
     {
       "file": "THIRD_PARTY_NOTICES.md",
@@ -885,8 +885,8 @@
     {
       "file": "docs/public/KNOWN-ISSUES.md",
       "source": "docs/public/KNOWN-ISSUES.md",
-      "bytes": 1099,
-      "sha256": "cc480cad0e52aa7e15438d12810de985f95aaa826131a57c39eb404410f0054d"
+      "bytes": 1174,
+      "sha256": "b054466e5b905a095ce4202084745b27fa828a84d54cea6e7d4c142fa57eed33"
     },
     {
       "file": "docs/public/MODEL-LICENSE.md",

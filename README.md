@@ -1,6 +1,6 @@
 # QQVibe
 
-QQ 单聊与群聊分析桌面客户端。Windows x64 发布候选版本 **0.1.0 / R8-20261001-rc2**，当前正在准备首批试用 Pre-release，发布链接将在检查后填写。
+QQ 单聊与群聊分析桌面客户端。供首批用户试用的 Windows x64 预发布版 **0.1.0 / R8-20261001-rc2**。本机已验证，跨机正在测试；不代表完整正式版验收通过。
 
 普通用户使用程序包，不需要 Git、Node、Python 或编译工具。仓库：[xzyj50609/QQVibe](https://github.com/xzyj50609/QQVibe)。[预发布下载页](https://github.com/xzyj50609/QQVibe/releases/tag/v0.1.0-preview.1)。
 
