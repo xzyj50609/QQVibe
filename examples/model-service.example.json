@@ -1,0 +1,8 @@
+{
+  "note": "Example only. Configure through the QQVibe UI; never commit real credentials.",
+  "protocol": "chat_completions",
+  "baseUrl": "https://api.example.com/v1",
+  "model": "replace-with-your-model-id",
+  "contextTokens": 128000,
+  "apiKey": ""
+}

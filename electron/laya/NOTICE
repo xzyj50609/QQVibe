@@ -1,0 +1,41 @@
+electron/laya — vendored Laya implementation
+==========================================
+
+Vendored from laya-mlx (Apache-2.0):
+  Repository: https://github.com/mizchi/laya-mlx
+  Source revision: dc3aa6b150cb861d0788fbd421cfd1303de4ed57
+  Source directory: web/packages/laya-web/src
+
+The following seven files are copied from that revision with only import
+specifier changes ("./x.ts" -> "./x", see README.md) and a provenance header
+added:
+
+  types.ts
+  pyjson.ts
+  tokenizer.ts
+  questions.ts
+  prompt.ts
+  calibration.ts
+  agent.ts
+
+The tokenizer/sequence/answer parity test fixture
+(tests/fixtures/laya-parity-multilingual.json) is also copied from that
+revision, file web/fixtures/parity-multilingual.json.
+
+--------------------------------------------------------------------------
+Upstream NOTICE, reproduced verbatim from laya-mlx at the revision above:
+
+laya-mlx
+Copyright 2026 laya-mlx contributors
+
+This product includes software derived from Laya:
+https://github.com/NandhaKishorM/laya
+Copyright Convai Innovations and Laya contributors. Licensed under Apache-2.0.
+Upstream source revision: 6a5819129eb220570792e417e49723d697efd76f
+
+The token sequence construction, question rendering, confidence calculation,
+presets, email utilities and language router are adapted from Laya.
+The neural network is reimplemented using Apple's MLX, following Laya's
+DecisionModel and the ModernBERT architecture in Hugging Face Transformers.
+Model weights are downloaded separately from Convai Innovations on Hugging Face;
+they are not included in this repository.

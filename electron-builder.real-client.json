@@ -1,0 +1,47 @@
+{
+  "appId": "__PRODUCT_APP_ID__",
+  "productName": "__PRODUCT_NAME__",
+  "directories": {
+    "output": "__CLEAN_BUILD_OUTPUT__"
+  },
+  "electronDist": "__ELECTRON_DIST__",
+  "extraMetadata": {
+    "name": "__PRODUCT_PACKAGE_NAME__",
+    "author": "tswawa",
+    "description": "__PRODUCT_DESCRIPTION__",
+    "main": "scripts/desktop-main.cjs"
+  },
+  "files": [
+    "scripts/desktop-main.cjs",
+    "scripts/product-identity.cjs",
+    "scripts/product-identity.json",
+    "scripts/real-client-shell.cjs",
+    "scripts/real-client-preload.cjs",
+    "scripts/real-client-recovery.cjs",
+    "scripts/real-client-update.cjs",
+    "scripts/real-client-update-proxy.cjs",
+    "scripts/real-client-model.cjs",
+    "scripts/real-client-update-controller.cjs",
+    "scripts/real-client-update-helper.cjs",
+    "scripts/update-signing.pub",
+    "package.json",
+    "!node_modules/**"
+  ],
+  "extraResources": [
+    {
+      "from": "__CLEAN_STAGE_CLIENT__",
+      "to": "client",
+      "filter": ["**/*", "!node_modules/**"]
+    },
+    {
+      "from": "__CLEAN_STAGE_NODE_MODULES__",
+      "to": "client/node_modules",
+      "filter": ["**/*"]
+    }
+  ],
+  "win": {
+    "target": ["dir"],
+    "icon": "__PRODUCT_ICON_ICO__",
+    "executableName": "__PRODUCT_EXECUTABLE_NAME__"
+  }
+}

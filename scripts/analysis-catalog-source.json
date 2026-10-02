@@ -1,0 +1,1349 @@
+{
+  "version": "catalog-2026-09-23-v2-expression-v1",
+  "emotions": [
+    {
+      "id": "happy",
+      "label": "开心",
+      "modelLabel": "happy",
+      "aliases": [
+        "快乐"
+      ]
+    },
+    {
+      "id": "affectionate",
+      "label": "亲近",
+      "modelLabel": "affectionate",
+      "aliases": [
+        "喜爱"
+      ]
+    },
+    {
+      "id": "neutral",
+      "label": "平静",
+      "modelLabel": "neutral",
+      "aliases": [
+        "中性"
+      ]
+    },
+    {
+      "id": "amused",
+      "label": "好笑",
+      "modelLabel": "amused",
+      "aliases": [
+        "搞怪",
+        "有趣",
+        "被逗乐"
+      ]
+    },
+    {
+      "id": "sad",
+      "label": "难过",
+      "modelLabel": "sad",
+      "aliases": [
+        "悲伤"
+      ]
+    },
+    {
+      "id": "anxious",
+      "label": "不安",
+      "modelLabel": "anxious",
+      "aliases": [
+        "焦虑"
+      ]
+    },
+    {
+      "id": "angry",
+      "label": "生气",
+      "modelLabel": "angry",
+      "aliases": [
+        "愤怒"
+      ]
+    },
+    {
+      "id": "excited",
+      "label": "兴奋",
+      "modelLabel": "excited",
+      "aliases": []
+    },
+    {
+      "id": "content",
+      "label": "满足",
+      "modelLabel": "content",
+      "aliases": []
+    },
+    {
+      "id": "relieved",
+      "label": "放心",
+      "modelLabel": "relieved",
+      "aliases": [
+        "释然"
+      ]
+    },
+    {
+      "id": "grateful",
+      "label": "感谢",
+      "modelLabel": "grateful",
+      "aliases": [
+        "感激"
+      ]
+    },
+    {
+      "id": "hopeful",
+      "label": "期待",
+      "modelLabel": "hopeful",
+      "aliases": []
+    },
+    {
+      "id": "curious",
+      "label": "好奇",
+      "modelLabel": "curious",
+      "aliases": []
+    },
+    {
+      "id": "proud",
+      "label": "自豪",
+      "modelLabel": "proud",
+      "aliases": []
+    },
+    {
+      "id": "tender",
+      "label": "温柔",
+      "modelLabel": "tender",
+      "aliases": []
+    },
+    {
+      "id": "shy",
+      "label": "害羞",
+      "modelLabel": "shy",
+      "aliases": []
+    },
+    {
+      "id": "lonely",
+      "label": "孤单",
+      "modelLabel": "lonely",
+      "aliases": []
+    },
+    {
+      "id": "disappointed",
+      "label": "失望",
+      "modelLabel": "disappointed",
+      "aliases": []
+    },
+    {
+      "id": "hurt",
+      "label": "委屈",
+      "modelLabel": "hurt",
+      "aliases": [
+        "受伤"
+      ]
+    },
+    {
+      "id": "guilty",
+      "label": "内疚",
+      "modelLabel": "guilty",
+      "aliases": [
+        "愧疚"
+      ]
+    },
+    {
+      "id": "ashamed",
+      "label": "羞愧",
+      "modelLabel": "ashamed",
+      "aliases": []
+    },
+    {
+      "id": "fearful",
+      "label": "害怕",
+      "modelLabel": "fearful",
+      "aliases": []
+    },
+    {
+      "id": "worried",
+      "label": "担心",
+      "modelLabel": "worried",
+      "aliases": [
+        "担忧"
+      ]
+    },
+    {
+      "id": "stressed",
+      "label": "紧张",
+      "modelLabel": "stressed",
+      "aliases": [
+        "紧绷"
+      ]
+    },
+    {
+      "id": "overwhelmed",
+      "label": "崩溃",
+      "modelLabel": "overwhelmed",
+      "aliases": [
+        "不堪重负"
+      ]
+    },
+    {
+      "id": "frustrated",
+      "label": "沮丧",
+      "modelLabel": "frustrated",
+      "aliases": [
+        "挫败"
+      ]
+    },
+    {
+      "id": "irritated",
+      "label": "烦躁",
+      "modelLabel": "irritated",
+      "aliases": []
+    },
+    {
+      "id": "resentful",
+      "label": "不满",
+      "modelLabel": "resentful",
+      "aliases": [
+        "怨怼"
+      ]
+    },
+    {
+      "id": "jealous",
+      "label": "吃醋",
+      "modelLabel": "jealous",
+      "aliases": []
+    },
+    {
+      "id": "suspicious",
+      "label": "怀疑",
+      "modelLabel": "suspicious",
+      "aliases": []
+    },
+    {
+      "id": "confused",
+      "label": "困惑",
+      "modelLabel": "confused",
+      "aliases": []
+    },
+    {
+      "id": "uncertain",
+      "label": "犹豫",
+      "modelLabel": "uncertain",
+      "aliases": []
+    },
+    {
+      "id": "bored",
+      "label": "无聊",
+      "modelLabel": "bored",
+      "aliases": []
+    },
+    {
+      "id": "tired",
+      "label": "累了",
+      "modelLabel": "tired",
+      "aliases": [
+        "疲惫"
+      ]
+    },
+    {
+      "id": "detached",
+      "label": "冷淡",
+      "modelLabel": "detached",
+      "aliases": [
+        "淡漠"
+      ]
+    },
+    {
+      "id": "calm",
+      "label": "淡定",
+      "modelLabel": "calm",
+      "aliases": [
+        "安定"
+      ]
+    },
+    {
+      "id": "focused",
+      "label": "专注",
+      "modelLabel": "focused",
+      "aliases": []
+    },
+    {
+      "id": "determined",
+      "label": "坚定",
+      "modelLabel": "determined",
+      "aliases": []
+    },
+    {
+      "id": "surprised",
+      "label": "惊讶",
+      "modelLabel": "surprised",
+      "aliases": []
+    },
+    {
+      "id": "embarrassed",
+      "label": "尴尬",
+      "modelLabel": "embarrassed",
+      "aliases": []
+    }
+  ],
+  "intentGroups": [
+    {
+      "id": "greeting",
+      "label": "招呼寒暄",
+      "modelLabel": "greeting and checking in",
+      "leaves": [
+        "hello|问候|say hello|向对方开启问候",
+        "morning|问候|wish good morning|在清晨致意",
+        "evening|问候|wish good evening|在夜间致意",
+        "return|问候|return a greeting|回答对方的招呼",
+        "wellbeing|关心|check wellbeing|问对方最近过得如何",
+        "recovery|关心|check recovery|问对方身体是否恢复",
+        "arrival|关心|check safe arrival|关心对方是否安全到达",
+        "weather|搭话|comment on weather|借天气寒暄",
+        "holiday|祝福|send holiday wishes|在节日表达祝愿",
+        "birthday|祝福|wish happy birthday|祝对方生日快乐",
+        "new_year|祝福|send new year wishes|祝对方新年顺利",
+        "weekend|问候|wish a good weekend|在周末表达问候",
+        "welcome_back|欢迎|welcome back|欢迎对方重新出现",
+        "reconnect|问候|reconnect after absence|久未联系后重新招呼",
+        "introduce_self|介绍|introduce oneself|向新认识的人说明身份",
+        "introduce_other|介绍|introduce someone else|向对方介绍另一人",
+        "welcome_new|欢迎|welcome newcomer|欢迎新成员加入",
+        "available|在吗|ask if available|先确认对方此刻能否交谈",
+        "busy|关心|check if busy|问对方最近是否忙碌",
+        "regards|问候|send regards|托对方向别人传递问候"
+      ]
+    },
+    {
+      "id": "conversation",
+      "label": "维持交流",
+      "modelLabel": "conversation management",
+      "leaves": [
+        "start|闲聊|start a topic|主动引入新谈资",
+        "continue|接话|continue current topic|接着当前话题说下去",
+        "change|转话题|change subject|把交流转向另一件事",
+        "return|回正题|return to topic|从岔题拉回原讨论",
+        "elaborate|追问|invite elaboration|让对方说得更详细",
+        "heard|接话|acknowledge hearing|确认自己听到了信息",
+        "attention|接话|signal attention|用简短话语鼓励继续",
+        "summarize|总结|summarize discussion|概述当前交流内容",
+        "reference|确认|clarify reference|弄清话里提及的人或事",
+        "misheard|纠正|correct mishearing|指出对方听错了内容",
+        "repeat|重说|repeat earlier point|再次说出未被听清的信息",
+        "ask_repeat|再说|ask to repeat|请对方重述刚才的话",
+        "pause|暂停|pause conversation|暂时中止交流稍后再说",
+        "resume|接话|resume conversation|从暂停处继续聊",
+        "understanding|确认|confirm understanding|核对双方理解是否一致",
+        "meaning|追问|ask what was meant|询问对方话语的意思",
+        "side_note|补充|add a side note|暂时插入一条相关补充",
+        "correct_self|纠正|correct own statement|修改自己之前说错的话",
+        "confusion|没懂|express confusion|告知对方自己尚未理解",
+        "recap|接话|recall previous exchange|提起上次交谈以续聊",
+        "perfunctory|敷衍|perfunctory filler|用哈哈确实等敷衍应付"
+      ]
+    },
+    {
+      "id": "inquiry",
+      "label": "询问求知",
+      "modelLabel": "asking for information",
+      "leaves": [
+        "fact|提问|ask a fact|请求核实一项具体事实",
+        "reason|提问|ask why|追问事情发生的缘由",
+        "method|提问|ask one time method|请教一个问题的操作说明",
+        "location|提问|ask where|打听所在或约定位置",
+        "time|提问|ask when|打听事情发生的时刻",
+        "identity|提问|ask who|弄清某人身份",
+        "quantity|提问|ask how many|确认数目或规模",
+        "price|提问|ask price|打听物品或服务费用",
+        "status|提问|ask status|打听事情当前进展",
+        "source|提问|ask source|询问信息从哪里得来",
+        "evidence|提问|ask for evidence|请求支撑观点的材料",
+        "example|提问|ask concept example|请用例子解释知识概念",
+        "comparison|提问|ask to compare|请对方说明几者差异",
+        "opinion|提问|ask opinion|想知道对方对此怎么看",
+        "preference|提问|ask preference|询问对方更喜欢什么",
+        "experience|提问|ask experience|请对方讲亲身经验",
+        "feeling|提问|ask how they feel|关心对方主观感受",
+        "intention|提问|ask intentions|了解对方下一步意向",
+        "permission|提问|ask permission|先问对方是否允许某事",
+        "recommendation|求推荐|ask recommendation|请对方推荐合适选项",
+        "trap_question|送命题|trap question|提出考验忠诚或极难作答的送命考问",
+        "gossip|吃瓜|ask for tea or gossip|八卦围观或索要后续最新动态"
+      ]
+    },
+    {
+      "id": "sharing",
+      "label": "分享消息",
+      "modelLabel": "sharing information",
+      "leaves": [
+        "fact|分享|report a fact|主动告知客观情况",
+        "news|分享|share news|转述新发生的消息",
+        "link|分享|share a link|提供可访问的参考网址",
+        "photo|分享|share a photo|发送图片供对方看",
+        "document|分享|share a document|传递文件或文档",
+        "result|分享|share outcome|说明事情最终结果",
+        "progress|分享|share progress|主动更新过程状态",
+        "discovery|分享|share discovery|讲述刚找到的新线索",
+        "tip|分享|share a practical tip|传授有用的小技巧",
+        "story|分享|tell a story|叙述一段完整经历",
+        "memory|分享|recall a memory|提起过去共同或个人经历",
+        "observation|分享|share observation|描述亲眼看到的现象",
+        "idea|分享|share an idea|介绍初步构想",
+        "resource|分享|share resource|转给对方可用材料",
+        "warning|提醒|warn of risk|告知对方潜在危险",
+        "correction|纠正|correct information|纠正已有错误事实",
+        "background|分享|explain background|补充理解事情所需前提",
+        "process|分享|explain process|叙述事情如何展开",
+        "rule|分享|explain a rule|说明应遵循的约定",
+        "change|通知|announce change|告知已发生的调整"
+      ]
+    },
+    {
+      "id": "coordination",
+      "label": "协调事务",
+      "modelLabel": "coordinating logistics",
+      "leaves": [
+        "address|确认|confirm address|确认邮寄或会面地点",
+        "time|确认|confirm timing|确认已有安排的时刻",
+        "contact|确认|confirm contact details|核实联络渠道",
+        "location|求定位|request live location|请对方发当前位置",
+        "arrival|报备|report arrival|通知对方自己已抵达",
+        "delay|报备|report delay|预告无法准时到达",
+        "eta|报备|estimate arrival|给出预计抵达时间",
+        "directions|指路|give directions|告诉对方怎样找到地点",
+        "channel|安排|choose contact channel|商量用电话或文字联系",
+        "call|安排|request a call|提议改为电话或语音",
+        "reschedule_call|改期|reschedule a call|调整原定通话时间",
+        "request_reminder|求提醒|ask for reminder|请对方到时提醒",
+        "send_reminder|提醒|send reminder|提醒对方即将到期的事",
+        "receipt|确认|confirm receipt|表示已收到文件或消息",
+        "acknowledgment|确认|request acknowledgment|请对方确认已收到",
+        "delegate|分工|delegate task|将某项事情交给对方",
+        "handoff|交接|coordinate handoff|商定资料或物品交接",
+        "delivery|催促|track delivery|确认物品运输进度",
+        "participants|确认|confirm participants|核实哪些人会参加",
+        "sequence|安排|coordinate sequence|安排各步骤的执行顺序"
+      ]
+    },
+    {
+      "id": "planning",
+      "label": "计划安排",
+      "modelLabel": "making plans",
+      "leaves": [
+        "propose|计划|propose a plan|给出一套行动安排",
+        "brainstorm|商量|brainstorm options|一起探索可行做法",
+        "goal|计划|set a goal|指出希望实现的结果",
+        "deadline|计划|set deadline|提出完成的最晚时间",
+        "priority|计划|prioritize tasks|决定哪件事先做",
+        "compare|商量|compare plans|权衡不同路径",
+        "choose|选择|choose plan|从备选中确定一项",
+        "reserve|安排|reserve time|提前空出日程",
+        "trip|计划|plan travel|安排交通与行程",
+        "meal|计划|plan a meal|商定吃饭地点时间",
+        "event|计划|plan an event|设计聚会或活动内容",
+        "study|计划|plan studying|安排学习进度",
+        "budget|计划|plan budget|规划可用费用",
+        "fallback|计划|plan fallback|预备原方案失败后的办法",
+        "revise|调整|revise plan|根据新情况调整安排",
+        "cancel|取消|cancel plan|明确终止既定活动",
+        "postpone|推迟|postpone plan|把安排延至更晚",
+        "advance|提前|move plan earlier|把安排改为更早",
+        "split|拆分|break down tasks|把目标划为具体步骤",
+        "review|复盘|review plan|检查安排执行是否合适"
+      ]
+    },
+    {
+      "id": "invitation",
+      "label": "邀请参与",
+      "modelLabel": "inviting participation",
+      "leaves": [
+        "meet|邀约|invite to meet|提议线下相见",
+        "dinner|邀约|invite to dinner|请对方一起用餐",
+        "coffee|邀约|invite for coffee|提议一起喝点东西",
+        "walk|邀约|invite for a walk|提议结伴散步",
+        "movie|邀约|invite to movie|提议一起观影",
+        "game|邀约|invite to game|请对方一起游戏",
+        "group|邀约|invite to group|请对方加入群聊",
+        "event|邀约|invite to event|请对方参与聚会活动",
+        "collaborate|邀约|invite to collaborate|提议共同做事",
+        "visit|邀约|invite to visit|欢迎对方到自己所在地",
+        "trip|邀约|invite on trip|提议一起出行",
+        "call|邀约|invite to voice chat|邀请对方进行实时语音",
+        "video|邀约|invite to video chat|邀请对方视频交流",
+        "celebrate|邀约|invite to celebrate|请对方共同庆祝",
+        "study|邀约|invite to study together|提议一起学习",
+        "exercise|邀约|invite to exercise|提议共同运动",
+        "contribute|邀约|invite contribution|请对方加入当前讨论",
+        "family|邀约|invite to meet family|邀请对方认识亲属",
+        "renew|邀约|renew invitation|在先前未成后重新提出邀约",
+        "open|邀约|extend open invitation|不限定时间欢迎对方参与"
+      ]
+    },
+    {
+      "id": "commitment",
+      "label": "承诺确认",
+      "modelLabel": "committing or confirming",
+      "leaves": [
+        "accept_offer|接受|accept proposal|同意对方提出的方案",
+        "accept_invite|接受|accept invitation|答应参加邀约",
+        "attend|确认|confirm attendance|明确自己会到场",
+        "action|承诺|promise action|答应完成具体行为",
+        "followup|承诺|promise follow up|表示稍后继续处理",
+        "confidentiality|承诺|promise confidentiality|答应不外传信息",
+        "return|承诺|promise return|答应将借物还回",
+        "agreement|确认|confirm agreement|核对已达成共同意见",
+        "decision|确认|confirm decision|明确最终选定事项",
+        "completion|完成|confirm completion|告知承诺的事已经做完",
+        "payment|付款|confirm payment|告知款项已支付",
+        "booking|预订|confirm booking|核实预约已经成功",
+        "conditional|同意|agree conditionally|只有满足条件才答应",
+        "principle|同意|agree in principle|总体赞成但保留细节",
+        "request|求承诺|request commitment|请对方给出明确保证",
+        "reaffirm|承诺|reaffirm promise|再次强调会履行约定",
+        "withdraw|撤回|withdraw commitment|说明自己不能再履行约定",
+        "condition|协商|set a condition|为达成协议限定前提",
+        "terms|协商|negotiate terms|就约定细节进行磋商",
+        "obligation|担当|acknowledge obligation|承认自己应完成某项义务",
+        "pie_in_sky|画饼|empty social promise|社交客套式的空头承诺"
+      ]
+    },
+    {
+      "id": "help_request",
+      "label": "请求协助",
+      "modelLabel": "requesting help",
+      "leaves": [
+        "favor|求助|ask a favor|请对方做一件事",
+        "advice|求建议|ask for advice|希望对方提出做法建议",
+        "guidance|求助|ask step by step guidance|请对方持续带着自己完成",
+        "explanation|求解释|ask for explanation|请对方讲解不懂的内容",
+        "review|求助|ask for review|请对方审阅成果",
+        "translation|求翻译|ask for translation|请对方翻译文本",
+        "transport|求接送|ask for a ride|请对方提供交通帮助",
+        "loan|借东西|ask to borrow|请对方暂借物品",
+        "financial|借钱|ask financial help|请求经济方面支持",
+        "introduction|求介绍|ask for introduction|请对方介绍合适的人",
+        "referral|求推荐|ask for referral|请对方推荐自己给他人",
+        "cover|求代班|ask to cover shift|请对方临时代替工作",
+        "pickup|求代取|ask to pick up item|请对方帮忙领取物品",
+        "vote|求助|ask for vote|请对方在选择中投票",
+        "share|求助|ask to share|请对方传播内容",
+        "comfort|求安慰|seek comfort|希望得到情绪上的安慰",
+        "company|求陪伴|ask for company|希望对方陪自己一会儿",
+        "mediation|求调解|ask to mediate|请对方参与化解矛盾",
+        "emergency|紧急求助|ask urgent help|因突发状况立即请求援助",
+        "access|求权限|ask for access|请求使用资源的许可"
+      ]
+    },
+    {
+      "id": "help_offer",
+      "label": "提供协助",
+      "modelLabel": "offering help",
+      "leaves": [
+        "assistance|帮忙|offer assistance|提出为对方分担事情",
+        "advice|建议|offer advice|主动给出行动建议",
+        "explanation|帮忙|offer explanation|表示愿意解释难点",
+        "review|帮忙|offer review|主动提出审阅内容",
+        "transport|接送|offer a ride|表示可以开车接送",
+        "loan|帮忙|offer to lend|提出出借自己物品",
+        "company|陪伴|offer company|表示会陪对方一起度过",
+        "introduction|介绍|offer introduction|表示可以介绍认识他人",
+        "referral|推荐|offer referral|提出替对方提供推荐",
+        "resources|帮忙|offer resources|主动提供可用工具材料",
+        "cover|帮忙|offer to cover|表示能代替对方处理",
+        "pickup|帮忙|offer to collect|主动提出帮忙取物",
+        "payment|请客|offer to pay|表示由自己支付费用",
+        "translation|帮忙|offer translation|提出帮忙翻译内容",
+        "reminder|提醒|offer reminder|表示到时会提醒对方",
+        "mediation|帮忙|offer mediation|提出参与化解争执",
+        "followup|帮忙|offer follow up|表示稍后会查看进度",
+        "teaching|教学|offer to teach|表示可以系统教对方",
+        "shelter|收留|offer shelter|提出暂时接纳对方留宿",
+        "emergency|救急|offer urgent help|主动处理对方突发困难"
+      ]
+    },
+    {
+      "id": "feedback",
+      "label": "反馈建议",
+      "modelLabel": "giving feedback",
+      "leaves": [
+        "evaluate|点评|evaluate result|对已完成内容作评价",
+        "suggest|建议|suggest improvement|给出具体优化方向",
+        "constructive|建议|give constructive critique|指出问题并建议修正",
+        "approve|认可|approve deliverable|正式批准采用工作成果",
+        "disapprove|否定|disapprove work|明确对结果不满意",
+        "clarity|解释|request clearer explanation|希望信息表达更清晰",
+        "detail|补充|request more detail|指出说明不够具体",
+        "accuracy|纠正|flag inaccuracy|指出内容与事实不符",
+        "tone|建议|comment on tone|提示表达方式带来的影响",
+        "timing|建议|comment on timing|指出沟通时间不合适",
+        "usability|点评|report usability issue|说明使用时遇到障碍",
+        "quality|点评|report quality issue|指出成果质量缺陷",
+        "request_revision|催改|request revision|请对方重新修改成果",
+        "request_example|求举例|request critique example|请评价者举出作品里的具体问题",
+        "request_shorter|精简|request concise answer|希望回答更加简洁",
+        "request_deeper|追问|request deeper analysis|希望探讨更深一层",
+        "ack_feedback|接受|acknowledge feedback|表示听取了对方意见",
+        "clarify_feedback|解释|clarify criticism|解释评价中的含义",
+        "contest_feedback|反驳|challenge feedback|对对方评价提出异议",
+        "follow_feedback|修改|act on feedback|说明已经按建议修改"
+      ]
+    },
+    {
+      "id": "gratitude",
+      "label": "感谢赞赏",
+      "modelLabel": "thanking and praising",
+      "leaves": [
+        "thank_general|感谢|say thanks|不说明具体原因地表达感谢",
+        "thank_help|感谢|thank for help|对具体帮助表示感谢",
+        "thank_time|感谢|thank for time|感谢对方投入时间",
+        "thank_gift|感谢|thank for gift|感谢收到的赠品",
+        "thank_listening|感谢|thank for listening|感谢对方认真听自己说",
+        "thank_honesty|感谢|thank for honesty|感谢对方真实表达",
+        "thank_patience|感谢|thank for patience|感谢对方愿意等待",
+        "thank_support|感谢|thank for support|感谢情绪或实际支持",
+        "thank_invite|感谢|thank for invitation|感谢对方发出的邀约",
+        "praise_skill|称赞|praise skill|肯定对方的专长",
+        "praise_effort|称赞|praise effort|认可对方付出的劳动",
+        "praise_kindness|称赞|praise kindness|赞赏对方体贴行为",
+        "praise_style|称赞|praise taste|肯定对方审美选择",
+        "praise_result|称赞|praise result|称赞已完成的结果",
+        "congratulate|祝贺|congratulate success|祝贺对方取得成果",
+        "celebrate_milestone|祝贺|celebrate milestone|纪念对方重要节点",
+        "admire_resilience|敬佩|admire resilience|赞赏对方困难中坚持",
+        "express_respect|敬佩|express respect|向对方表示尊重",
+        "return_compliment|感谢|receive compliment|对赞美表达感谢",
+        "credit_other|归功|give credit|指出成果有对方贡献",
+        "public_appreciation|感谢|thank publicly|在众人面前表达感谢"
+      ]
+    },
+    {
+      "id": "apology",
+      "label": "道歉认错",
+      "modelLabel": "apologizing",
+      "leaves": [
+        "late|道歉|apologize for lateness|承认耽误对方时间",
+        "mistake|道歉|apologize for mistake|承认自己做错了事",
+        "words|道歉|apologize for words|承认说话伤害了对方",
+        "neglect|道歉|apologize for neglect|承认没有照顾到对方",
+        "broken_promise|道歉|apologize for broken promise|承认未履行约定",
+        "interruption|道歉|apologize for interruption|为插话造成干扰致歉",
+        "misunderstanding|道歉|apologize for misunderstanding|承认错解对方意思",
+        "accusation|道歉|apologize for accusation|收回不当指责",
+        "absence|道歉|apologize for silence|承认长时间未回应",
+        "cancellation|道歉|apologize for cancellation|为临时取消安排致歉",
+        "damage|道歉|apologize for damage|承认造成物品损失",
+        "privacy|道歉|apologize for intrusion|承认侵犯对方私人边界",
+        "tone|道歉|apologize for tone|承认表达方式不妥",
+        "embarrassment|道歉|apologize for embarrassment|承认使对方当众难堪",
+        "inconvenience|道歉|apologize for inconvenience|承认额外增加了负担",
+        "responsibility|认错|take responsibility|明确错误由自己造成",
+        "explain_error|解释|explain mistake|说明错误怎样发生",
+        "offer_restitution|补偿|offer restitution|愿意弥补造成的损失",
+        "ask_forgiveness|求原谅|ask forgiveness|希望对方愿意谅解",
+        "commit_change|承诺|promise to change|向对方做出保证或承诺",
+        "plead_mercy|求饶|plead for mercy|戏谑求饶主动示弱哄对方",
+        "soften_surrender|服软|soften and surrender|主动低头退让听从对方",
+        "chickening_out|认怂|tactical chickening out|察觉不妙迅速主动退避保命"
+      ]
+    },
+    {
+      "id": "repair",
+      "label": "修复关系",
+      "modelLabel": "repairing a relationship",
+      "leaves": [
+        "open_talk|沟通|ask to talk things through|希望坦诚讨论矛盾",
+        "acknowledge_hurt|认错|acknowledge hurt|确认对方被自己伤害",
+        "listen_grievance|倾听|invite grievance|请对方说出不满",
+        "clarify_intent|澄清|clarify intention|解释并非刻意伤害",
+        "correct_record|澄清|clear misunderstanding|纠正双方误解",
+        "seek_compromise|协商|seek compromise|寻找彼此可接受的办法",
+        "propose_reset|和好|propose fresh start|请求放下旧争执",
+        "rebuild_trust|修复|rebuild trust|提出可验证的改善行动",
+        "accept_apology|原谅|accept apology|表示愿意原谅错误",
+        "decline_apology|暂缓|not ready to accept apology yet|尚未准备接受道歉但保留可能",
+        "request_space|暂停|ask for cooling time|暂离冲突以整理情绪",
+        "return_after_space|沟通|resume after cooling|在暂停后重新沟通",
+        "reaffirm_bond|和好|affirm relationship|强调仍珍视彼此联系",
+        "name_pattern|提醒|identify recurring pattern|说明矛盾一再出现",
+        "set_repair_step|修复|set repair action|约定下一项具体改善",
+        "check_repair|关心|check repair progress|确认对方是否觉得好转",
+        "own_part|认错|own own part|承认自己对争执的贡献",
+        "invite_mediation|调解|suggest mediation|提议请中立者帮助",
+        "express_regret|遗憾|express regret|对关系受损表示难过",
+        "close_conflict|休战|close the dispute|双方决定停止当前争吵"
+      ]
+    },
+    {
+      "id": "affection",
+      "label": "表达亲近",
+      "modelLabel": "expressing affection",
+      "leaves": [
+        "miss_you|想念|say I miss you|告诉对方自己很想念",
+        "care|在乎|show care|主动关注对方需要",
+        "cherish|在乎|say I cherish you|说明重视彼此关系",
+        "trust|信任|express trust|表明相信对方",
+        "admiration|称赞|express admiration|说出对方吸引自己的地方",
+        "fondness|示好|express fondness|直接说喜欢相处",
+        "love|示好|say I love you|明确表达深厚爱意",
+        "reassure|在乎|reassure closeness|告诉对方感情没有变",
+        "celebrate_us|纪念|celebrate relationship|纪念一起经历的时刻",
+        "share_future|憧憬|imagine future together|谈论两人未来可能",
+        "offer_hug|拥抱|offer a hug|以拥抱表示亲近",
+        "ask_hug|要抱抱|ask for a hug|希望获得身体安慰",
+        "pet_name|亲昵|use endearment|用亲昵称呼呼唤对方",
+        "goodnight|问候|wish goodnight warmly|睡前表达温柔关怀",
+        "goodmorning|问候|wish good morning warmly|醒来后特别问候",
+        "remember_detail|在乎|recall personal detail|提起对方在意的细节",
+        "protect|在乎|promise to be there|表示困难时会在身边",
+        "proud_of_you|称赞|say proud of you|为对方成长感到欣慰",
+        "want_time|在乎|want more time together|希望增加相处时间",
+        "mutual_bond|要抱抱|affirm mutual closeness|表达亲近依恋与想要抱抱的心态",
+        "pamper|宠溺|indulgent pampering|极度温柔包容并纵容对方的小撒娇"
+      ]
+    },
+    {
+      "id": "flirt",
+      "label": "暧昧试探",
+      "modelLabel": "flirting",
+      "leaves": [
+        "hint_attraction|暧昧|hint attraction|含蓄透露被对方吸引",
+        "playful_tease|暧昧|tease flirtatiously|用轻松调侃制造暧昧",
+        "compliment_appearance|暧昧|compliment appearance|赞美对方外形魅力",
+        "compliment_charm|暧昧|compliment charm|赞赏对方吸引力",
+        "test_interest|试探|test romantic interest|探问对方是否有意",
+        "ask_single|试探|ask if single|了解对方是否已有伴侣",
+        "suggest_date|邀约|hint at a date|试探两人单独见面的可能",
+        "direct_date|邀约|ask on a date|明确邀请对方约会",
+        "romantic_joke|暧昧|make romantic joke|借玩笑试探恋爱话题",
+        "imagine_couple|暧昧|imagine being together|设想两人在一起",
+        "signal_exclusivity|暧昧|signal special attention|说对方与别人不同",
+        "reciprocate|暧昧|reciprocate flirting|接住对方的浪漫暗示",
+        "deflect|傲娇|deflect flirting|绕开对方的浪漫暗示",
+        "ask_signal|试探|ask what signal means|确认对方是否在示好",
+        "confess_crush|表白|confess a crush|表明一直有浪漫好感",
+        "express_chemistry|暧昧|express chemistry|描述两人之间吸引",
+        "send_heart|暧昧|send romantic heart|用爱心表达暧昧",
+        "playful_challenge|暧昧|offer flirtatious challenge|以小挑战引出亲近互动",
+        "gentle_touch|试探|suggest gentle touch|询问更亲密接触是否合适",
+        "relationship_question|试探|ask where this is going|探问两人到底是何种关系",
+        "innuendo|暧昧|playful dirty innuendo|带有不可言说的暧昧内涵与微开车试探",
+        "tipsy_confession|暧昧|tipsy emotional confession|借微醺或夜半感性大胆流露心动试探",
+        "feigned_innocence|茶茶|feigned innocent teasing|绿茶属性拉满以退为进故作无辜",
+        "courtship|求偶|courtship display|展现自身魅力才艺高调吸引关注",
+        "fishing_bait|钓鱼|fishing for reaction|故意抛出引人遐想的半截话诱人咬钩"
+      ]
+    },
+    {
+      "id": "boundary",
+      "label": "设立边界",
+      "modelLabel": "setting boundaries",
+      "leaves": [
+        "need_space|独处|ask for personal space|希望保留独处时间",
+        "privacy|保密|protect privacy|不愿公开私人信息",
+        "no_touch|拒绝|set touch boundary|说明不接受身体接触",
+        "no_jokes|拒绝|set joke boundary|要求停止不适的玩笑",
+        "no_topic|婉拒|set topic boundary|说明不想讨论某件事",
+        "no_late_call|婉拒|set contact hours|要求在合适时段联系",
+        "pace|慢慢来|slow relationship pace|希望关系不要发展过快",
+        "friend_only|婉拒|define friendship only|说明只想维持友谊",
+        "work_only|公事公办|keep it professional|要求交流保持工作性质",
+        "consent|确认|ask for consent|希望对方先得到允许",
+        "money|拒绝|set money boundary|说明不愿借钱或垫付",
+        "availability|婉拒|state limited availability|告知无法随时回应",
+        "stop_pressure|别催|ask to stop pressure|面对催促希望节奏慢下来",
+        "stop_insult|制止|ask to stop insults|要求对方停止侮辱",
+        "stop_sharing|保密|forbid forwarding|要求不要传播私聊内容",
+        "visit|预约|set visit boundary|要求来访前提前约定",
+        "explain_limit|解释|explain personal limit|说明边界背后的需要",
+        "enforce_limit|坚持|enforce stated limit|对越界行为采取行动",
+        "respect_limit|尊重|accept stated boundary|明确接受对方的限制",
+        "renegotiate|协商|renegotiate boundary|商量讨论是否有调整空间",
+        "hermit|自闭|social recharge retreat|社交电量耗尽开启防空洞静静模式"
+      ]
+    },
+    {
+      "id": "rejection",
+      "label": "拒绝回避",
+      "modelLabel": "refusing or withdrawing",
+      "leaves": [
+        "decline_invite|拒绝|decline invitation|明确不参加邀约",
+        "decline_date|拒绝|decline date|明确不愿浪漫约会",
+        "decline_request|拒绝|decline request|说明无法满足请求",
+        "decline_offer|婉拒|decline offer|礼貌拒绝对方提供的帮助",
+        "decline_purchase|拒绝|decline purchase|不接受交易提议",
+        "decline_call|拒绝|decline call|不愿改成语音交流",
+        "decline_meeting|拒绝|decline meeting|不愿在线下碰面",
+        "decline_answer|拒绝|decline to answer|不回应某个私人问题",
+        "decline_commitment|拒绝|decline commitment|不答应未来义务",
+        "decline_apology|拒绝|reject offered apology|明确不接受对方提出的道歉",
+        "soft_no|婉拒|soft refusal|以礼貌措辞表达不愿意",
+        "firm_no|拒绝|firm refusal|直接而清楚地说不",
+        "delay_decision|犹豫|defer decision|此刻不愿给答复",
+        "withdraw_plan|退出|withdraw from plan|原先答应后决定不参与",
+        "withdraw_relation|退出|end relationship|明确停止亲密交往",
+        "distance|疏远|create distance|主动减少接触频率",
+        "avoid_topic|回避|avoid question|绕开不想回答的提问",
+        "stop_contact|断联|request no contact|要求对方不要再联系",
+        "block_contact|拉黑|announce blocking|告知将中断联系渠道",
+        "explain_refusal|解释|explain refusal|说明拒绝的具体理由",
+        "instant_ick|下头|instant ick reaction|因对方言行瞬间兴致全无好感骤降"
+      ]
+    },
+    {
+      "id": "conflict",
+      "label": "争论冲突",
+      "modelLabel": "arguing or confronting",
+      "leaves": [
+        "disagree|争论|express disagreement|明确不同意对方观点",
+        "challenge_claim|质疑|challenge a claim|要求对方证明断言",
+        "correct_fact|纠正|correct disputed fact|指出对方事实错误",
+        "counterexample|反驳|give counterexample|用事例反驳论点",
+        "accuse|指责|make accusation|认为对方做了错事",
+        "confront_lie|质问|confront dishonesty|就不实信息当面对质",
+        "call_out|指责|call out behavior|指出对方行为不妥",
+        "demand_explanation|质问|demand explanation|要求对方说明可疑行为",
+        "defend_self|辩解|defend oneself|回应对自己的指控",
+        "deny_accusation|否认|deny accusation|说明指责并非事实",
+        "assign_blame|甩锅|assign blame|认为问题责任在对方",
+        "contest_blame|辩解|contest blame|反驳被归咎的责任",
+        "ultimatum|警告|set ultimatum|要求限时选择否则终止",
+        "escalate|争论|escalate argument|以更激烈措辞回应",
+        "deescalate|缓和|deescalate argument|主动降低对抗强度",
+        "ask_civility|劝和|ask for civility|请求停止人身攻击",
+        "seek_common_ground|商量|seek common ground|找出双方都认可部分",
+        "state_nonnegotiable|警告|state nonnegotiable|明确不能让步的条件",
+        "propose_pause|暂停|pause argument|提议先停止争执",
+        "agree_disagree|和解|agree to disagree|承认不同意见可并存",
+        "interrogate|查岗|jealous location probe|暗中排查对方周围人员与具体行踪",
+        "heart_strike|扎心|roast with blunt truth|一针见血直击痛处的大实话暴击",
+        "tsundere_denial|嘴硬|tsundere verbal denial|心里在意却嘴硬否认",
+        "sour_jealousy|吃醋|sour jealousy outburst|因对方提及他人而酸溜溜质问",
+        "passive_aggressive|阴阳|passive aggressive remark|字面客气实际冷嘲热讽",
+        "flustered_rage|急了|flustered defensive rage|被踩中痛脚恼羞成怒反击"
+      ]
+    },
+    {
+      "id": "complaint",
+      "label": "抱怨申诉",
+      "modelLabel": "complaining",
+      "leaves": [
+        "vent_day|吐槽|vent about day|宣泄当天不顺",
+        "vent_work|吐槽|complain about work|表达工作压力不满",
+        "vent_family|吐槽|complain about family|表达家中处境的不快",
+        "vent_service|投诉|complain about service|反映服务体验不好",
+        "vent_delay|吐槽|complain about delay|对等待过久不满",
+        "vent_cost|吐槽|complain about cost|认为价格或花费过高",
+        "vent_noise|吐槽|complain about noise|反映环境太吵",
+        "vent_unfair|吐槽|complain about unfairness|认为遭遇不公平对待",
+        "vent_ignored|吐槽|complain about neglect|表达被冷落的不满",
+        "vent_broken_promise|吐槽|complain about broken promise|对未兑现的承诺不满",
+        "vent_misunderstood|吐槽|complain about misunderstanding|认为别人曲解自己",
+        "vent_repetition|吐槽|complain about repeated issue|指出同一问题多次发生",
+        "vent_burden|吐槽|complain about workload|觉得承担过多事务",
+        "vent_health|吐槽|complain about symptoms|描述身体难受",
+        "vent_weather|吐槽|complain about weather|表达对天气的不适",
+        "vent_technology|吐槽|complain about malfunction|表达技术问题的烦躁",
+        "file_complaint|投诉|file formal complaint|要求组织处理问题",
+        "request_remedy|求补救|request remedy|希望对方采取解决措施",
+        "document_issue|投诉|document grievance|详细记录遭遇的失误",
+        "acknowledge_complaint|回应|acknowledge complaint|表示已经收到申诉"
+      ]
+    },
+    {
+      "id": "support",
+      "label": "情绪支持",
+      "modelLabel": "emotional support",
+      "leaves": [
+        "listen|倾听|offer listening|让对方放心讲述感受",
+        "validate|理解|validate feelings|承认对方感受合理",
+        "comfort|安慰|give comfort|帮助对方缓和难过",
+        "reassure|安慰|offer reassurance|减轻对方的不确定感",
+        "encourage|鼓励|encourage perseverance|支持对方继续尝试",
+        "celebrate|庆祝|share joy|与对方一起高兴",
+        "grieve|陪伴|sit with grief|在失落时陪伴对方",
+        "check_safety|关心|check immediate safety|询问对方是否安全",
+        "offer_presence|陪伴|say I am here|告诉对方随时可以联系",
+        "ask_need|提问|ask what they need|不预设方式而先问需要",
+        "avoid_judgment|理解|promise no judgment|让对方可以安心表达",
+        "normalize|理解|normalize reaction|说明压力下反应可以理解",
+        "reflect|共情|reflect emotion|说出听到的感受以确认",
+        "ground|劝解|suggest grounding|帮助对方回到当下",
+        "suggest_rest|提醒|suggest rest|提醒对方先照顾身体",
+        "offer_practical|帮忙|offer practical support|提出可执行的协助",
+        "respect_silence|陪伴|allow silence|不要求对方立刻说话",
+        "check_later|关心|promise later check in|表示稍后再问近况",
+        "refer_help|劝解|suggest professional help|鼓励对方联系合适支持",
+        "thank_trust|感谢|thank for confiding|感谢对方分享难处",
+        "hype|捧场|hype up enthusiastically|积极接梗与热情喝彩，拉满情绪价值"
+      ]
+    },
+    {
+      "id": "disclosure",
+      "label": "自我披露",
+      "modelLabel": "personal disclosure",
+      "leaves": [
+        "feeling|倾诉|share own feeling|说出自己的情绪体验",
+        "fear|倾诉|confide fear|讲出令自己担忧的事",
+        "hope|分享|share personal hope|讲述自己期望的未来",
+        "dream|分享|share life dream|谈及长远人生理想",
+        "regret|倾诉|confide regret|讲述后悔的决定",
+        "insecurity|倾诉|confide insecurity|说出自我怀疑",
+        "trauma|倾诉|disclose painful past|讲述痛苦往事",
+        "health|分享|disclose health issue|告知私人身体情况",
+        "family|分享|share family situation|谈及家庭近况",
+        "money|诉苦|share money trouble|讲述个人财务压力",
+        "work|倾诉|share career concern|讨论自己工作方向",
+        "identity|分享|share identity|主动说明自我认同",
+        "value|分享|share personal values|说出自己看重的原则",
+        "hobby|分享|share hobby|告诉对方个人兴趣",
+        "habit|分享|share habit|说出日常生活习惯",
+        "secret|坦白|confide secret|透露不愿广泛公开的事",
+        "success|分享|share personal success|讲述自己的进步成果",
+        "failure|坦白|admit failure|讲述做砸的经历",
+        "need|分享|state personal need|直接讲明希望被怎样对待",
+        "limit|坦白|admit limitation|坦白自己目前做不到的事",
+        "clown|小丑|clown self realization|意识到自身一厢情愿自嘲小丑竟是我"
+      ]
+    },
+    {
+      "id": "humor",
+      "label": "幽默玩笑",
+      "modelLabel": "joking and play",
+      "leaves": [
+        "tell_joke|分享|tell a joke|分享搞笑段子逗乐对方",
+        "pun|玩梗|make a pun|利用词语双关逗乐",
+        "self_deprecate|自嘲|joke about oneself|以自身短处制造笑点",
+        "tease_friend|调侃|tease playfully|轻轻打趣熟悉的人",
+        "sarcasm|讽刺|use sarcasm|用反话表达讽刺",
+        "callback|玩梗|recall inside joke|重提双方懂的笑点",
+        "absurd|玩笑|make absurd joke|用不可能的情节搞笑",
+        "wordplay|玩梗|play with words|借词形词义制造笑点",
+        "impression|玩笑|do an impression|模仿人物语气搞笑",
+        "prank|恶作剧|suggest prank|计划轻松的捉弄",
+        "riddle|猜谜|pose a riddle|用谜题开展互动",
+        "quiz|猜谜|pose playful quiz|用小游戏式问题娱乐",
+        "challenge|玩笑|playful challenge|提出不严肃的小任务",
+        "banter|斗嘴|exchange banter|快速往返地开玩笑",
+        "laugh|笑了|react with laughter|表明被对方逗笑",
+        "explain_joke|解释|explain joke|说明玩笑为什么好笑",
+        "soften_joke|玩笑|clarify joking|避免对方误会为认真",
+        "stop_joke|收敛|stop joking|发现不妥后停止逗趣",
+        "celebrate_humor|称赞|praise humor|称赞对方幽默让人发笑",
+        "adopt_father|认爹|playful father figure adoption|当代社交戏谑认爹求带飞",
+        "verbal_advantage|占便宜|take verbal advantage|叫声好听的口头占先",
+        "hard_to_hold|难绷|hard to keep straight face|场面过于离谱滑稽强行憋笑或笑场"
+      ]
+    },
+    {
+      "id": "work",
+      "label": "工作协作",
+      "modelLabel": "work collaboration",
+      "leaves": [
+        "assign|安排|assign work|明确交给对方的任务",
+        "report|汇报|report work status|说明任务当前完成情况",
+        "deadline|催促|follow up deadline|提醒工作交付日期",
+        "specify|要求|specify requirements|写清工作交付标准",
+        "clarify_scope|确认|clarify work scope|确认哪些事项属于任务",
+        "review|检查|review deliverable|检查工作成品",
+        "approve|同意|approve proposal|表示可以按方案执行",
+        "reject|拒绝|reject proposal|说明当前方案不能采用",
+        "escalate|求助|escalate blocker|向更高层说明问题",
+        "schedule_meeting|邀约|schedule work meeting|组织工作讨论",
+        "minutes|分享|share meeting notes|发出会议结论记录",
+        "handover|交接|handover responsibilities|移交工作责任",
+        "request_update|追问|request status update|要求当前进展说明",
+        "flag_risk|提醒|flag project risk|提醒项目潜在问题",
+        "propose_solution|建议|propose solution|给工作障碍提供做法",
+        "coordinate_team|协调|coordinate team|安排多人分工配合",
+        "request_leave|请假|request time off|向工作方提出休假",
+        "confirm_leave|批假|approve time off|答复休假申请",
+        "discuss_pay|谈钱|discuss compensation|商谈工作薪酬",
+        "give_reference|推荐|provide work reference|为对方职业机会背书"
+      ]
+    },
+    {
+      "id": "transaction",
+      "label": "交易服务",
+      "modelLabel": "transaction or service",
+      "leaves": [
+        "inquire_item|提问|ask about item|了解商品具体情况",
+        "inquire_stock|提问|ask availability|确认是否还有现货",
+        "inquire_condition|提问|ask item condition|核实物品使用状态",
+        "inquire_shipping|提问|ask shipping cost|了解配送所需费用",
+        "quote_price|报价|quote price|告知商品或服务价格",
+        "bargain|砍价|negotiate price|提出改动售价",
+        "accept_price|接受|accept quoted price|同意当前报价",
+        "refuse_price|拒绝|decline quoted price|因价格不合适而拒绝",
+        "place_order|下单|place order|明确要购买物品",
+        "confirm_order|确认|confirm order|核实交易明细",
+        "request_payment|催款|request payment|要求支付订单款项",
+        "send_payment|付款|report payment sent|通知款项已经转出",
+        "request_refund|退款|request refund|希望退回已付款项",
+        "approve_refund|退款|approve refund|答应返还付款",
+        "request_exchange|换货|request exchange|希望更换收到的商品",
+        "report_defect|投诉|report item defect|指出商品实际问题",
+        "arrange_delivery|发货|arrange shipping|确定寄出时间方式",
+        "provide_tracking|发货|provide tracking code|发送包裹追踪信息",
+        "confirm_delivery|签收|confirm delivery|告知已经收到商品",
+        "rate_service|评价|rate service|反馈交易体验"
+      ]
+    },
+    {
+      "id": "closure",
+      "label": "结束告别",
+      "modelLabel": "closing a conversation",
+      "leaves": [
+        "goodbye|告别|say goodbye|结束当前对话",
+        "goodnight|晚安|say goodnight|睡前结束交流",
+        "see_you|告别|say see you|表达之后会再相见",
+        "talk_later|暂停|say talk later|结束本轮并预留后续",
+        "leave_now|告别|announce departure|告知自己现在得离开",
+        "busy_now|暂停|say busy now|因事务中断谈话",
+        "end_call|告别|end a call|表示要挂断实时电话",
+        "wrap_up|总结|wrap up discussion|概括结果后结束",
+        "final_question|追问|ask final question|结束前补问一件事",
+        "final_note|补充|add final note|告别前追加信息",
+        "wish_rest|祝福|wish good rest|临别提醒对方休息",
+        "wish_luck|祝福|wish good luck|临别祝对方顺利",
+        "wish_safe|祝福|wish safe travel|出行前表达安全祝愿",
+        "thank_chat|感谢|thank for conversation|感谢本次交流",
+        "confirm_next|邀约|confirm next contact|约定何时再沟通",
+        "close_thread|总结|close this topic|明确这一事项讨论完毕",
+        "pause_until|暂停|pause until scheduled time|下次按约定时间再谈",
+        "sign_off_work|下班|sign off for workday|结束当日工作交流",
+        "leave_group|退群|announce leaving group|说明将退出群聊",
+        "end_contact|断联|say final farewell|表达不再继续联系",
+        "playful_exit|逃跑|playfully escape the conversation|借洗澡、睡觉等说法从当前话题脱身，须结合上下文区分真的有事和玩笑式逃避"
+      ]
+    }
+  ],
+  "expressionFamilies": [
+    {
+      "id": "closeness",
+      "label": "亲昵俏皮",
+      "modelLabel": "playful closeness",
+      "groups": [
+        "clingy",
+        "cute",
+        "tsundere"
+      ]
+    },
+    {
+      "id": "friction",
+      "label": "抗议恼火",
+      "modelLabel": "protest or anger",
+      "groups": [
+        "protest",
+        "anger",
+        "jealousy"
+      ]
+    },
+    {
+      "id": "vulnerability",
+      "label": "脆弱低落",
+      "modelLabel": "hurt shy or downcast",
+      "groups": [
+        "grievance",
+        "shyness",
+        "downcast"
+      ]
+    },
+    {
+      "id": "care",
+      "label": "关心安慰",
+      "modelLabel": "care and reassurance",
+      "groups": [
+        "caring"
+      ]
+    },
+    {
+      "id": "play",
+      "label": "调侃逗趣",
+      "modelLabel": "teasing humor",
+      "groups": [
+        "teasing"
+      ]
+    },
+    {
+      "id": "upbeat",
+      "label": "期待兴奋",
+      "modelLabel": "anticipation and excitement",
+      "groups": [
+        "excitement"
+      ]
+    },
+    {
+      "id": "reserved",
+      "label": "冷淡或平静",
+      "modelLabel": "reserved or matter of fact",
+      "groups": [
+        "curtness",
+        "calmness"
+      ]
+    }
+  ],
+  "expressionFaceBuckets": [
+    {
+      "kaomoji": [
+        "( ▽ )"
+      ],
+      "emotions": [
+        "happy",
+        "amused",
+        "excited",
+        "hopeful",
+        "proud",
+        "surprised"
+      ]
+    },
+    {
+      "kaomoji": [
+        "( ︶ )"
+      ],
+      "emotions": [
+        "affectionate",
+        "content",
+        "relieved",
+        "grateful",
+        "tender",
+        "calm"
+      ]
+    },
+    {
+      "kaomoji": [
+        "( △ )"
+      ],
+      "emotions": [
+        "sad",
+        "anxious",
+        "angry",
+        "lonely",
+        "disappointed",
+        "hurt",
+        "guilty",
+        "ashamed",
+        "fearful",
+        "worried",
+        "stressed",
+        "overwhelmed",
+        "frustrated",
+        "irritated",
+        "resentful",
+        "jealous",
+        "tired"
+      ]
+    },
+    {
+      "kaomoji": [
+        "( •_• )"
+      ],
+      "emotions": [
+        "neutral",
+        "shy",
+        "suspicious",
+        "confused",
+        "uncertain",
+        "bored",
+        "detached",
+        "focused",
+        "determined",
+        "embarrassed",
+        "curious"
+      ]
+    }
+  ],
+  "expressionGroups": [
+    {
+      "id": "clingy",
+      "label": "亲昵撒娇",
+      "modelLabel": "affectionate coaxing",
+      "leaves": [
+        "attention|求关注|seeking attention|用亲昵称呼或语气索取对方注意|affectionate",
+        "company|黏人|asking for company|用软语请求对方陪伴|affectionate",
+        "reply|撒娇|coaxing a reply|亲昵地盼对方继续回应|hopeful",
+        "request|撒娇|soft affectionate request|以亲昵姿态请求一件事|tender",
+        "dependence|撒娇|playful dependence|故意显得依赖以求亲近|affectionate",
+        "complaint|埋怨|affectionate complaint|表面埋怨而实际靠近|affectionate",
+        "cuddle|贴贴|asking for a cuddle|明说想抱抱或贴近对方|affectionate"
+      ]
+    },
+    {
+      "id": "cute",
+      "label": "可爱卖萌",
+      "modelLabel": "cute playacting",
+      "leaves": [
+        "baby_talk|卖萌|babyish speech|故意用幼态说法表现可爱|amused",
+        "sound|卖萌|cute sound effects|用拟声词表达俏皮|amused",
+        "brag|臭美|cute self praise|用轻巧自夸讨喜|proud",
+        "face|搞怪|making a silly face|以滑稽表情扮可爱|amused",
+        "plea|求饶|cute pleading|以卖萌姿态请求宽容|hopeful",
+        "clueless|装傻|playing clueless|故意装不懂来活跃气氛|amused",
+        "animal|卖萌|animal imitation|模仿动物口吻逗人|amused"
+      ]
+    },
+    {
+      "id": "tsundere",
+      "label": "傲娇嘴硬",
+      "modelLabel": "defensive affection",
+      "leaves": [
+        "deny_care|嘴硬|denying concern|嘴上否认在意却显露关心|tender",
+        "indifferent|傲娇|feigned indifference|表面冷淡掩盖关注|shy",
+        "praise|傲娇|reluctant praise|夸人同时故作不情愿|shy",
+        "refusal|口是心非|playful refusal|表面拒绝互动仍继续靠近|affectionate",
+        "bravado|逞强|embarrassed bravado|因害羞而故作强硬|embarrassed",
+        "deny_like|嘴硬|denying affection|否认亲近意思却带试探|shy",
+        "accept|傲娇|grudging acceptance|不情愿口气表达实际接受|neutral"
+      ]
+    },
+    {
+      "id": "protest",
+      "label": "撒泼抗议",
+      "modelLabel": "dramatic protest",
+      "leaves": [
+        "pout|赌气|pouting protest|用夸张不满要求让步|irritated",
+        "repeat_no|闹脾气|dramatic refusal|反复夸张地表示不答应|frustrated",
+        "tantrum|耍赖|playful tantrum|以戏剧化闹腾争取关注|amused",
+        "fairness|不服|protesting unfairness|明确指出待遇不公平|frustrated",
+        "insist|缠人|insistent asking|重复要求直到对方回应|determined",
+        "mock_threat|吓唬|mock threat|用玩笑式狠话施压|amused",
+        "talk_back|顶嘴|talking back|针对限制或要求反抗|irritated"
+      ]
+    },
+    {
+      "id": "anger",
+      "label": "生气恼火",
+      "modelLabel": "genuine anger",
+      "leaves": [
+        "snap|生气|snapping angrily|突然用激烈语气表达怒意|angry",
+        "impatient|不耐烦|impatient irritation|因拖延或重复而显露烦躁|irritated",
+        "rebuke|责备|angry rebuke|带怒意指出对方过错|angry",
+        "cold_anger|憋火|controlled anger|克制却明确地流露怒意|irritated",
+        "indignant|不服|righteous indignation|因认为不公而发怒|angry",
+        "sarcasm|讽刺|hostile sarcasm|用尖刻反话攻击对方|resentful",
+        "outburst|发火|anger outburst|强烈情绪突然倾泻|angry"
+      ]
+    },
+    {
+      "id": "grievance",
+      "label": "委屈求哄",
+      "modelLabel": "hurt and seeking comfort",
+      "leaves": [
+        "comfort|求哄|asking to be comforted|明示希望对方哄自己|hurt",
+        "hurt|委屈|voicing hurt|讲述自己受委屈的经历|hurt",
+        "tearful|示弱|tearful vulnerability|流露想哭或无助姿态|sad",
+        "sulk|委屈|sulking|用低落口气暗示不满|disappointed",
+        "reassurance|求安慰|asking for reassurance|确认对方是否仍在意自己|anxious",
+        "self_pity|卖惨|self pity|强调自己的可怜处境以求安抚|lonely",
+        "soft_blame|埋怨|soft blame|温和指出对方让自己受伤|hurt"
+      ]
+    },
+    {
+      "id": "jealousy",
+      "label": "吃醋试探",
+      "modelLabel": "jealous probing",
+      "leaves": [
+        "probe|试探|indirect jealousy probe|绕着第三人探问关系|jealous",
+        "compare|吃醋|comparing attention|问对方是否更在意别人|jealous",
+        "possessive|占有欲|possessive affection|要求独占对方时间或注意|jealous",
+        "casual|试探|casual jealous question|故作随意地探查第三人|suspicious",
+        "rival|吃醋|rival wariness|对潜在竞争者流露戒备|jealous",
+        "joke|吃醋|joking jealousy|用玩笑表达在意其他人|jealous",
+        "priority|求偏爱|asking to be prioritized|希望自己得到更高优先次序|jealous"
+      ]
+    },
+    {
+      "id": "caring",
+      "label": "关心安慰",
+      "modelLabel": "caring reassurance",
+      "leaves": [
+        "check|关心|gentle check in|体贴询问对方状态|worried",
+        "practical|照顾|practical caring|提出具体照料行动|tender",
+        "reassure|安慰|gentle reassurance|告诉对方不用独自担心|tender",
+        "listen|倾听|attentive listening|明确愿意听对方说|calm",
+        "validate|理解|empathetic validation|承认对方的感受合理|tender",
+        "encourage|鼓励|warm encouragement|温柔激励对方继续|hopeful",
+        "protect|叮嘱|protective reminder|出于关心提醒风险或休息|worried"
+      ]
+    },
+    {
+      "id": "teasing",
+      "label": "调侃逗趣",
+      "modelLabel": "playful teasing",
+      "leaves": [
+        "tease|调侃|playful teasing|以善意调侃对方|amused",
+        "self_joke|自嘲|self deprecation|用自己开玩笑减轻气氛|amused",
+        "wordplay|玩梗|wordplay|玩双关或谐音逗趣|amused",
+        "exaggerate|搞笑|comic exaggeration|夸大事实营造笑点|amused",
+        "deadpan|冷幽默|deadpan joke|一本正经地说反差笑话|amused",
+        "banter|接梗|reciprocal banter|接续对方笑话互相逗趣|amused",
+        "trick|逗你玩|playful trick|轻微设悬念后揭开玩笑|amused"
+      ]
+    },
+    {
+      "id": "shyness",
+      "label": "尴尬害羞",
+      "modelLabel": "shy or awkward",
+      "leaves": [
+        "blush|害羞|blushing shyness|因受到关注显露害羞|shy",
+        "hesitate|扭捏|hesitant affection|表达亲近时明显犹豫|shy",
+        "deflect|害羞|deflecting praise shyly|对夸奖难为情并推回|embarrassed",
+        "pause|尴尬|awkward pause|用停顿或措辞表露局促|embarrassed",
+        "cover|尴尬|covering embarrassment|转移话题掩饰窘迫|embarrassed",
+        "opening|害羞|timid opening|谨慎小声发起交流|shy",
+        "laugh|尬笑|nervous laugh|以干笑化解尴尬|embarrassed"
+      ]
+    },
+    {
+      "id": "excitement",
+      "label": "期待兴奋",
+      "modelLabel": "upbeat anticipation",
+      "leaves": [
+        "await|期待|looking forward|明显盼着即将发生的事|hopeful",
+        "share|兴奋|excited sharing|迫不及待讲好消息|excited",
+        "eager|心急|eager anticipation|急切盼消息或进展|excited",
+        "celebrate|开心|celebrating|因已发生的好事欢呼|happy",
+        "surprised|惊喜|delighted surprise|意外收获带来喜悦|surprised",
+        "hype|起哄|hype and cheering|用高涨语气带动大家|excited",
+        "meet|期待|looking forward to meeting|期待约定的相见|hopeful"
+      ]
+    },
+    {
+      "id": "downcast",
+      "label": "失落无奈",
+      "modelLabel": "downcast resignation",
+      "leaves": [
+        "sigh|失落|disappointed sigh|期待落空而低落|disappointed",
+        "resign|无奈|resigned acceptance|没有办法只好接受|tired",
+        "weary|诉苦|weary complaint|身心疲惫地说难处|tired",
+        "quiet_sad|难过|quiet sadness|克制地表达难过|sad",
+        "helpless|无助|expressing helplessness|坦言无法改变局面|overwhelmed",
+        "lonely|孤单|lonely reflection|表达无人陪伴的孤独|lonely",
+        "bitter|苦笑|bitter laugh|以笑掩盖失落|hurt"
+      ]
+    },
+    {
+      "id": "curtness",
+      "label": "敷衍冷淡",
+      "modelLabel": "curt or distant",
+      "leaves": [
+        "perfunctory|敷衍|perfunctory reply|只以最短话语应付交流|detached",
+        "cold|冷淡|cold reply|语气明显疏离|detached",
+        "avoid|回避|topic avoidance|转开或略过对方关切|detached",
+        "disengaged|敷衍|lack of engagement|表现不太想继续讨论|bored",
+        "polite|客气|polite distance|客气但缺少亲近|detached",
+        "dismissive|不屑|dismissive reply|轻看对方观点或关切|irritated",
+        "end|冷淡|ending contact tone|用短语表达尽快结束的态度|detached"
+      ]
+    },
+    {
+      "id": "calmness",
+      "label": "平静认真",
+      "modelLabel": "calm and focused",
+      "leaves": [
+        "neutral|平静|plain neutral|无明显情绪姿态的普通陈述|neutral",
+        "factual|认真|matter of fact|重在说明事实而非表达情绪|neutral",
+        "thoughtful|思考|thoughtful reflection|先考虑再认真回应|focused",
+        "composed|淡定|composed response|面对压力仍语气稳定|calm",
+        "sincere|真诚|sincere directness|诚恳清楚地表达看法|calm",
+        "firm|坚定|firm statement|有分寸地明确立场|determined",
+        "attentive|认真|attentive response|专注确认理解对方|focused"
+      ]
+    }
+  ]
+}

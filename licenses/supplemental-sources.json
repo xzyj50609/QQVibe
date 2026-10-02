@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "files": [
+    {
+      "package": "jieba",
+      "version": "0.42.1",
+      "file": "licenses/jieba-0.42.1-LICENSE.txt",
+      "sha256": "18ba0984839f85853b29fadaf992f7dba8fd0ca0fbeae34de2b8735222dc7a37",
+      "source": "https://raw.githubusercontent.com/fxsjy/jieba/v0.42.1/LICENSE",
+      "license": "MIT",
+      "checkedAt": "2026-09-30"
+    },
+    {
+      "package": "standardwebhooks",
+      "version": "1.1.1",
+      "file": "licenses/standardwebhooks-1.1.1-LICENSE.txt",
+      "sha256": "5ec8c7b26b64d881a6706617bed25c049f97f2f35de034c756de8546fd6dbe27",
+      "source": "https://raw.githubusercontent.com/standard-webhooks/standard-webhooks/a7d19b4574ae62221042e76240648d0688a8c420/libraries/LICENSE",
+      "license": "MIT",
+      "checkedAt": "2026-09-30"
+    }
+  ]
+}

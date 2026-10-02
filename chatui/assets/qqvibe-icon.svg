@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="QQVibe">
+<title>QQVibe</title><desc>Local conversation analysis: a speech bubble with four signal bars.</desc>
+<rect x="8" y="8" width="240" height="240" rx="64" fill="#163747"/>
+<polygon points="84,172 66,213 118,174" fill="#55d8dc"/>
+<rect x="44" y="52" width="168" height="132" rx="40" fill="#55d8dc"/>
+<rect x="78" y="112" width="14" height="28" rx="7" fill="#163747"/>
+<rect x="103" y="94" width="14" height="60" rx="7" fill="#163747"/>
+<rect x="128" y="78" width="14" height="86" rx="7" fill="#163747"/>
+<rect x="153" y="105" width="14" height="40" rx="7" fill="#163747"/>
+</svg>

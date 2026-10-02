@@ -1,0 +1,26 @@
+{
+  "reviewDate": "2026-10-01",
+  "fixedSources": [
+    {
+      "file": "licenses/laya-model-mlx-LICENSE",
+      "url": "https://huggingface.co/aac6fef/laya-multilingual-mlx/raw/f2b4faf51023039425946074e2cf1361d2db11d5/LICENSE",
+      "sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9"
+    },
+    {
+      "file": "licenses/laya-model-mlx-NOTICE",
+      "url": "https://huggingface.co/aac6fef/laya-multilingual-mlx/raw/f2b4faf51023039425946074e2cf1361d2db11d5/NOTICE",
+      "sha256": "f23ae8ae701f5a43e186182e387aeef00b666daed18a946fc7c9ea827b00a8fa"
+    },
+    {
+      "file": "licenses/laya-model-mlx-README.txt",
+      "url": "https://huggingface.co/aac6fef/laya-multilingual-mlx/raw/f2b4faf51023039425946074e2cf1361d2db11d5/README.md",
+      "sha256": "72f0ae05f12cc6c13fc04853648cb2e1edf8eb4461cf0b9c09df1aa4d84882b0"
+    },
+    {
+      "file": "licenses/laya-model-original-README.txt",
+      "url": "https://huggingface.co/convaiinnovations/laya-multilingual/raw/052592a15d198d9ad47da779604259b10b47b7aa/README.md",
+      "sha256": "8a8a77d006d07a1a1ee1f964d83b4de935dee354a3e6f371c044b4a3b4c4ef70"
+    }
+  ],
+  "redistribution": "Apache-2.0 with attached license attribution and conversion notice; no endorsement"
+}

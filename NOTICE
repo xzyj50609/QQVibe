@@ -1,0 +1,20 @@
+QQVibe
+Based on tswawa/WechatVibe 1.2.2 (Apache-2.0).
+Upstream source: https://github.com/tswawa/WechatVibe
+Baseline: 02b770821a1cf46b8ecc46b4f874ac6f922bd586
+QQVibe adds/adapts QQ account and message storage, QCE read-only connectors,
+import, synchronization, analysis scopes, desktop identity and UI.
+Original copyright and license notices remain in source files and
+THIRD_PARTY_NOTICES.md. Embedded Laya source attribution is preserved in
+electron/laya/NOTICE and electron/laya/LICENSE.
+QQVibe is independently maintained and is not affiliated with Tencent,
+WechatVibe upstream, Convai Innovations, or the model port authors.
+
+The full portable package redistributes fixed Laya ONNX model files under
+Apache-2.0. Original model: Convai Innovations and Laya contributors.
+Original revision: 052592a15d198d9ad47da779604259b10b47b7aa
+MLX conversion: aac6fef/laya-multilingual-mlx, f2b4faf51023039425946074e2cf1361d2db11d5
+ONNX conversion: mizchi/laya-multilingual-onnx, d9d003d543e63d6d3375c21d44624136bd1e0bad
+QQVibe does not retrain these weights. Conversion descriptions, original model
+card and applicable upstream LICENSE/NOTICE are retained in licenses/ and
+resources/client/.models/laya/README.md in the full package.

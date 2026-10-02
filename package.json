@@ -1,0 +1,45 @@
+{
+  "name": "qqvibe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "QQVibe 本机单聊分析桌面客户端（预览开发版）",
+  "license": "Apache-2.0",
+  "main": "scripts/desktop-main.cjs",
+  "engines": {
+    "node": "24.11.1"
+  },
+  "scripts": {
+    "start": "electron .",
+    "start:service": "python scripts/run-project-python.py scripts/start-real-client.py",
+    "setup:models": "tsx scripts/setup-models.ts",
+    "catalog:generate": "node scripts/build-analysis-catalog.mjs",
+    "catalog:export": "python scripts/export-label-library.py --output WechatVibe-label-library.txt",
+    "test": "npm run typecheck && npm run test:node && npm run test:scripts && npm run test:python",
+    "test:node": "node --import tsx --test tests/*.test.ts tests/*.test.cjs",
+    "test:python": "python scripts/run-python-tests.py",
+    "test:model": "tsx scripts/test-model.ts",
+    "test:recovery": "node scripts/test-desktop-main.cjs && node scripts/test-real-client-recovery.cjs && python scripts/run-project-python.py scripts/test-start-real-client.py && python scripts/run-project-python.py bridge/test_account_store.py",
+    "build:portable": "python scripts/run-project-python.py scripts/build-portable-clean.py",
+    "typecheck": "tsc --noEmit -p tsconfig.electron.json",
+    "test:scripts": "node scripts/run-node-script-tests.cjs",
+    "setup:electron": "node node_modules/electron/install.js",
+    "postinstall": "npm run setup:electron"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.128.0",
+    "@google/genai": "2.24.0",
+    "@huggingface/tokenizers": "0.2.0",
+    "ollama": "0.6.3",
+    "onnxruntime-node": "1.30.0",
+    "openai": "7.23.0",
+    "tsx": "4.23.15",
+    "undici": "7.29.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.2",
+    "electron": "44.4.3",
+    "electron-builder": "26.15.3",
+    "typescript": "7.0.2"
+  }
+}

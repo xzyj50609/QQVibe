@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "default": "qq",
+  "products": {
+    "wechat": {
+      "productName": "WechatVibe",
+      "appId": "com.local.wechatvibe.real-client",
+      "dataDir": ".local",
+      "instanceSalt": "wechatvibe",
+      "controlTokenEnv": "WECHATVIBE_CONTROL_TOKEN",
+      "controlTokenHeader": "X-WechatVibe-Control-Token",
+      "storageNamespace": "real",
+      "updateRepository": "tswawa/WechatVibe",
+      "iconPng": "chatui/assets/wechatvibe-icon.png",
+      "iconIco": "chatui/assets/wechatvibe-icon.ico"
+    },
+    "qq": {
+      "productName": "QQVibe",
+      "appId": "com.local.qqvibe.real-client",
+      "dataDir": "QQVibeData",
+      "instanceSalt": "qqvibe",
+      "controlTokenEnv": "QQVIBE_CONTROL_TOKEN",
+      "controlTokenHeader": "X-QQVibe-Control-Token",
+      "storageNamespace": "qq-real",
+      "updateRepository": null,
+      "iconPng": "chatui/assets/qqvibe-icon.png",
+      "iconIco": "chatui/assets/qqvibe-icon.ico"
+    }
+  }
+}

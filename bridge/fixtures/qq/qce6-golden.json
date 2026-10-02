@@ -1,0 +1,35 @@
+{
+  "evidenceClass": "synthetic-source-shaped",
+  "sources": [
+    "QQ migration pinned NapCat packages/napcat-onebot/api/msg.ts:96-105,298,1181-1192",
+    "QQ migration pinned QCE api/routes/messages.rs:702-719 and json_exporter.rs:142-160",
+    "QQ migration pinned ChatLab shuakami-qq-exporter.test.ts:44-53 and shuakami-qq-exporter.ts:60-98"
+  ],
+  "raw": {
+    "msgId": "9007199254740993",
+    "msgSeq": "9223372036854775808",
+    "msgTime": "1700000000",
+    "chatType": 1,
+    "peerUid": "u_synthetic_peer",
+    "senderUin": "10002",
+    "senderUid": "u_synthetic_peer",
+    "sendType": "0",
+    "msgType": 2,
+    "recallTime": "0",
+    "elements": [
+      {"elementType": 7, "replyElement": {"sourceMsgIdInRecords": "80001"}},
+      {"elementType": 1, "textElement": {"content": "明天见", "atType": 0}},
+      {"elementType": 1, "textElement": {"content": "，九点。", "atType": 0}}
+    ],
+    "records": [{"msgId": "80001", "elements": [{"elementType": 1, "textElement": {"content": "几点见？"}}]}]
+  },
+  "export": {
+    "metadata": {"name": "QQChatExporter V6", "version": "6.0.3"},
+    "chatInfo": {"name": "Synthetic", "type": "private", "selfUin": "10001", "peerUid": "u_synthetic_peer", "peerUin": "10002"},
+    "messages": [
+      {"messageId": "9007199254740993", "timestamp": "2026-07-10T12:00:00.123Z", "sender": {"uin": "10002", "uid": "u_synthetic_peer", "name": "Synthetic"}, "messageType": 2, "content": {"text": "明天见，九点。", "reply": {"referencedMessageId": "80001", "content": "几点见？"}}},
+      {"messageId": "9007199254740994", "timestamp": "2026-07-10T20:00:01+08:00", "sender": {"uin": "10001", "uid": "u_synthetic_self", "name": "Self"}, "messageType": 2, "content": {"text": "好"}}
+    ]
+  },
+  "expected": {"text": "明天见，九点。", "quote": "几点见？", "nativeId": "9007199254740993", "rawTimeMs": 1700000000000, "exportTimeMs": 1783684800123}
+}

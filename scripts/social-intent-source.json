@@ -1,0 +1,541 @@
+{
+  "version": "social-intents-v1",
+  "groups": [
+    {
+      "id": "receive_closeness",
+      "label": "想被亲近",
+      "modelLabel": "receive gentle closeness",
+      "leaves": [
+        {
+          "id": "hug",
+          "label": "要抱抱",
+          "modelLabel": "want to be hugged",
+          "definition": "说话人希望对方主动拥抱自己"
+        },
+        {
+          "id": "snuggle",
+          "label": "要贴贴",
+          "modelLabel": "want to cuddle close",
+          "definition": "说话人希望和对方依偎贴近"
+        },
+        {
+          "id": "head_pat",
+          "label": "要摸头",
+          "modelLabel": "want a head pat",
+          "definition": "说话人希望对方轻轻摸自己的头"
+        },
+        {
+          "id": "hand_hold",
+          "label": "要牵手",
+          "modelLabel": "want hand held",
+          "definition": "说话人希望对方牵住自己的手"
+        },
+        {
+          "id": "lean_shoulder",
+          "label": "靠靠你",
+          "modelLabel": "want to lean on shoulder",
+          "definition": "说话人希望借对方肩膀依靠"
+        },
+        {
+          "id": "sit_close",
+          "label": "坐近点",
+          "modelLabel": "want to sit close",
+          "definition": "说话人希望和对方挨近坐着"
+        },
+        {
+          "id": "shoulder_pat",
+          "label": "拍拍我",
+          "modelLabel": "want a shoulder pat",
+          "definition": "说话人希望对方轻拍肩膀表示支持"
+        },
+        {
+          "id": "fist_bump",
+          "label": "碰碰拳",
+          "modelLabel": "want a fist bump",
+          "definition": "说话人希望以碰拳表达默契或鼓励"
+        },
+        {
+          "id": "arm_link",
+          "label": "要挽手",
+          "modelLabel": "want to link arms",
+          "definition": "说话人希望和对方挽着胳膊同行"
+        },
+        {
+          "id": "wipe_tears",
+          "label": "给我擦泪",
+          "modelLabel": "want tears gently wiped",
+          "definition": "说话人希望对方帮自己擦去眼泪"
+        }
+      ]
+    },
+    {
+      "id": "give_closeness",
+      "label": "想亲近对方",
+      "modelLabel": "offer gentle closeness",
+      "leaves": [
+        {
+          "id": "hug_other",
+          "label": "抱抱你",
+          "modelLabel": "want to hug them",
+          "definition": "说话人想主动拥抱对方"
+        },
+        {
+          "id": "snuggle_other",
+          "label": "贴贴你",
+          "modelLabel": "want to cuddle them",
+          "definition": "说话人想主动与对方依偎贴近"
+        },
+        {
+          "id": "pat_head_other",
+          "label": "摸摸头",
+          "modelLabel": "want to pat their head",
+          "definition": "说话人想轻轻摸对方的头"
+        },
+        {
+          "id": "hold_hand_other",
+          "label": "牵你手",
+          "modelLabel": "want to hold their hand",
+          "definition": "说话人想主动牵对方的手"
+        },
+        {
+          "id": "offer_shoulder",
+          "label": "给你靠",
+          "modelLabel": "want to offer shoulder",
+          "definition": "说话人想让对方靠在自己肩上"
+        },
+        {
+          "id": "sit_beside",
+          "label": "陪你坐",
+          "modelLabel": "want to sit beside them",
+          "definition": "说话人想坐在对方身边"
+        },
+        {
+          "id": "pat_shoulder_other",
+          "label": "拍拍肩",
+          "modelLabel": "want to pat their shoulder",
+          "definition": "说话人想轻拍对方肩膀表示支持"
+        },
+        {
+          "id": "invite_high_five",
+          "label": "击个掌",
+          "modelLabel": "want to offer high five",
+          "definition": "说话人想与对方击掌庆祝或鼓励"
+        },
+        {
+          "id": "link_arms_other",
+          "label": "挽着你",
+          "modelLabel": "want to link arms with them",
+          "definition": "说话人想主动挽着对方同行"
+        },
+        {
+          "id": "wipe_tears_other",
+          "label": "帮你擦泪",
+          "modelLabel": "want to wipe their tears",
+          "definition": "说话人想帮对方擦去眼泪"
+        }
+      ]
+    },
+    {
+      "id": "receive_words",
+      "label": "想被言语安抚",
+      "modelLabel": "receive verbal comfort",
+      "leaves": [
+        {
+          "id": "be_coaxed",
+          "label": "要哄哄",
+          "modelLabel": "want to be soothed",
+          "definition": "说话人希望对方用软话哄自己"
+        },
+        {
+          "id": "be_praised",
+          "label": "要夸夸",
+          "modelLabel": "want to be praised",
+          "definition": "说话人希望对方具体夸奖自己"
+        },
+        {
+          "id": "hear_okay",
+          "label": "求安慰",
+          "modelLabel": "want to hear it is okay",
+          "definition": "说话人希望听到对方安抚说事情会过去"
+        },
+        {
+          "id": "be_understood",
+          "label": "求理解",
+          "modelLabel": "want to be understood",
+          "definition": "说话人希望对方理解自己的处境和感受"
+        },
+        {
+          "id": "be_listened",
+          "label": "听我说",
+          "modelLabel": "want to be listened to",
+          "definition": "说话人希望对方耐心听自己讲完"
+        },
+        {
+          "id": "hear_goodnight",
+          "label": "要晚安",
+          "modelLabel": "want a goodnight wish",
+          "definition": "说话人希望对方睡前向自己道晚安"
+        },
+        {
+          "id": "hear_miss_you",
+          "label": "说想我",
+          "modelLabel": "want to hear missed you",
+          "definition": "说话人希望听到对方表达思念"
+        },
+        {
+          "id": "hear_apology",
+          "label": "要道歉",
+          "modelLabel": "want to hear an apology",
+          "definition": "说话人希望对方承认过错并道歉"
+        },
+        {
+          "id": "be_encouraged",
+          "label": "求鼓励",
+          "modelLabel": "want verbal encouragement",
+          "definition": "说话人希望对方为自己的努力打气"
+        },
+        {
+          "id": "hear_affirmation",
+          "label": "求肯定",
+          "modelLabel": "want affirmation of ability",
+          "definition": "说话人希望听到对方肯定自己的能力或选择"
+        }
+      ]
+    },
+    {
+      "id": "give_words",
+      "label": "想言语温暖对方",
+      "modelLabel": "offer verbal warmth",
+      "leaves": [
+        {
+          "id": "coax_other",
+          "label": "哄哄你",
+          "modelLabel": "want to soothe them",
+          "definition": "说话人想用软话安抚对方"
+        },
+        {
+          "id": "praise_other",
+          "label": "夸夸你",
+          "modelLabel": "want to praise them",
+          "definition": "说话人想具体夸奖对方"
+        },
+        {
+          "id": "reassure_other",
+          "label": "安慰你",
+          "modelLabel": "want to reassure them",
+          "definition": "说话人想告诉对方不用独自担心"
+        },
+        {
+          "id": "listen_other",
+          "label": "听你说",
+          "modelLabel": "want to hear them out",
+          "definition": "说话人想耐心听对方说出心事"
+        },
+        {
+          "id": "cheer_other",
+          "label": "给你打气",
+          "modelLabel": "want to cheer them on",
+          "definition": "说话人想给对方继续努力的鼓励"
+        },
+        {
+          "id": "apologize_other",
+          "label": "道个歉",
+          "modelLabel": "want to apologize to them",
+          "definition": "说话人想为自己的过错向对方道歉"
+        },
+        {
+          "id": "thank_other",
+          "label": "谢谢你",
+          "modelLabel": "want to thank them",
+          "definition": "说话人想明确感谢对方的帮助或付出"
+        },
+        {
+          "id": "goodnight_other",
+          "label": "说晚安",
+          "modelLabel": "want to wish goodnight",
+          "definition": "说话人想在睡前向对方道晚安"
+        },
+        {
+          "id": "miss_other",
+          "label": "想你了",
+          "modelLabel": "want to say missed you",
+          "definition": "说话人想向对方表达思念"
+        },
+        {
+          "id": "wish_other",
+          "label": "送祝福",
+          "modelLabel": "want to offer a blessing",
+          "definition": "说话人想用话语祝愿对方顺利"
+        }
+      ]
+    },
+    {
+      "id": "receive_attention",
+      "label": "想被惦记",
+      "modelLabel": "receive attention and remembrance",
+      "leaves": [
+        {
+          "id": "quick_reply",
+          "label": "快回我",
+          "modelLabel": "want timely replies",
+          "definition": "说话人希望对方别让消息久等"
+        },
+        {
+          "id": "start_chat",
+          "label": "找我聊",
+          "modelLabel": "want them to initiate chat",
+          "definition": "说话人希望对方先主动发起聊天"
+        },
+        {
+          "id": "daily_check",
+          "label": "问问我",
+          "modelLabel": "want regular check ins",
+          "definition": "说话人希望对方平日主动问候近况"
+        },
+        {
+          "id": "remember_plan",
+          "label": "记得约定",
+          "modelLabel": "want promise remembered",
+          "definition": "说话人希望对方记住双方约定"
+        },
+        {
+          "id": "notice_mood",
+          "label": "懂我心情",
+          "modelLabel": "want mood noticed",
+          "definition": "说话人希望对方察觉自己的情绪变化"
+        },
+        {
+          "id": "remember_birthday",
+          "label": "记得生日",
+          "modelLabel": "want birthday remembered",
+          "definition": "说话人希望对方记得自己的生日"
+        },
+        {
+          "id": "notice_effort",
+          "label": "求认可",
+          "modelLabel": "want effort noticed",
+          "definition": "说话人希望自己的付出被对方看见"
+        },
+        {
+          "id": "invite_me",
+          "label": "约我嘛",
+          "modelLabel": "want an invitation",
+          "definition": "说话人希望对方主动邀请自己参加活动"
+        },
+        {
+          "id": "prioritize_me",
+          "label": "偏爱我",
+          "modelLabel": "want to be prioritized",
+          "definition": "说话人希望对方在忙碌时仍优先照顾自己"
+        },
+        {
+          "id": "follow_up",
+          "label": "问问后续",
+          "modelLabel": "want them to follow up",
+          "definition": "说话人希望对方事后再询问事情进展"
+        }
+      ]
+    },
+    {
+      "id": "shared_play",
+      "label": "想一起玩",
+      "modelLabel": "share playful time",
+      "leaves": [
+        {
+          "id": "play_game",
+          "label": "一起玩",
+          "modelLabel": "want to play a game",
+          "definition": "说话人希望和对方一起玩电子游戏或桌游"
+        },
+        {
+          "id": "banter",
+          "label": "斗嘴",
+          "modelLabel": "want playful banter",
+          "definition": "说话人希望和对方互相接梗开玩笑"
+        },
+        {
+          "id": "late_chat",
+          "label": "陪我聊",
+          "modelLabel": "want a late night chat",
+          "definition": "说话人希望和对方长时间聊天直到夜深"
+        },
+        {
+          "id": "watch_show",
+          "label": "一起追剧",
+          "modelLabel": "want to watch a show",
+          "definition": "说话人希望和对方同步看节目或剧集"
+        },
+        {
+          "id": "walk_together",
+          "label": "一起散步",
+          "modelLabel": "want to take a walk",
+          "definition": "说话人希望与对方一起出门散步"
+        },
+        {
+          "id": "eat_together",
+          "label": "一起吃饭",
+          "modelLabel": "want to eat together",
+          "definition": "说话人希望与对方共享一顿饭"
+        },
+        {
+          "id": "meet_up",
+          "label": "想见你",
+          "modelLabel": "want to meet in person",
+          "definition": "说话人希望和对方约定线下见面"
+        },
+        {
+          "id": "share_music",
+          "label": "一起听歌",
+          "modelLabel": "want to listen together",
+          "definition": "说话人希望和对方一起听同一首歌"
+        },
+        {
+          "id": "make_something",
+          "label": "一起动手",
+          "modelLabel": "want to make something",
+          "definition": "说话人希望与对方一起制作或完成小物件"
+        },
+        {
+          "id": "take_photo",
+          "label": "拍合照",
+          "modelLabel": "want to take a photo",
+          "definition": "说话人希望和对方一起留下合照"
+        }
+      ]
+    },
+    {
+      "id": "practical_care",
+      "label": "暖心照料",
+      "modelLabel": "practical everyday care",
+      "leaves": [
+        {
+          "id": "receive_drink",
+          "label": "要热饮",
+          "modelLabel": "want a warm drink brought",
+          "definition": "说话人希望对方送来热饮照顾自己"
+        },
+        {
+          "id": "receive_food",
+          "label": "求投喂",
+          "modelLabel": "want food brought over",
+          "definition": "说话人希望对方送吃的给自己"
+        },
+        {
+          "id": "receive_reminder",
+          "label": "提醒我",
+          "modelLabel": "want a useful reminder",
+          "definition": "说话人希望对方提醒自己休息或记住事务"
+        },
+        {
+          "id": "receive_ride",
+          "label": "接送我",
+          "modelLabel": "want a ride or pickup",
+          "definition": "说话人希望对方出行时接送自己"
+        },
+        {
+          "id": "share_umbrella",
+          "label": "一起撑伞",
+          "modelLabel": "want to share an umbrella",
+          "definition": "说话人希望与对方在雨中共用一把伞"
+        },
+        {
+          "id": "bring_drink",
+          "label": "送你热饮",
+          "modelLabel": "want to bring warm drink",
+          "definition": "说话人想送热饮给对方"
+        },
+        {
+          "id": "cook_other",
+          "label": "给你做饭",
+          "modelLabel": "want to cook for them",
+          "definition": "说话人想为对方做一顿饭"
+        },
+        {
+          "id": "share_burden",
+          "label": "帮你分担",
+          "modelLabel": "want to ease their load",
+          "definition": "说话人想分担对方手头的事务"
+        },
+        {
+          "id": "care_sick",
+          "label": "照顾你",
+          "modelLabel": "want to care when sick",
+          "definition": "说话人想在对方生病时照料起居"
+        },
+        {
+          "id": "wait_safe",
+          "label": "等你到家",
+          "modelLabel": "want to check safe arrival",
+          "definition": "说话人想等对方安全到家再放心"
+        }
+      ]
+    },
+    {
+      "id": "role_call",
+      "label": "趣味称呼",
+      "modelLabel": "playful forms of address",
+      "leaves": [
+        {
+          "id": "call_mom",
+          "label": "喊妈妈",
+          "modelLabel": "want to call them mom",
+          "definition": "说话人想用妈妈这一趣味称呼叫对方"
+        },
+        {
+          "id": "hear_mom",
+          "label": "叫我妈妈",
+          "modelLabel": "want to be called mom",
+          "definition": "说话人想让对方用妈妈称呼自己"
+        },
+        {
+          "id": "call_sis",
+          "label": "喊姐姐",
+          "modelLabel": "want to call them sister",
+          "definition": "说话人想用姐姐这一称呼叫对方"
+        },
+        {
+          "id": "hear_sis",
+          "label": "叫我姐姐",
+          "modelLabel": "want to be called sister",
+          "definition": "说话人想让对方用姐姐称呼自己"
+        },
+        {
+          "id": "call_boss",
+          "label": "喊老板",
+          "modelLabel": "want to call them boss",
+          "definition": "说话人想玩笑式地用老板称呼对方"
+        },
+        {
+          "id": "hear_boss",
+          "label": "叫我老板",
+          "modelLabel": "want to be called boss",
+          "definition": "说话人想让对方玩笑式地称自己老板"
+        },
+        {
+          "id": "coin_nickname",
+          "label": "起昵称",
+          "modelLabel": "want to invent a nickname",
+          "definition": "说话人想为对方起一个专属昵称"
+        },
+        {
+          "id": "hear_nickname",
+          "label": "喊我小名",
+          "modelLabel": "want to hear a nickname",
+          "definition": "说话人想让对方用昵称称呼自己"
+        },
+        {
+          "id": "private_code",
+          "label": "对暗号",
+          "modelLabel": "want a private code name",
+          "definition": "说话人想和对方约定只有彼此懂的称呼"
+        },
+        {
+          "id": "change_address",
+          "label": "换称呼",
+          "modelLabel": "want a different nickname",
+          "definition": "说话人想改变双方现有的称呼方式"
+        }
+      ]
+    }
+  ]
+}

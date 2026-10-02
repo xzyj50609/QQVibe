@@ -1,0 +1,5 @@
+* text=auto
+*.png -text
+*.ico -text
+licenses/* -text
+docs/migration/upstream/* -text

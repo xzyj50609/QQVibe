@@ -1,0 +1,35 @@
+{
+  "evidence": "synthetic-not-a-real-group-response",
+  "qceVersion": "6.3.0",
+  "sourceCommit": "7fcca88880c2eb8c12c51c2b6cc49ee805a53d0c",
+  "groupList": {
+    "success": true,
+    "data": {
+      "groups": [{"groupCode": "20001", "groupName": "合成群", "memberCount": 3, "avatarUrl": ""}],
+      "totalCount": 1, "currentPage": 1, "totalPages": 1, "hasNext": false, "hasPrev": false
+    }
+  },
+  "members": {
+    "success": true,
+    "data": [
+      {"uin": "10001", "uid": "u_self_synthetic", "nick": "合成我", "cardName": "我在合成群"},
+      {"uin": "10002", "uid": "u_peer_synthetic", "nick": "同名", "cardName": "合成A"},
+      {"uin": "10003", "uid": "u_peer_second", "nick": "同名", "cardName": "合成B"}
+    ]
+  },
+  "request": {
+    "peer": {"chatType": 2, "peerUid": "20001"}, "page": 1, "limit": 50, "batchSize": 200,
+    "filter": {"startTime": 1700000000000, "endTime": 1700000010000}
+  },
+  "page": {
+    "success": true,
+    "data": {
+      "messages": [
+        {"chatType": 2, "peerUid": "20001", "msgId": "90071992547409930", "msgSeq": "1", "msgTime": "1700000001", "senderUin": "10001", "senderUid": "u_self_synthetic", "elements": [{"elementType": 1, "textElement": {"content": "合成本人发言"}}]},
+        {"chatType": 2, "peerUid": "20001", "msgId": "90071992547409931", "msgSeq": "3", "msgTime": "1700000001", "senderUin": "10002", "senderUid": "u_peer_synthetic", "elements": [{"elementType": 1, "textElement": {"content": "合成成员发言"}}]}
+      ],
+      "totalCount": 2, "currentPage": 1, "totalPages": 1, "hasNext": false, "cacheHit": false,
+      "fetchedAt": "2023-11-14T22:13:21Z"
+    }
+  }
+}

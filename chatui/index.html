@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WechatVibe</title>
+  <link rel="icon" type="image/png" href="/assets/wechatvibe-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="startup-overlay" id="startupOverlay" role="status" aria-live="polite" hidden>
+  <div class="startup-card">
+    <div class="startup-brand"><img src="/assets/wechatvibe-icon.png" alt=""><strong>WechatVibe</strong></div>
+    <div class="startup-steps" aria-hidden="true">
+      <div class="startup-step active" data-step="account">连接当前微信账号</div>
+      <div class="startup-step" data-step="sessions">读取会话列表</div>
+      <div class="startup-step" data-step="messages">准备全部会话消息</div>
+    </div>
+    <div class="startup-status" id="startupStatus">正在连接当前微信账号…</div>
+    <section id="qqStartupAccounts" class="qq-startup-accounts" aria-label="打开已保存的 QQ 账号" hidden></section>
+    <div class="startup-actions">
+      <button type="button" class="startup-retry" id="startupRetry" hidden>重试</button>
+      <button type="button" class="startup-continue" id="startupContinue" hidden>进入空界面</button>
+    </div>
+  </div>
+</div>
+
+<div class="desktop-titlebar" aria-hidden="true"></div>
+<div class="app-window" id="appWindow">
+
+  <!-- ================= COLUMN 1: LEFT NAVIGATION RAIL ================= -->
+  <aside class="nav-rail">
+    <!-- Top User Avatar -->
+    <div class="user-avatar-wrap" title="个人信息">
+      <span id="selfAvatarFallback" class="avatar-fallback self-avatar-fallback">我</span>
+      <img id="selfAvatar" alt="" class="user-avatar">
+    </div>
+
+    <!-- Main Navigation Icons (仅保留：聊天、人物画像) -->
+    <div class="nav-icons-main">
+      <!-- Chat (Active) -->
+      <div class="nav-item active" title="聊天" data-tab="chat" id="navChat">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>
+      </div>
+
+      <!-- Persona / 人格画像 (AI) -->
+      <div class="nav-item" title="人物画像" data-tab="persona" id="navPersona">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2a5 5 0 0 1 5 5v1a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5zm0 12c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4zm7.5-9.5l.94 2.06 2.06.94-2.06.94-.94 2.06-.94-2.06-2.06-.94 2.06-.94.94-2.06z"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Bottom Action Icons (仅保留三个横杠：设置) -->
+    <div class="nav-icons-bottom">
+      <div class="nav-item" title="设置" id="btnSettings">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= COLUMN 2: MIDDLE SESSION LIST ================= -->
+  <section class="session-pane">
+    <!-- Top Search Header -->
+    <div class="search-header">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="搜索">
+      </div>
+    </div>
+
+    <!-- Session Items Container -->
+    <div class="session-list" id="sessionList">
+      <div class="ui-state">正在读取会话…</div>
+    </div>
+  </section>
+
+  <!-- ================= COLUMN 3: RIGHT MAIN CHAT PANE ================= -->
+  <main class="chat-pane">
+    <!-- VIEW 1: CHAT VIEW -->
+    <div class="pane-view active" id="chatView">
+      <!-- Chat Header Bar -->
+    <header class="chat-header">
+      <div class="chat-title-group">
+        <h2 class="chat-title" id="chatTitle">聊天</h2>
+        <span class="chat-status-pill" id="chatStatusPill" style="display:none">
+          <span class="header-mood-label" id="headerMoodLabel"></span>
+          <span class="kaomoji-pill-icon" id="headerMoodKaomoji"></span>
+        </span>
+        <span class="analysis-status" id="analysisStatus"></span>
+
+      </div>
+      <div class="chat-history-actions">
+        <button type="button" class="chat-history-action" id="btnReturnLatest" hidden>返回最新</button>
+        <button type="button" class="chat-history-action" id="btnChatHistory" aria-expanded="false" aria-controls="historySearchPanel">聊天记录</button>
+      </div>
+    </header>
+        <div id="qqAnalysisControls" class="qq-analysis-controls" hidden>
+          <button type="button" class="chat-history-action" id="btnPauseQQAnalysis">暂停分析</button>
+          <button type="button" class="chat-history-action" id="btnResumeQQAnalysis" hidden>继续分析</button>
+          <button type="button" class="chat-history-action" id="btnCancelQQAnalysis">取消分析</button>
+          <span id="qqAnalysisControlStatus" role="status" aria-live="polite"></span>
+          <span id="qqAnalysisBudget" hidden>
+            <span id="qqAnalysisUsage" role="status"></span>
+            <label>本会话剩余请求上限 <input id="qqAnalysisRequestLimit" type="number" min="1" max="1000" value="24" style="width:4em"></label>
+            <button type="button" class="chat-history-action" id="btnQQAnalysisBudget">设置额度</button>
+          </span>
+        </div>
+
+    <!-- Chat Main Area (Messages Scroll Area) -->
+    <div class="chat-main-area" id="chatMainArea">
+      <div class="history-navigation" id="historyNavigation" hidden>
+        <button type="button" class="history-nav-button" id="btnHistoryEarlier">加载更早</button>
+        <span class="history-nav-status" id="historyNavStatus"></span>
+        <button type="button" class="history-nav-button" id="btnHistoryNewer" hidden>加载较新</button>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+      <aside class="history-search-panel" id="historySearchPanel" aria-label="聊天记录" hidden>
+        <div class="history-panel-head">
+          <strong>聊天记录</strong>
+          <button type="button" class="history-panel-close" id="btnCloseHistorySearch" aria-label="关闭聊天记录">×</button>
+        </div>
+        <form id="historySearchForm" class="history-search-form">
+          <input type="search" id="historyKeyword" placeholder="关键词" aria-label="关键词">
+          <input type="date" id="historyDate" aria-label="日期">
+          <select id="historyMember" aria-label="筛选群成员" hidden><option value="">全部成员</option></select>
+          <div class="history-search-actions">
+            <button type="submit" id="btnRunHistorySearch">搜索</button>
+            <button type="button" id="btnCancelHistorySearch" hidden>取消</button>
+          </div>
+        </form>
+        <div class="history-search-status" id="historySearchStatus" role="status"></div>
+        <div class="history-search-results" id="historySearchResults"></div>
+        <div class="history-search-pages">
+          <button type="button" id="btnHistoryPrevResults" hidden>上一页</button>
+          <button type="button" id="btnHistoryNextResults" hidden>下一页</button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Chat Input Area -->
+    <div class="chat-input-pane">
+      <section class="reply-prediction" id="replyPrediction" aria-live="polite" hidden>
+        <div class="reply-prediction-head">
+          <strong>可能的回应</strong>
+          <button type="button" class="reply-prediction-close" id="btnClosePrediction" aria-label="关闭预测">×</button>
+        </div>
+        <div class="reply-prediction-body" id="replyPredictionBody"></div>
+      </section>
+      <!-- Input Toolbar -->
+      <p id="qqLocalQualityNotice" class="model-source-status" hidden>实验性本地群聊标签候选，不代表确定的情绪或意图；引用、转发、讽刺和复杂多人语境仍有已知偏差，请结合原文判断。</p>
+      <div class="input-toolbar">
+        <div class="toolbar-left">
+          <!-- Emoji Smiley -->
+          <div class="tool-btn" id="btnEmoji" title="表情">
+            <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+          </div>
+
+          <!-- Send File -->
+          <div class="tool-btn disabled" id="btnFile" title="不支持附件" aria-disabled="true">
+            <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+          </div>
+
+          <!-- Screenshot -->
+          <div class="tool-btn split disabled" id="btnScreenshot" title="不支持截图" aria-disabled="true">
+            <svg viewBox="0 0 24 24"><path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3h-3z"/></svg>
+            <svg class="arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </div>
+
+          <!-- Text Action Buttons on the right of icons -->
+          <button class="toolbar-text-btn active" id="btnToggleIntent" title="识别对方消息的情绪与意图">情绪 / 意图</button>
+          <button class="toolbar-text-btn" id="btnToggleLabelView" title="统一切换所有消息的简洁标签与百分比显示" aria-pressed="false" hidden>百分比详情</button>
+          <button class="toolbar-text-btn" id="btnToolbarPersona" title="切换到当前聊天对象的人格画像">人物画像</button>
+          <button class="toolbar-text-btn" id="btnRetryAnalysis" title="重新分析当前会话" hidden>分析失败 · 重试</button>
+        </div>
+      </div>
+
+      <!-- Textarea Wrap -->
+      <div class="input-textarea-wrap">
+        <textarea id="chatInput" class="chat-textarea" placeholder="草稿仅用于复制，不会发送到微信"></textarea>
+      </div>
+
+      <!-- Bottom Action Row -->
+      <div class="input-bottom-bar">
+        <span class="shortcut-hint">Enter 复制草稿，Shift+Enter 换行 · 不发送</span>
+        <button class="btn-send" id="btnSend">复制草稿</button>
+      </div>
+    </div>
+  </div><!-- /chatView -->
+
+    <!-- VIEW 2: PERSONA PORTRAIT DASHBOARD (人格画像) -->
+    <div class="pane-view" id="personaView">
+      <!-- Persona Header -->
+      <header class="persona-header">
+        <div class="persona-header-left">
+          <div class="persona-nav-title">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2a5 5 0 0 1 5 5v1a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5zm0 12c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4zm7.5-9.5l.94 2.06 2.06.94-2.06.94-.94 2.06-.94-2.06-2.06-.94 2.06-.94.94-2.06z"/>
+            </svg>
+            <span id="personaHeaderTitle">人物画像分析</span>
+            <span class="portrait-source-badge" id="portraitSourceBadge">本地 Laya</span>
+          </div>
+
+          <!-- Group Member Tabs (仅在群聊时展示，供在群聊内切换成员画像) -->
+          <div class="group-member-tabs" id="groupMemberTabs" style="display:none;"></div>
+        </div>
+
+        <div class="persona-header-right">
+          <button class="btn-back-chat" id="btnBackToChat" title="返回会话聊天界面">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <span>返回聊天</span>
+          </button>
+
+        </div>
+      </header>
+
+      <!-- Scrollable Persona Dashboard Content -->
+      <div class="persona-dashboard" id="personaDashboard">
+        <!-- 1. System Status Strip -->
+        <div class="persona-status-strip">
+          <div class="status-item">
+            <span class="status-dot-pulse"></span>
+            <span><span id="stripMessageLabel">消息：</span><strong id="stripDbPath">待读取</strong></span>
+          </div>
+          <div class="status-item">
+            <span><span id="stripTextLabel">文本：</span><strong id="stripMsgCount">待读取</strong></span>
+          </div>
+          <div class="status-item" id="stripConfidenceItem" style="display:none">
+           <span><span id="stripAnalysisLabel">已分析：</span><strong id="stripConfidence"></strong></span>
+        </div>
+          <div class="status-item" id="stripStatusItem" style="display:none">
+            <span>状态：<strong id="stripStatusText"></strong></span>
+          </div>
+          <button class="ui-retry" id="btnRetryProfile" type="button" hidden>重试分析</button>
+        </div>
+
+        <!-- 2. Hero Profile Card -->
+        <div class="persona-hero-card">
+          <div class="hero-left">
+            <div class="hero-avatar-wrap">
+              <span class="hero-avatar" id="heroAvatar"></span>
+            </div>
+            <div class="hero-info">
+              <div class="hero-name-row">
+                <h3 class="hero-name" id="heroName">待读取</h3>
+                <span class="chat-subtitle-badge" id="heroRelationBadge">待分析</span>
+              </div>
+              <p class="hero-archetype" id="heroArchetype" style="display:none"></p>
+              <div class="hero-mbti-row" id="heroMbtiRow" hidden>
+                <span class="hero-mbti-label">人格属性 · 聊天推测</span>
+                <span class="hero-mbti-state" id="heroMbti"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Right Box: Dynamic for 1-on-1 (Game-like Favorability) OR Group (Group Activity Dynamics) -->
+          <div class="hero-metric-box" id="heroMetricBox">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+
+        <!-- 3. Grid Row 1: Chat-based preference evidence and unsupported traits -->
+        <div class="persona-grid">
+          <!-- Card A: MBTI 4-Dimension Scales -->
+          <div class="persona-card" id="mbtiCard">
+            <div class="card-header">
+              <span class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                MBTI · 聊天推测
+              </span>
+              <span class="card-badge" id="mbtiScaleBadge">尚未生成</span>
+            </div>
+            <div class="mbti-scales-list" id="mbtiScalesList"></div>
+            <div class="mbti-theory-sources" id="mbtiSources"></div>
+          </div>
+
+          <!-- Card B: Six Trait Dimensions -->
+          <div class="persona-card" id="radarCard">
+            <div class="card-header">
+              <span class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                互动风格
+              </span>
+              <span class="card-badge" id="radarBadge">聊天表现</span>
+            </div>
+            <div class="radar-container" id="radarContainer"></div>
+          </div>
+        </div>
+
+        <!-- 4. Grid Row 2: Linguistic Fingerprint & AI Contextual Summary -->
+        <div class="persona-grid">
+          <!-- Card C: Linguistic Style & Catchphrases -->
+          <div class="persona-card">
+            <div class="card-header">
+              <span class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                <span id="tagCardTitle">高频词</span>
+              </span>
+              <span class="card-badge" id="tagCardBadge">词频统计 Top 6</span>
+            </div>
+            <div class="tag-cloud" id="tagCloud">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+
+          <!-- Card D: AI Deep Analysis Summary -->
+          <div class="persona-card" id="summaryCard">
+            <div class="card-header">
+              <span class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                画像摘要
+              </span>
+              <span class="card-badge" id="summaryBadge">基于聊天汇总</span>
+            </div>
+            <p class="bot-summary-text" id="botSummaryText">
+              <!-- Dynamically rendered -->
+            </p>
+            <div class="api-portrait-details" id="apiPortraitDetails" hidden></div>
+            <div class="api-portrait-status" id="apiPortraitStatus" role="status" hidden></div>
+            <button type="button" class="ui-retry" id="btnRetryApiPortrait" hidden>重试 API 画像</button>
+          </div>
+        </div>
+
+      </div><!-- /persona-dashboard -->
+    </div><!-- /personaView -->
+  </main>
+
+  <!-- ================= POPUPS & MODALS ================= -->
+  <!-- Emoji & Kaomoji Popover -->
+  <div class="emoji-popover" id="emojiPopover">
+    <div class="emoji-popover-tabs">
+      <span class="popover-tab active" data-tab="emoji">Emoji</span>
+      <span class="popover-tab" data-tab="kaomoji">颜文字 (心情)</span>
+    </div>
+    <div class="emoji-grid active" id="emojiGrid">
+      <span class="emoji-btn">🦀</span>
+      <span class="emoji-btn">🐶</span>
+      <span class="emoji-btn">🐱</span>
+      <span class="emoji-btn">😂</span>
+      <span class="emoji-btn">🤣</span>
+      <span class="emoji-btn">👍</span>
+      <span class="emoji-btn">❤️</span>
+      <span class="emoji-btn">🔥</span>
+      <span class="emoji-btn">😭</span>
+      <span class="emoji-btn">🙏</span>
+      <span class="emoji-btn">😎</span>
+      <span class="emoji-btn">🤔</span>
+      <span class="emoji-btn">🎉</span>
+      <span class="emoji-btn">✨</span>
+      <span class="emoji-btn">👏</span>
+      <span class="emoji-btn">🍺</span>
+      <span class="emoji-btn">🌙</span>
+      <span class="emoji-btn">🚀</span>
+    </div>
+    <div class="kaomoji-grid" id="kaomojiGrid"></div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-msg" id="toastMsg"></div>
+
+  <!-- WeChat Desktop Settings Modal (设置中心) -->
+  <div class="settings-modal-overlay" id="settingsModal">
+    <div class="settings-modal-card">
+      <button class="settings-close-btn" id="btnCloseSettings" title="关闭设置">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+      <div class="settings-sidebar">
+        <div class="settings-tab-btn active" data-tab="general">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span>通用设置</span>
+        </div>
+        <div class="settings-tab-btn" data-tab="about">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span>关于</span>
+        </div>
+      </div>
+
+      <div class="settings-content">
+        <!-- Panel 1: General -->
+        <div class="settings-panel active" id="panelGeneral">
+          <div class="settings-title">通用设置</div>
+          <div class="settings-row">
+            <span>主题外观</span>
+            <select id="selectThemeMode">
+              <option value="dark">深色模式 (默认)</option>
+              <option value="light">浅色模式 (白天)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <span>界面缩放比例</span>
+            <select id="selectZoomLevel">
+              <option value="1.0">100% (标准)</option>
+              <option value="0.9">90% (紧凑)</option>
+              <option value="1.1">110% (放大)</option>
+              <option value="1.25">125% (大号)</option>
+              <option value="1.5">150% (特大)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label for="selectModelSource">模型来源</label>
+            <div class="model-source-choice">
+              <span id="modelSourceActive" role="status">待读取</span>
+              <select id="selectModelSource" aria-label="模型来源" disabled>
+                <option value="local">本地部署</option>
+                <option value="api">API 接入</option>
+              </select>
+            </div>
+          </div>
+          <section class="model-source-panel" id="localModelSettings">
+            <div class="settings-row">
+              <span>本地模型</span>
+              <span class="model-source-value">Laya</span>
+            </div>
+            <div class="settings-row">
+              <label for="selectRuntimeProvider">模型设备</label>
+              <div class="runtime-control">
+                <span id="runtimeStatus" role="status">待读取</span>
+                <select id="selectRuntimeProvider" aria-label="模型设备" disabled>
+                  <option value="cpu">CPU</option>
+                  <option value="gpu">GPU</option>
+                </select>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span>模型文件</span>
+              <span id="localModelStatus" role="status">检测中…</span>
+            </div>
+            <p class="qq-startup-hint">没有 Laya 时，可下载模型或选择已有目录；也可把模型来源切换为 API 接入。</p>
+            <div class="local-model-control">
+              <button type="button" class="settings-action-btn" id="btnDownloadLocalModel">下载模型</button>
+              <button type="button" class="settings-action-btn" id="btnChooseLocalModelDir">选择目录</button>
+            </div>
+            <div class="local-model-progress" id="localModelDownloadProgress" role="status" hidden></div>
+            <div class="model-source-actions" id="localModelActions" hidden>
+              <button type="button" class="settings-action-btn" id="btnActivateLocal">启用本地模型</button>
+            </div>
+          </section>
+          <section class="model-source-panel api-model-settings" id="apiModelSettings" hidden>
+            <div class="settings-row">
+              <label for="selectApiProtocol">接口协议</label>
+              <select id="selectApiProtocol">
+                <option value="anthropic">Anthropic 兼容</option>
+                <option value="responses">Responses 兼容</option>
+                <option value="chat_completions">Completions（旧版）</option>
+                <option value="gemini">Gemini 兼容</option>
+                <option value="ollama">Ollama 兼容</option>
+              </select>
+            </div>
+            <div class="model-source-field">
+              <label for="inputApiBaseUrl">Base URL</label>
+              <input id="inputApiBaseUrl" type="text" inputmode="url" placeholder="https://api.example.com/v1" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="model-source-field">
+              <label for="inputApiKey">API Key <span id="apiKeySaved" hidden>已保存</span></label>
+              <input id="inputApiKey" type="password" placeholder="留空沿用已保存密钥" autocomplete="new-password" spellcheck="false">
+            </div>
+            <div class="model-source-discovery">
+              <button type="button" class="settings-action-btn" id="btnFetchApiModels">获取模型列表</button>
+              <span id="apiModelCount" role="status"></span>
+            </div>
+            <div class="model-source-field">
+              <label for="selectApiModel">模型列表</label>
+              <select id="selectApiModel" aria-label="模型列表" disabled>
+                <option value="">获取列表后选择</option>
+              </select>
+            </div>
+            <div class="model-source-field">
+              <label for="inputApiModelId">模型 ID</label>
+              <input id="inputApiModelId" type="text" placeholder="可手动填写模型 ID" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="model-source-field">
+              <label for="inputApiContextTokens">上下文大小（tokens）</label>
+              <input id="inputApiContextTokens" type="number" min="4096" max="1000000" step="1" placeholder="接口未提供时填写，例如 128000" inputmode="numeric">
+            </div>
+            <div class="model-source-actions">
+              <button type="button" class="settings-action-btn" id="btnTestApiModel">测试连接</button>
+              <button type="button" class="settings-action-btn model-source-primary" id="btnActivateApi">保存并启用</button>
+              <button type="button" class="settings-danger-btn" id="btnClearApiKey" hidden>清除密钥</button>
+            </div>
+            <div id="apiModelTestStatus" class="model-source-status" role="status"></div>
+          </section>
+          <div class="model-source-status-row">
+            <div id="modelSourceStatus" class="model-source-status" role="status"></div>
+            <button type="button" class="settings-action-btn" id="btnReloadModelSource" hidden>重新读取</button>
+          </div>
+          <div class="settings-row">
+            <span>信息列表</span>
+            <button type="button" class="settings-action-btn" id="btnManageConversations">管理会话</button>
+          </div>
+          <section class="conversation-manager" id="conversationManager" hidden>
+            <div class="conversation-manager-head">
+              <strong id="conversationManagerCount">会话目录</strong>
+              <input type="search" id="conversationSearch" placeholder="搜索会话" aria-label="搜索会话">
+            </div>
+            <div class="conversation-manager-list" id="conversationManagerList"></div>
+            <div id="conversationManagerStatus" class="model-source-status" role="status"></div>
+          </section>
+          <div class="settings-row">
+            <span>管理账号</span>
+            <div class="account-status-control">
+              <span id="accountCheckSummary" role="status">正在连接微信…</span>
+              <button type="button" class="settings-action-btn" id="btnManageAccounts">查看账号</button>
+            </div>
+          </div>
+          <p id="qqConnectionStatus" class="qq-connection-status" role="status" hidden></p>
+          <details id="qqDataScopePanel" class="qq-import-panel" hidden>
+            <summary>当前会话的数据范围与管理</summary>
+            <div id="qqDataScopeRows" class="qq-import-preview" role="status"></div>
+            <button type="button" class="settings-action-btn" id="btnRefreshQQDataScope">刷新范围</button>
+            <button type="button" class="settings-action-btn" id="btnToggleQQConversationRead">停止读取此会话</button>
+            <button type="button" class="settings-danger-btn" id="btnClearQQConversation">清除此会话副本</button>
+            <div id="qqClearConversationConfirm" class="account-confirm" hidden>
+              <p>只清除当前会话的本地消息与分析副本，先保留完整恢复点。QQ 原记录保持不变。</p>
+              <button type="button" class="settings-action-btn" id="btnCancelClearQQConversation">取消</button>
+              <button type="button" class="settings-danger-btn" id="btnConfirmClearQQConversation">确认清除此会话副本</button>
+            </div>
+          </details>
+          <details id="qqSyncPanel" class="qq-import-panel" hidden>
+            <summary>QQ 连接与自动同步</summary>
+            <p id="qqSyncGate" class="qq-import-help"></p>
+            <button type="button" class="settings-action-btn" id="btnConnectStandardQQ">连接本机 QQ / QCE</button>
+            <p class="qq-import-help">先打开 QQ Chat Exporter 并登录 QQ，再点连接。仅此操作读取标准安装的受控配置，并在本机加密保存凭证；添加单聊后首次读取最近 90 天、最多 200 条消息，随后同步新消息。自定义安装使用下方高级设置。</p>
+            <details>
+            <summary>高级连接设置（自定义地址 / token）</summary>
+            <label class="qq-import-label" for="qqSyncBase">QCE 本机地址</label>
+            <input id="qqSyncBase" type="text" placeholder="http://127.0.0.1:40653" autocomplete="off" spellcheck="false">
+            <label class="qq-import-label" for="qqSyncOwner">本人 QQ 号</label>
+            <input id="qqSyncOwner" type="text" inputmode="numeric" autocomplete="off">
+            <label class="qq-import-label" for="qqSyncToken">QCE 接入 token</label>
+            <input id="qqSyncToken" type="password" autocomplete="off" placeholder="输入后仅在本机加密保存">
+            <div class="account-confirm-actions">
+              <button type="button" class="settings-action-btn" id="btnSaveQQConnection">保存连接</button>
+              <button type="button" class="settings-action-btn" id="btnConnectQQ">连接并同步</button>
+              <button type="button" class="settings-action-btn" id="btnDisconnectQQ">停止同步</button>
+              <button type="button" class="settings-action-btn" id="btnClearQQToken">清除 token</button>
+              <button type="button" class="settings-action-btn" id="btnRefreshQQConnection">刷新状态</button>
+            </div>
+            </details>
+            <div id="qqSyncStatus" class="model-source-status" role="status" aria-live="polite"></div>
+            <p id="qqCompatibilityStatus" class="model-source-status" role="status"></p>
+            <button type="button" class="settings-action-btn" id="btnTrialQQVersion" hidden>已了解未验证状态，允许此版本小范围试用</button>
+            <p id="qqSyncLastSuccess" class="model-source-status"></p>
+            <div class="qq-import-file">
+              <button type="button" class="settings-action-btn" id="btnReadQQContacts">读取 QQ 好友</button>
+              <button type="button" class="settings-action-btn" id="btnNextQQContacts" hidden>下一页好友</button>
+            </div>
+            <div id="qqSyncContacts" class="conversation-manager-list" hidden></div>
+            <label class="qq-import-label" for="qqSyncPeerUin">或填写对方 QQ 号，仅添加此单聊</label>
+            <div class="qq-import-file">
+              <input id="qqSyncPeerUin" type="text" inputmode="numeric" autocomplete="off">
+              <button type="button" class="settings-action-btn" id="btnAddQQPeer">添加单聊</button>
+            </div>
+            <div id="qqSyncWindows" class="qq-import-preview" hidden></div>
+            <label class="qq-import-label" for="qqSyncGroupCode">添加你明确选择的群聊</label>
+            <div class="qq-import-file">
+              <input id="qqSyncGroupCode" type="text" inputmode="numeric" autocomplete="off" placeholder="群号">
+              <button type="button" class="settings-action-btn" id="btnAddQQGroup">添加群聊</button>
+            </div>
+          </details>
+          <section id="qqImportPanel" class="qq-import-panel" hidden aria-labelledby="qqImportTitle">
+            <div class="account-manager-head"><span id="qqImportTitle">导入 QQ 单聊文件</span></div>
+            <p class="qq-import-help">支持 QQChatExporter 单 JSON 或分块 manifest.json。文件在本机处理，导入仅补充本地历史。</p>
+            <label class="qq-import-label" for="qqImportPath">导出文件</label>
+            <div class="qq-import-file">
+              <input id="qqImportPath" type="text" placeholder="选择文件，或粘贴本地完整路径" autocomplete="off" spellcheck="false">
+              <button type="button" class="settings-action-btn" id="btnChooseQQExport">选择文件</button>
+              <button type="button" class="settings-action-btn" id="btnPreviewQQExport">预览</button>
+            </div>
+            <div id="qqImportStatus" class="model-source-status" role="status" aria-live="polite"></div>
+            <div id="qqImportIdentity" hidden>
+              <label class="qq-import-label" for="qqImportOwner">哪一个 QQ 号是本人？</label>
+              <select id="qqImportOwner"><option value="">请选择本人 QQ 号</option></select>
+              <input id="qqImportOwnerManual" type="text" inputmode="numeric" placeholder="手动填写本人 QQ 号" aria-label="手动填写本人 QQ 号" hidden autocomplete="off">
+              <label id="qqImportPeerLabel" class="qq-import-label" for="qqImportPeerUid" hidden>文件缺少对方 UID，请填写已核对的对方 UID</label>
+              <input id="qqImportPeerUid" type="text" placeholder="u_…" hidden autocomplete="off">
+              <button type="button" class="settings-action-btn" id="btnMapQQImport">确认身份并预览</button>
+            </div>
+            <div id="qqImportPreview" class="qq-import-preview" hidden></div>
+            <label id="qqImportPartialLabel" class="qq-import-partial" hidden><input id="qqImportAcceptPartial" type="checkbox">我已查看拒绝数，同意跳过这些消息</label>
+            <div class="account-confirm-actions">
+              <button type="button" class="settings-action-btn" id="btnCommitQQImport" hidden>确认导入</button>
+              <button type="button" class="settings-action-btn" id="btnCancelQQImport" hidden>取消</button>
+              <button type="button" class="settings-action-btn" id="btnOpenQQImport" hidden>查看导入账号</button>
+            </div>
+          </section>
+          <section class="account-manager" id="accountManager" hidden>
+            <div class="account-validation" id="accountValidation">
+              <span id="accountCheckStatus" role="status" aria-live="polite">正在确认当前账号…</span>
+              <div class="account-validation-actions">
+                <button type="button" class="settings-action-btn" id="btnRetryAccountCheck" hidden>重试</button>
+              </div>
+            </div>
+            <div class="account-manager-head">
+              <span>已保存的微信账号</span>
+              <div class="account-manager-head-actions">
+                <button type="button" class="settings-action-btn" id="btnToggleAccountManagement" aria-pressed="false">管理</button>
+                <button type="button" class="settings-action-btn" id="btnRefreshAccounts">刷新</button>
+              </div>
+            </div>
+            <div class="account-list" id="accountList"></div>
+            <div class="account-manager-actions">
+              <span id="accountManagerStatus" role="status"></span>
+            </div>
+            <div class="account-delete-confirm" id="accountDeleteConfirm" hidden>
+              <p id="accountDeleteQuestion"></p>
+              <div class="account-confirm-actions">
+                <button type="button" class="settings-action-btn" id="btnCancelDeleteAccount">取消</button>
+                <button type="button" class="settings-danger-btn" id="btnConfirmDeleteAccount">确认清除</button>
+              </div>
+            </div>
+          </section>
+          <div class="settings-row">
+            <span>分析缓存</span>
+            <button type="button" class="settings-action-btn" id="btnManageAnalysisCache">查看缓存</button>
+          </div>
+          <section class="analysis-cache-manager" id="analysisCacheManager" hidden>
+            <div class="analysis-cache-list" id="analysisCacheList"></div>
+            <div id="analysisCacheStatus" role="status" aria-live="polite"></div>
+            <div class="analysis-cache-confirm" id="analysisCacheConfirm" hidden>
+              <p id="analysisCacheQuestion"></p>
+              <div class="account-confirm-actions">
+                <button type="button" class="settings-action-btn" id="btnCancelAnalysisCacheClear">取消</button>
+                <button type="button" class="settings-danger-btn" id="btnConfirmAnalysisCacheClear">确认清除</button>
+              </div>
+            </div>
+          </section>
+          <section id="qqBackupPanel" class="qq-import-panel" hidden aria-labelledby="qqBackupTitle">
+            <h3 id="qqBackupTitle">完整数据备份与恢复</h3>
+            <p class="qq-import-help">保留消息、分析结果、续算检查点、会话选择和设置。备份含私人聊天与本机加密配置，请保存在自己的目录。模型文件与浏览器缓存不包含在内。</p>
+            <div class="account-confirm-actions">
+              <button type="button" class="settings-action-btn" id="btnBackupQQData">备份全部数据</button>
+              <button type="button" class="settings-action-btn" id="btnRestoreQQData">恢复备份</button>
+            </div>
+            <p id="qqBackupStatus" class="model-source-status" role="status" aria-live="polite"></p>
+          </section>
+        </div>
+
+        <!-- Panel 2: About -->
+        <div class="settings-panel" id="panelAbout">
+        <div class="settings-title about-title"><img src="/assets/wechatvibe-icon.png" alt="" class="about-brand-icon">关于 WechatVibe</div>
+        <div class="about-card">
+          <button type="button" class="about-row about-version-row" id="btnAboutVersion" aria-label="查看软件更新">
+            <span class="about-label">当前版本</span>
+            <span class="about-version-value"><span class="about-val" id="aboutCurrentVersion">读取中</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+          </button>
+          <div id="qqDiagnosticsRow" class="about-row" hidden>
+            <span class="about-label">问题诊断</span>
+            <button type="button" class="settings-action-btn" id="btnExportQQDiagnostics">导出诊断信息</button>
+          </div>
+          <p id="qqDiagnosticsStatus" class="model-source-status" role="status" hidden>导出版本、运行状态和计数；不含聊天正文、账号标识和密钥。</p>
+          <div class="about-row">
+            <span class="about-label">作者</span>
+            <a class="about-val about-link user-select-all" href="https://github.com/tswawa" target="_blank" rel="noopener noreferrer">
+              <svg class="about-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297a12 12 0 0 0-3.793 23.386c.6.111.82-.261.82-.577v-2.234c-3.338.726-4.043-1.416-4.043-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.304-5.466-1.333-5.466-5.932 0-1.311.469-2.381 1.236-3.221-.123-.303-.536-1.524.117-3.176 0 0 1.008-.323 3.301 1.23A11.535 11.535 0 0 1 12 6.386c1.02.005 2.047.138 3.006.404 2.291-1.553 3.297-1.23 3.297-1.23.655 1.652.242 2.873.12 3.176.77.84 1.235 1.91 1.235 3.221 0 4.61-2.805 5.625-5.476 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.216.694.824.576A12.001 12.001 0 0 0 12 .297z"/></svg>
+              <span>tswawa</span>
+            </a>
+          </div>
+          <div class="about-row">
+            <span class="about-label">B站</span>
+            <span class="about-val user-select-all">tswawa9595</span>
+          </div>
+          <div class="about-row">
+            <span class="about-label">抖音</span>
+            <span class="about-val user-select-all">tswawa9595</span>
+          </div>
+          <div class="about-row">
+            <span class="about-label">GitHub 仓库</span>
+            <a class="about-val about-link user-select-all" href="https://github.com/tswawa/WechatVibe" target="_blank" rel="noopener noreferrer">
+              <svg class="about-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297a12 12 0 0 0-3.793 23.386c.6.111.82-.261.82-.577v-2.234c-3.338.726-4.043-1.416-4.043-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.304-5.466-1.333-5.466-5.932 0-1.311.469-2.381 1.236-3.221-.123-.303-.536-1.524.117-3.176 0 0 1.008-.323 3.301 1.23A11.535 11.535 0 0 1 12 6.386c1.02.005 2.047.138 3.006.404 2.291-1.553 3.297-1.23 3.297-1.23.655 1.652.242 2.873.12 3.176.77.84 1.235 1.91 1.235 3.221 0 4.61-2.805 5.625-5.476 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.216.694.824.576A12.001 12.001 0 0 0 12 .297z"/></svg>
+              <span>WechatVibe</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+<div class="update-modal-overlay" id="updateModal" role="dialog" aria-modal="true" aria-labelledby="updateModalTitle">
+  <div class="update-modal-card">
+    <div class="update-modal-head">
+      <div class="update-modal-identity">
+        <img src="/assets/wechatvibe-icon.png" alt="" class="update-modal-icon">
+        <h2 id="updateModalTitle">软件更新</h2>
+      </div>
+      <button type="button" class="update-modal-close" id="btnCloseUpdate" title="关闭" aria-label="关闭软件更新">×</button>
+    </div>
+    <div class="update-modal-body">
+      <div class="update-version-row"><span>当前版本</span><strong id="updateCurrentVersion">读取中</strong></div>
+      <div class="update-version-row" id="updateLatestRow" hidden><span>最新版本</span><strong id="updateLatestVersion"></strong></div>
+      <div class="update-status" id="updateStatus" role="status" aria-live="polite">待读取</div>
+      <div class="update-progress" id="updateProgress" hidden>
+        <div class="update-progress-track" role="progressbar" id="updateProgressBar" aria-label="更新下载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="updateProgressFill"></span></div>
+        <span id="updateProgressText">0%</span>
+      </div>
+      <div class="update-rollback" id="updateRollback" hidden>
+        <div><span>可回退版本</span><strong id="updateRollbackVersion"></strong></div>
+        <button type="button" id="btnRollbackUpdate">回退版本</button>
+      </div>
+    </div>
+    <div class="update-modal-actions">
+      <a id="updateReleaseLink" href="https://github.com/tswawa/WechatVibe/releases" target="_blank" rel="noopener noreferrer">官方发布页</a>
+      <button type="button" class="update-check-button" id="btnCheckUpdates">检查更新</button>
+      <button type="button" class="update-primary-button" id="btnBeginUpdate" hidden>下载并安装</button>
+    </div>
+  </div>
+</div>
+<script src="kaomoji.js"></script>
+<script src="view-state.js"></script>
+<script src="message-insight-adapters.js"></script>
+<script src="message-labels.js"></script>
+<script src="/product-config.js"></script>
+<script src="qq-startup.js"></script>
+<script src="qq-import-ui.js"></script>
+<script src="qq-sync-ui.js"></script>
+<script src="qq-provenance-ui.js"></script>
+<script src="qq-support-ui.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
+

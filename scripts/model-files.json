@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "files": {
+    "model.onnx": { "bytes": 646870871, "sha256": "0b095e005a4c295cae74d47b7eb6931c369d48f5b720b45278d774165798310c" },
+    "onnx_config.json": { "bytes": 332, "sha256": "13db475255d076da580a3435f28904e3360fe7f6380d7e3c75ee586e966ca5f0" },
+    "README.md": { "bytes": 2743, "sha256": "cc4deb231c7398076c31cef3583785c9fefeb8d154fe386d733bee19e9a969ff" },
+    "rl_agent_config.json": { "bytes": 473, "sha256": "9a669a70961064c3c6cc76d2afb8bc5fb10dcd8349bb66e5f7b9b1afb74440d5" },
+    "tokenizer/tokenizer_config.json": { "bytes": 524, "sha256": "6c6b2d8e3c84ce0e671c129cd6b374b235d6f9863042a5836358d00a89bbb5a1" },
+    "tokenizer/tokenizer.json": { "bytes": 34363188, "sha256": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f" }
+  }
+}

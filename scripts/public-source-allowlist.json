@@ -1,0 +1,1319 @@
+{
+  "schema": 1,
+  "reviewStatus": "reviewed-explicit-inventory",
+  "scope": "runtime code, build inputs, synthetic tests, public docs and applicable licenses only",
+  "files": [
+    {
+      "source": ".gitignore",
+      "target": ".gitignore"
+    },
+    {
+      "source": "LICENSE",
+      "target": "LICENSE"
+    },
+    {
+      "source": "NOTICE",
+      "target": "NOTICE"
+    },
+    {
+      "source": "README.md",
+      "target": "README.md"
+    },
+    {
+      "source": "THIRD_PARTY_NOTICES.md",
+      "target": "THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "source": "bridge/account_api.py",
+      "target": "bridge/account_api.py"
+    },
+    {
+      "source": "bridge/account_store.py",
+      "target": "bridge/account_store.py"
+    },
+    {
+      "source": "bridge/analysis_control.py",
+      "target": "bridge/analysis_control.py"
+    },
+    {
+      "source": "bridge/analysis_scheduler.py",
+      "target": "bridge/analysis_scheduler.py"
+    },
+    {
+      "source": "bridge/analysis_server.ts",
+      "target": "bridge/analysis_server.ts"
+    },
+    {
+      "source": "bridge/analysis_targets.py",
+      "target": "bridge/analysis_targets.py"
+    },
+    {
+      "source": "bridge/api_tasks.py",
+      "target": "bridge/api_tasks.py"
+    },
+    {
+      "source": "bridge/backend_contracts.py",
+      "target": "bridge/backend_contracts.py"
+    },
+    {
+      "source": "bridge/backend_service.py",
+      "target": "bridge/backend_service.py"
+    },
+    {
+      "source": "bridge/batch_engine.py",
+      "target": "bridge/batch_engine.py"
+    },
+    {
+      "source": "bridge/batch_state.py",
+      "target": "bridge/batch_state.py"
+    },
+    {
+      "source": "bridge/cache_source.py",
+      "target": "bridge/cache_source.py"
+    },
+    {
+      "source": "bridge/chat_server.py",
+      "target": "bridge/chat_server.py"
+    },
+    {
+      "source": "bridge/conversation_selection.py",
+      "target": "bridge/conversation_selection.py"
+    },
+    {
+      "source": "bridge/fixtures/qq/group-contract.synthetic.json",
+      "target": "bridge/fixtures/qq/group-contract.synthetic.json"
+    },
+    {
+      "source": "bridge/fixtures/qq/qce6-golden.json",
+      "target": "bridge/fixtures/qq/qce6-golden.json"
+    },
+    {
+      "source": "bridge/history_browser.py",
+      "target": "bridge/history_browser.py"
+    },
+    {
+      "source": "bridge/instance_identity.py",
+      "target": "bridge/instance_identity.py"
+    },
+    {
+      "source": "bridge/live_source.py",
+      "target": "bridge/live_source.py"
+    },
+    {
+      "source": "bridge/local_model_source.py",
+      "target": "bridge/local_model_source.py"
+    },
+    {
+      "source": "bridge/message_contracts.py",
+      "target": "bridge/message_contracts.py"
+    },
+    {
+      "source": "bridge/message_input.py",
+      "target": "bridge/message_input.py"
+    },
+    {
+      "source": "bridge/message_results.py",
+      "target": "bridge/message_results.py"
+    },
+    {
+      "source": "bridge/model_bundle.py",
+      "target": "bridge/model_bundle.py"
+    },
+    {
+      "source": "bridge/model_install.py",
+      "target": "bridge/model_install.py"
+    },
+    {
+      "source": "bridge/model_source.py",
+      "target": "bridge/model_source.py"
+    },
+    {
+      "source": "bridge/node_analysis.py",
+      "target": "bridge/node_analysis.py"
+    },
+    {
+      "source": "bridge/portrait_contracts.py",
+      "target": "bridge/portrait_contracts.py"
+    },
+    {
+      "source": "bridge/product_profile.py",
+      "target": "bridge/product_profile.py"
+    },
+    {
+      "source": "bridge/profile_signals.py",
+      "target": "bridge/profile_signals.py"
+    },
+    {
+      "source": "bridge/profile_state.py",
+      "target": "bridge/profile_state.py"
+    },
+    {
+      "source": "bridge/qce_protocol.py",
+      "target": "bridge/qce_protocol.py"
+    },
+    {
+      "source": "bridge/qq_account_api.py",
+      "target": "bridge/qq_account_api.py"
+    },
+    {
+      "source": "bridge/qq_account_store.py",
+      "target": "bridge/qq_account_store.py"
+    },
+    {
+      "source": "bridge/qq_analysis_store.py",
+      "target": "bridge/qq_analysis_store.py"
+    },
+    {
+      "source": "bridge/qq_api_analysis_store.py",
+      "target": "bridge/qq_api_analysis_store.py"
+    },
+    {
+      "source": "bridge/qq_compatibility.py",
+      "target": "bridge/qq_compatibility.py"
+    },
+    {
+      "source": "bridge/qq_connector.py",
+      "target": "bridge/qq_connector.py"
+    },
+    {
+      "source": "bridge/qq_data_management.py",
+      "target": "bridge/qq_data_management.py"
+    },
+    {
+      "source": "bridge/qq_entities.py",
+      "target": "bridge/qq_entities.py"
+    },
+    {
+      "source": "bridge/qq_group_analysis.py",
+      "target": "bridge/qq_group_analysis.py"
+    },
+    {
+      "source": "bridge/qq_history_browser.py",
+      "target": "bridge/qq_history_browser.py"
+    },
+    {
+      "source": "bridge/qq_identity.py",
+      "target": "bridge/qq_identity.py"
+    },
+    {
+      "source": "bridge/qq_import.py",
+      "target": "bridge/qq_import.py"
+    },
+    {
+      "source": "bridge/qq_import_reader.py",
+      "target": "bridge/qq_import_reader.py"
+    },
+    {
+      "source": "bridge/qq_ingest_audit.py",
+      "target": "bridge/qq_ingest_audit.py"
+    },
+    {
+      "source": "bridge/qq_message_display.py",
+      "target": "bridge/qq_message_display.py"
+    },
+    {
+      "source": "bridge/qq_message_store.py",
+      "target": "bridge/qq_message_store.py"
+    },
+    {
+      "source": "bridge/qq_normalize.py",
+      "target": "bridge/qq_normalize.py"
+    },
+    {
+      "source": "bridge/qq_roles.py",
+      "target": "bridge/qq_roles.py"
+    },
+    {
+      "source": "bridge/qq_source.py",
+      "target": "bridge/qq_source.py"
+    },
+    {
+      "source": "bridge/qq_standard_connection.py",
+      "target": "bridge/qq_standard_connection.py"
+    },
+    {
+      "source": "bridge/qq_support.py",
+      "target": "bridge/qq_support.py"
+    },
+    {
+      "source": "bridge/qq_sync.py",
+      "target": "bridge/qq_sync.py"
+    },
+    {
+      "source": "bridge/qq_sync_config.py",
+      "target": "bridge/qq_sync_config.py"
+    },
+    {
+      "source": "bridge/qq_sync_work.py",
+      "target": "bridge/qq_sync_work.py"
+    },
+    {
+      "source": "bridge/real_backend.py",
+      "target": "bridge/real_backend.py"
+    },
+    {
+      "source": "bridge/real_http.py",
+      "target": "bridge/real_http.py"
+    },
+    {
+      "source": "bridge/result_store.py",
+      "target": "bridge/result_store.py"
+    },
+    {
+      "source": "bridge/snapshot_cache.py",
+      "target": "bridge/snapshot_cache.py"
+    },
+    {
+      "source": "bridge/test_account_store.py",
+      "target": "bridge/test_account_store.py"
+    },
+    {
+      "source": "bridge/test_analysis_contracts.py",
+      "target": "bridge/test_analysis_contracts.py"
+    },
+    {
+      "source": "bridge/test_analysis_scheduler.py",
+      "target": "bridge/test_analysis_scheduler.py"
+    },
+    {
+      "source": "bridge/test_api_insights.py",
+      "target": "bridge/test_api_insights.py"
+    },
+    {
+      "source": "bridge/test_api_insights_http.py",
+      "target": "bridge/test_api_insights_http.py"
+    },
+    {
+      "source": "bridge/test_api_tasks.py",
+      "target": "bridge/test_api_tasks.py"
+    },
+    {
+      "source": "bridge/test_api_worker_recovery.py",
+      "target": "bridge/test_api_worker_recovery.py"
+    },
+    {
+      "source": "bridge/test_backend_layers.py",
+      "target": "bridge/test_backend_layers.py"
+    },
+    {
+      "source": "bridge/test_chat_classifier.py",
+      "target": "bridge/test_chat_classifier.py"
+    },
+    {
+      "source": "bridge/test_conversation_selection.py",
+      "target": "bridge/test_conversation_selection.py"
+    },
+    {
+      "source": "bridge/test_conversation_selection_http.py",
+      "target": "bridge/test_conversation_selection_http.py"
+    },
+    {
+      "source": "bridge/test_live_source.py",
+      "target": "bridge/test_live_source.py"
+    },
+    {
+      "source": "bridge/test_message_input.py",
+      "target": "bridge/test_message_input.py"
+    },
+    {
+      "source": "bridge/test_message_results.py",
+      "target": "bridge/test_message_results.py"
+    },
+    {
+      "source": "bridge/test_model_install.py",
+      "target": "bridge/test_model_install.py"
+    },
+    {
+      "source": "bridge/test_model_source.py",
+      "target": "bridge/test_model_source.py"
+    },
+    {
+      "source": "bridge/test_portrait_read_performance.py",
+      "target": "bridge/test_portrait_read_performance.py"
+    },
+    {
+      "source": "bridge/test_product_profile.py",
+      "target": "bridge/test_product_profile.py"
+    },
+    {
+      "source": "bridge/test_qq_accounts.py",
+      "target": "bridge/test_qq_accounts.py"
+    },
+    {
+      "source": "bridge/test_qq_analysis_control.py",
+      "target": "bridge/test_qq_analysis_control.py"
+    },
+    {
+      "source": "bridge/test_qq_analysis_revision.py",
+      "target": "bridge/test_qq_analysis_revision.py"
+    },
+    {
+      "source": "bridge/test_qq_api_revision.py",
+      "target": "bridge/test_qq_api_revision.py"
+    },
+    {
+      "source": "bridge/test_qq_compatibility.py",
+      "target": "bridge/test_qq_compatibility.py"
+    },
+    {
+      "source": "bridge/test_qq_data_management.py",
+      "target": "bridge/test_qq_data_management.py"
+    },
+    {
+      "source": "bridge/test_qq_directory.py",
+      "target": "bridge/test_qq_directory.py"
+    },
+    {
+      "source": "bridge/test_qq_entities.py",
+      "target": "bridge/test_qq_entities.py"
+    },
+    {
+      "source": "bridge/test_qq_export.py",
+      "target": "bridge/test_qq_export.py"
+    },
+    {
+      "source": "bridge/test_qq_focus_scheduling.py",
+      "target": "bridge/test_qq_focus_scheduling.py"
+    },
+    {
+      "source": "bridge/test_qq_group_analysis.py",
+      "target": "bridge/test_qq_group_analysis.py"
+    },
+    {
+      "source": "bridge/test_qq_groups.py",
+      "target": "bridge/test_qq_groups.py"
+    },
+    {
+      "source": "bridge/test_qq_history.py",
+      "target": "bridge/test_qq_history.py"
+    },
+    {
+      "source": "bridge/test_qq_history_sync.py",
+      "target": "bridge/test_qq_history_sync.py"
+    },
+    {
+      "source": "bridge/test_qq_import.py",
+      "target": "bridge/test_qq_import.py"
+    },
+    {
+      "source": "bridge/test_qq_ingest_audit.py",
+      "target": "bridge/test_qq_ingest_audit.py"
+    },
+    {
+      "source": "bridge/test_qq_local_integrity.py",
+      "target": "bridge/test_qq_local_integrity.py"
+    },
+    {
+      "source": "bridge/test_qq_message_display.py",
+      "target": "bridge/test_qq_message_display.py"
+    },
+    {
+      "source": "bridge/test_qq_message_store.py",
+      "target": "bridge/test_qq_message_store.py"
+    },
+    {
+      "source": "bridge/test_qq_metadata_scheduling.py",
+      "target": "bridge/test_qq_metadata_scheduling.py"
+    },
+    {
+      "source": "bridge/test_qq_normalize.py",
+      "target": "bridge/test_qq_normalize.py"
+    },
+    {
+      "source": "bridge/test_qq_online_analysis.py",
+      "target": "bridge/test_qq_online_analysis.py"
+    },
+    {
+      "source": "bridge/test_qq_portrait_thresholds.py",
+      "target": "bridge/test_qq_portrait_thresholds.py"
+    },
+    {
+      "source": "bridge/test_qq_read_control.py",
+      "target": "bridge/test_qq_read_control.py"
+    },
+    {
+      "source": "bridge/test_qq_source.py",
+      "target": "bridge/test_qq_source.py"
+    },
+    {
+      "source": "bridge/test_qq_standard_connection.py",
+      "target": "bridge/test_qq_standard_connection.py"
+    },
+    {
+      "source": "bridge/test_qq_support.py",
+      "target": "bridge/test_qq_support.py"
+    },
+    {
+      "source": "bridge/test_qq_sync.py",
+      "target": "bridge/test_qq_sync.py"
+    },
+    {
+      "source": "bridge/test_qq_targets.py",
+      "target": "bridge/test_qq_targets.py"
+    },
+    {
+      "source": "bridge/test_real_backend.py",
+      "target": "bridge/test_real_backend.py"
+    },
+    {
+      "source": "bridge/test_real_http_control.py",
+      "target": "bridge/test_real_http_control.py"
+    },
+    {
+      "source": "bridge/test_real_http_denial.py",
+      "target": "bridge/test_real_http_denial.py"
+    },
+    {
+      "source": "bridge/test_snapshot_cache.py",
+      "target": "bridge/test_snapshot_cache.py"
+    },
+    {
+      "source": "bridge/test_staged_readiness.py",
+      "target": "bridge/test_staged_readiness.py"
+    },
+    {
+      "source": "bridge/wechat_bridge.py",
+      "target": "bridge/wechat_bridge.py"
+    },
+    {
+      "source": "bridge/wechat_source.py",
+      "target": "bridge/wechat_source.py"
+    },
+    {
+      "source": "bridge/windows_file_owners.py",
+      "target": "bridge/windows_file_owners.py"
+    },
+    {
+      "source": "chatui/app.js",
+      "target": "chatui/app.js"
+    },
+    {
+      "source": "chatui/assets/qqvibe-icon.ico",
+      "target": "chatui/assets/qqvibe-icon.ico"
+    },
+    {
+      "source": "chatui/assets/qqvibe-icon.png",
+      "target": "chatui/assets/qqvibe-icon.png"
+    },
+    {
+      "source": "chatui/assets/qqvibe-icon.svg",
+      "target": "chatui/assets/qqvibe-icon.svg"
+    },
+    {
+      "source": "chatui/assets/wechatvibe-icon.ico",
+      "target": "chatui/assets/wechatvibe-icon.ico"
+    },
+    {
+      "source": "chatui/assets/wechatvibe-icon.png",
+      "target": "chatui/assets/wechatvibe-icon.png"
+    },
+    {
+      "source": "chatui/data/analysis-catalog.json",
+      "target": "chatui/data/analysis-catalog.json"
+    },
+    {
+      "source": "chatui/index.html",
+      "target": "chatui/index.html"
+    },
+    {
+      "source": "chatui/kaomoji.js",
+      "target": "chatui/kaomoji.js"
+    },
+    {
+      "source": "chatui/message-insight-adapters.js",
+      "target": "chatui/message-insight-adapters.js"
+    },
+    {
+      "source": "chatui/message-labels.js",
+      "target": "chatui/message-labels.js"
+    },
+    {
+      "source": "chatui/qq-import-ui.js",
+      "target": "chatui/qq-import-ui.js"
+    },
+    {
+      "source": "chatui/qq-provenance-ui.js",
+      "target": "chatui/qq-provenance-ui.js"
+    },
+    {
+      "source": "chatui/qq-startup.js",
+      "target": "chatui/qq-startup.js"
+    },
+    {
+      "source": "chatui/qq-support-ui.js",
+      "target": "chatui/qq-support-ui.js"
+    },
+    {
+      "source": "chatui/qq-sync-ui.js",
+      "target": "chatui/qq-sync-ui.js"
+    },
+    {
+      "source": "chatui/style.css",
+      "target": "chatui/style.css"
+    },
+    {
+      "source": "chatui/view-state.js",
+      "target": "chatui/view-state.js"
+    },
+    {
+      "source": "docs/contracts/data-schema.md",
+      "target": "docs/contracts/data-schema.md"
+    },
+    {
+      "source": "docs/contracts/group-data-schema.md",
+      "target": "docs/contracts/group-data-schema.md"
+    },
+    {
+      "source": "docs/contracts/source-contract.md",
+      "target": "docs/contracts/source-contract.md"
+    },
+    {
+      "source": "docs/migration/upstream/WechatVibe-1.2.2-THIRD_PARTY_NOTICES.md",
+      "target": "docs/migration/upstream/WechatVibe-1.2.2-THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "source": "docs/public/BACKUP-UPGRADE.md",
+      "target": "docs/public/BACKUP-UPGRADE.md"
+    },
+    {
+      "source": "docs/public/BUILD.md",
+      "target": "docs/public/BUILD.md"
+    },
+    {
+      "source": "docs/public/COMPATIBILITY.md",
+      "target": "docs/public/COMPATIBILITY.md"
+    },
+    {
+      "source": "docs/public/FEEDBACK.md",
+      "target": "docs/public/FEEDBACK.md"
+    },
+    {
+      "source": "docs/public/KNOWN-ISSUES.md",
+      "target": "docs/public/KNOWN-ISSUES.md"
+    },
+    {
+      "source": "docs/public/MODEL-LICENSE.md",
+      "target": "docs/public/MODEL-LICENSE.md"
+    },
+    {
+      "source": "docs/public/R9-TRIAL.md",
+      "target": "docs/public/R9-TRIAL.md"
+    },
+    {
+      "source": "docs/public/RELEASE-NOTES.md",
+      "target": "docs/public/RELEASE-NOTES.md"
+    },
+    {
+      "source": "docs/public/SETUP.md",
+      "target": "docs/public/SETUP.md"
+    },
+    {
+      "source": "electron-builder.real-client.json",
+      "target": "electron-builder.real-client.json"
+    },
+    {
+      "source": "electron/analysis.ts",
+      "target": "electron/analysis.ts"
+    },
+    {
+      "source": "electron/api-analysis-json.ts",
+      "target": "electron/api-analysis-json.ts"
+    },
+    {
+      "source": "electron/api-insights.ts",
+      "target": "electron/api-insights.ts"
+    },
+    {
+      "source": "electron/api-message-insights.ts",
+      "target": "electron/api-message-insights.ts"
+    },
+    {
+      "source": "electron/api-portrait.ts",
+      "target": "electron/api-portrait.ts"
+    },
+    {
+      "source": "electron/laya/LICENSE",
+      "target": "electron/laya/LICENSE"
+    },
+    {
+      "source": "electron/laya/NOTICE",
+      "target": "electron/laya/NOTICE"
+    },
+    {
+      "source": "electron/laya/agent.ts",
+      "target": "electron/laya/agent.ts"
+    },
+    {
+      "source": "electron/laya/calibration.ts",
+      "target": "electron/laya/calibration.ts"
+    },
+    {
+      "source": "electron/laya/catalog.ts",
+      "target": "electron/laya/catalog.ts"
+    },
+    {
+      "source": "electron/laya/context.ts",
+      "target": "electron/laya/context.ts"
+    },
+    {
+      "source": "electron/laya/expression.ts",
+      "target": "electron/laya/expression.ts"
+    },
+    {
+      "source": "electron/laya/forecast.ts",
+      "target": "electron/laya/forecast.ts"
+    },
+    {
+      "source": "electron/laya/general-intent.ts",
+      "target": "electron/laya/general-intent.ts"
+    },
+    {
+      "source": "electron/laya/grounded-intent.ts",
+      "target": "electron/laya/grounded-intent.ts"
+    },
+    {
+      "source": "electron/laya/index.ts",
+      "target": "electron/laya/index.ts"
+    },
+    {
+      "source": "electron/laya/message-batch.ts",
+      "target": "electron/laya/message-batch.ts"
+    },
+    {
+      "source": "electron/laya/options.ts",
+      "target": "electron/laya/options.ts"
+    },
+    {
+      "source": "electron/laya/personality.ts",
+      "target": "electron/laya/personality.ts"
+    },
+    {
+      "source": "electron/laya/prompt.ts",
+      "target": "electron/laya/prompt.ts"
+    },
+    {
+      "source": "electron/laya/pyjson.ts",
+      "target": "electron/laya/pyjson.ts"
+    },
+    {
+      "source": "electron/laya/questions.ts",
+      "target": "electron/laya/questions.ts"
+    },
+    {
+      "source": "electron/laya/runner.ts",
+      "target": "electron/laya/runner.ts"
+    },
+    {
+      "source": "electron/laya/scoring.ts",
+      "target": "electron/laya/scoring.ts"
+    },
+    {
+      "source": "electron/laya/social-cues.ts",
+      "target": "electron/laya/social-cues.ts"
+    },
+    {
+      "source": "electron/laya/social-intents.ts",
+      "target": "electron/laya/social-intents.ts"
+    },
+    {
+      "source": "electron/laya/style.ts",
+      "target": "electron/laya/style.ts"
+    },
+    {
+      "source": "electron/laya/tokenizer.ts",
+      "target": "electron/laya/tokenizer.ts"
+    },
+    {
+      "source": "electron/laya/types.ts",
+      "target": "electron/laya/types.ts"
+    },
+    {
+      "source": "electron/local-message-insights.ts",
+      "target": "electron/local-message-insights.ts"
+    },
+    {
+      "source": "electron/model-connectors.ts",
+      "target": "electron/model-connectors.ts"
+    },
+    {
+      "source": "examples/model-service.example.json",
+      "target": "examples/model-service.example.json"
+    },
+    {
+      "source": "licenses/jieba-0.42.1-LICENSE.txt",
+      "target": "licenses/jieba-0.42.1-LICENSE.txt"
+    },
+    {
+      "source": "licenses/laya-model-mlx-LICENSE",
+      "target": "licenses/laya-model-mlx-LICENSE"
+    },
+    {
+      "source": "licenses/laya-model-mlx-NOTICE",
+      "target": "licenses/laya-model-mlx-NOTICE"
+    },
+    {
+      "source": "licenses/laya-model-mlx-README.txt",
+      "target": "licenses/laya-model-mlx-README.txt"
+    },
+    {
+      "source": "licenses/laya-model-original-README.txt",
+      "target": "licenses/laya-model-original-README.txt"
+    },
+    {
+      "source": "licenses/laya-model-sources.json",
+      "target": "licenses/laya-model-sources.json"
+    },
+    {
+      "source": "licenses/node-LICENSE-24.11.1.txt",
+      "target": "licenses/node-LICENSE-24.11.1.txt"
+    },
+    {
+      "source": "licenses/standardwebhooks-1.1.1-LICENSE.txt",
+      "target": "licenses/standardwebhooks-1.1.1-LICENSE.txt"
+    },
+    {
+      "source": "licenses/supplemental-sources.json",
+      "target": "licenses/supplemental-sources.json"
+    },
+    {
+      "source": "native-reader/THIRD_PARTY_NOTICES.md",
+      "target": "native-reader/THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "source": "native-reader/test_discovery.py",
+      "target": "native-reader/test_discovery.py"
+    },
+    {
+      "source": "native-reader/wr/__init__.py",
+      "target": "native-reader/wr/__init__.py"
+    },
+    {
+      "source": "native-reader/wr/crypto.py",
+      "target": "native-reader/wr/crypto.py"
+    },
+    {
+      "source": "native-reader/wr/database.py",
+      "target": "native-reader/wr/database.py"
+    },
+    {
+      "source": "native-reader/wr/discovery.py",
+      "target": "native-reader/wr/discovery.py"
+    },
+    {
+      "source": "native-reader/wr/errors.py",
+      "target": "native-reader/wr/errors.py"
+    },
+    {
+      "source": "native-reader/wr/fixture.py",
+      "target": "native-reader/wr/fixture.py"
+    },
+    {
+      "source": "native-reader/wr/log.py",
+      "target": "native-reader/wr/log.py"
+    },
+    {
+      "source": "native-reader/wr/png_encode.py",
+      "target": "native-reader/wr/png_encode.py"
+    },
+    {
+      "source": "native-reader/wr/protocol.py",
+      "target": "native-reader/wr/protocol.py"
+    },
+    {
+      "source": "native-reader/wr/service.py",
+      "target": "native-reader/wr/service.py"
+    },
+    {
+      "source": "native-reader/wr/snapshot.py",
+      "target": "native-reader/wr/snapshot.py"
+    },
+    {
+      "source": "native-reader/wr/wal.py",
+      "target": "native-reader/wr/wal.py"
+    },
+    {
+      "source": "native-reader/wr/window.py",
+      "target": "native-reader/wr/window.py"
+    },
+    {
+      "source": "native-reader/wr/window_capture.py",
+      "target": "native-reader/wr/window_capture.py"
+    },
+    {
+      "source": "native-reader/wr/window_uia.py",
+      "target": "native-reader/wr/window_uia.py"
+    },
+    {
+      "source": "package-lock.json",
+      "target": "package-lock.json"
+    },
+    {
+      "source": "package.json",
+      "target": "package.json"
+    },
+    {
+      "source": "probes/fake_qce_server.py",
+      "target": "probes/fake_qce_server.py"
+    },
+    {
+      "source": "probes/qce_probe.py",
+      "target": "probes/qce_probe.py"
+    },
+    {
+      "source": "probes/sync_measurement.py",
+      "target": "probes/sync_measurement.py"
+    },
+    {
+      "source": "probes/test_qce_group_contract.py",
+      "target": "probes/test_qce_group_contract.py"
+    },
+    {
+      "source": "probes/test_qce_probe.py",
+      "target": "probes/test_qce_probe.py"
+    },
+    {
+      "source": "probes/test_sync_measurement.py",
+      "target": "probes/test_sync_measurement.py"
+    },
+    {
+      "source": "python-requirements.lock.txt",
+      "target": "python-requirements.lock.txt"
+    },
+    {
+      "source": "scripts/analysis-catalog-source.json",
+      "target": "scripts/analysis-catalog-source.json"
+    },
+    {
+      "source": "scripts/audit-delivery.py",
+      "target": "scripts/audit-delivery.py"
+    },
+    {
+      "source": "scripts/build-analysis-catalog.mjs",
+      "target": "scripts/build-analysis-catalog.mjs"
+    },
+    {
+      "source": "scripts/build-model-asset.py",
+      "target": "scripts/build-model-asset.py"
+    },
+    {
+      "source": "scripts/build-portable-clean.py",
+      "target": "scripts/build-portable-clean.py"
+    },
+    {
+      "source": "scripts/build-prerequisites.py",
+      "target": "scripts/build-prerequisites.py"
+    },
+    {
+      "source": "scripts/build-update-manifest.cjs",
+      "target": "scripts/build-update-manifest.cjs"
+    },
+    {
+      "source": "scripts/build-windows-release.py",
+      "target": "scripts/build-windows-release.py"
+    },
+    {
+      "source": "scripts/check-public-source.py",
+      "target": "scripts/check-public-source.py"
+    },
+    {
+      "source": "scripts/desktop-main.cjs",
+      "target": "scripts/desktop-main.cjs"
+    },
+    {
+      "source": "scripts/export-label-library.py",
+      "target": "scripts/export-label-library.py"
+    },
+    {
+      "source": "scripts/export-public-source.py",
+      "target": "scripts/export-public-source.py"
+    },
+    {
+      "source": "scripts/intent-display-source.json",
+      "target": "scripts/intent-display-source.json"
+    },
+    {
+      "source": "scripts/model-asset.json",
+      "target": "scripts/model-asset.json"
+    },
+    {
+      "source": "scripts/model-files.json",
+      "target": "scripts/model-files.json"
+    },
+    {
+      "source": "scripts/package-test-driver.cjs",
+      "target": "scripts/package-test-driver.cjs"
+    },
+    {
+      "source": "scripts/product-identity.cjs",
+      "target": "scripts/product-identity.cjs"
+    },
+    {
+      "source": "scripts/product-identity.json",
+      "target": "scripts/product-identity.json"
+    },
+    {
+      "source": "scripts/project_python.py",
+      "target": "scripts/project_python.py"
+    },
+    {
+      "source": "scripts/public-source-allowlist.json",
+      "target": "scripts/public-source-allowlist.json"
+    },
+    {
+      "source": "scripts/public-source-gitattributes.txt",
+      "target": "scripts/public-source-gitattributes.txt"
+    },
+    {
+      "source": "scripts/real-client-model.cjs",
+      "target": "scripts/real-client-model.cjs"
+    },
+    {
+      "source": "scripts/real-client-preload.cjs",
+      "target": "scripts/real-client-preload.cjs"
+    },
+    {
+      "source": "scripts/real-client-recovery.cjs",
+      "target": "scripts/real-client-recovery.cjs"
+    },
+    {
+      "source": "scripts/real-client-shell.cjs",
+      "target": "scripts/real-client-shell.cjs"
+    },
+    {
+      "source": "scripts/real-client-update-controller.cjs",
+      "target": "scripts/real-client-update-controller.cjs"
+    },
+    {
+      "source": "scripts/real-client-update-extract.py",
+      "target": "scripts/real-client-update-extract.py"
+    },
+    {
+      "source": "scripts/real-client-update-helper.cjs",
+      "target": "scripts/real-client-update-helper.cjs"
+    },
+    {
+      "source": "scripts/real-client-update-proxy.cjs",
+      "target": "scripts/real-client-update-proxy.cjs"
+    },
+    {
+      "source": "scripts/real-client-update.cjs",
+      "target": "scripts/real-client-update.cjs"
+    },
+    {
+      "source": "scripts/restore-qq-data.py",
+      "target": "scripts/restore-qq-data.py"
+    },
+    {
+      "source": "scripts/run-node-script-tests.cjs",
+      "target": "scripts/run-node-script-tests.cjs"
+    },
+    {
+      "source": "scripts/run-project-python.py",
+      "target": "scripts/run-project-python.py"
+    },
+    {
+      "source": "scripts/run-python-tests.py",
+      "target": "scripts/run-python-tests.py"
+    },
+    {
+      "source": "scripts/setup-models.ts",
+      "target": "scripts/setup-models.ts"
+    },
+    {
+      "source": "scripts/social-intent-catalog.mjs",
+      "target": "scripts/social-intent-catalog.mjs"
+    },
+    {
+      "source": "scripts/social-intent-source.json",
+      "target": "scripts/social-intent-source.json"
+    },
+    {
+      "source": "scripts/stage-real-client.py",
+      "target": "scripts/stage-real-client.py"
+    },
+    {
+      "source": "scripts/stage-real-runtime.py",
+      "target": "scripts/stage-real-runtime.py"
+    },
+    {
+      "source": "scripts/start-real-client.cmd",
+      "target": "scripts/start-real-client.cmd"
+    },
+    {
+      "source": "scripts/start-real-client.py",
+      "target": "scripts/start-real-client.py"
+    },
+    {
+      "source": "scripts/test-audit-delivery.py",
+      "target": "scripts/test-audit-delivery.py"
+    },
+    {
+      "source": "scripts/test-build-portable-clean.py",
+      "target": "scripts/test-build-portable-clean.py"
+    },
+    {
+      "source": "scripts/test-build-prerequisites.py",
+      "target": "scripts/test-build-prerequisites.py"
+    },
+    {
+      "source": "scripts/test-build-windows-release.py",
+      "target": "scripts/test-build-windows-release.py"
+    },
+    {
+      "source": "scripts/test-desktop-main.cjs",
+      "target": "scripts/test-desktop-main.cjs"
+    },
+    {
+      "source": "scripts/test-migration-contracts.py",
+      "target": "scripts/test-migration-contracts.py"
+    },
+    {
+      "source": "scripts/test-model-preserve.py",
+      "target": "scripts/test-model-preserve.py"
+    },
+    {
+      "source": "scripts/test-model.ts",
+      "target": "scripts/test-model.ts"
+    },
+    {
+      "source": "scripts/test-product-identity.cjs",
+      "target": "scripts/test-product-identity.cjs"
+    },
+    {
+      "source": "scripts/test-project-python.py",
+      "target": "scripts/test-project-python.py"
+    },
+    {
+      "source": "scripts/test-real-client-exit.cjs",
+      "target": "scripts/test-real-client-exit.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-recovery.cjs",
+      "target": "scripts/test-real-client-recovery.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-shell-qq-update.cjs",
+      "target": "scripts/test-real-client-shell-qq-update.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-shell-update.cjs",
+      "target": "scripts/test-real-client-shell-update.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-update-controller.cjs",
+      "target": "scripts/test-real-client-update-controller.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-update-extract.py",
+      "target": "scripts/test-real-client-update-extract.py"
+    },
+    {
+      "source": "scripts/test-real-client-update-final-ready.cjs",
+      "target": "scripts/test-real-client-update-final-ready.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-update-helper.cjs",
+      "target": "scripts/test-real-client-update-helper.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-update-proxy.cjs",
+      "target": "scripts/test-real-client-update-proxy.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-update-security.cjs",
+      "target": "scripts/test-real-client-update-security.cjs"
+    },
+    {
+      "source": "scripts/test-real-client-update.cjs",
+      "target": "scripts/test-real-client-update.cjs"
+    },
+    {
+      "source": "scripts/test-start-real-client.py",
+      "target": "scripts/test-start-real-client.py"
+    },
+    {
+      "source": "scripts/update-signing.pub",
+      "target": "scripts/update-signing.pub"
+    },
+    {
+      "source": "shared/contracts.ts",
+      "target": "shared/contracts.ts"
+    },
+    {
+      "source": "shared/group-context.ts",
+      "target": "shared/group-context.ts"
+    },
+    {
+      "source": "shared/message-input.ts",
+      "target": "shared/message-input.ts"
+    },
+    {
+      "source": "src/lib/labels.ts",
+      "target": "src/lib/labels.ts"
+    },
+    {
+      "source": "tests/analysis-modules.test.ts",
+      "target": "tests/analysis-modules.test.ts"
+    },
+    {
+      "source": "tests/api-generation-concurrency.test.cjs",
+      "target": "tests/api-generation-concurrency.test.cjs"
+    },
+    {
+      "source": "tests/api-insights.test.ts",
+      "target": "tests/api-insights.test.ts"
+    },
+    {
+      "source": "tests/api-persona-ui.test.cjs",
+      "target": "tests/api-persona-ui.test.cjs"
+    },
+    {
+      "source": "tests/api-probe-concurrency.test.cjs",
+      "target": "tests/api-probe-concurrency.test.cjs"
+    },
+    {
+      "source": "tests/api-semantic-contract.test.ts",
+      "target": "tests/api-semantic-contract.test.ts"
+    },
+    {
+      "source": "tests/api-throughput-tail.test.cjs",
+      "target": "tests/api-throughput-tail.test.cjs"
+    },
+    {
+      "source": "tests/generic-labels.test.ts",
+      "target": "tests/generic-labels.test.ts"
+    },
+    {
+      "source": "tests/grounded-intent.test.ts",
+      "target": "tests/grounded-intent.test.ts"
+    },
+    {
+      "source": "tests/helpers/view-state-harness.cjs",
+      "target": "tests/helpers/view-state-harness.cjs"
+    },
+    {
+      "source": "tests/intent-display.test.cjs",
+      "target": "tests/intent-display.test.cjs"
+    },
+    {
+      "source": "tests/laya-performance.test.ts",
+      "target": "tests/laya-performance.test.ts"
+    },
+    {
+      "source": "tests/local-message-insights.test.ts",
+      "target": "tests/local-message-insights.test.ts"
+    },
+    {
+      "source": "tests/local-quality.test.ts",
+      "target": "tests/local-quality.test.ts"
+    },
+    {
+      "source": "tests/message-input.test.ts",
+      "target": "tests/message-input.test.ts"
+    },
+    {
+      "source": "tests/message-insight-adapters.test.cjs",
+      "target": "tests/message-insight-adapters.test.cjs"
+    },
+    {
+      "source": "tests/model-connectors.test.ts",
+      "target": "tests/model-connectors.test.ts"
+    },
+    {
+      "source": "tests/model-download.test.cjs",
+      "target": "tests/model-download.test.cjs"
+    },
+    {
+      "source": "tests/model-insights-ui.test.cjs",
+      "target": "tests/model-insights-ui.test.cjs"
+    },
+    {
+      "source": "tests/model-protocol-matrix.test.ts",
+      "target": "tests/model-protocol-matrix.test.ts"
+    },
+    {
+      "source": "tests/model-source-settings.test.cjs",
+      "target": "tests/model-source-settings.test.cjs"
+    },
+    {
+      "source": "tests/qq-analysis-control-ui.test.cjs",
+      "target": "tests/qq-analysis-control-ui.test.cjs"
+    },
+    {
+      "source": "tests/qq-analysis-revision-ui.test.cjs",
+      "target": "tests/qq-analysis-revision-ui.test.cjs"
+    },
+    {
+      "source": "tests/qq-draft-keyboard.test.cjs",
+      "target": "tests/qq-draft-keyboard.test.cjs"
+    },
+    {
+      "source": "tests/qq-empty-group-ui.test.cjs",
+      "target": "tests/qq-empty-group-ui.test.cjs"
+    },
+    {
+      "source": "tests/qq-group-model-roles.test.ts",
+      "target": "tests/qq-group-model-roles.test.ts"
+    },
+    {
+      "source": "tests/qq-import-ui.test.cjs",
+      "target": "tests/qq-import-ui.test.cjs"
+    },
+    {
+      "source": "tests/qq-message-presentation.test.cjs",
+      "target": "tests/qq-message-presentation.test.cjs"
+    },
+    {
+      "source": "tests/qq-online-analysis-ui.test.cjs",
+      "target": "tests/qq-online-analysis-ui.test.cjs"
+    },
+    {
+      "source": "tests/qq-provenance-ui.test.cjs",
+      "target": "tests/qq-provenance-ui.test.cjs"
+    },
+    {
+      "source": "tests/qq-reading-window.test.cjs",
+      "target": "tests/qq-reading-window.test.cjs"
+    },
+    {
+      "source": "tests/qq-startup.test.cjs",
+      "target": "tests/qq-startup.test.cjs"
+    },
+    {
+      "source": "tests/qq-support-ui.test.cjs",
+      "target": "tests/qq-support-ui.test.cjs"
+    },
+    {
+      "source": "tests/qq-sync-ui.test.cjs",
+      "target": "tests/qq-sync-ui.test.cjs"
+    },
+    {
+      "source": "tests/setup-models.test.ts",
+      "target": "tests/setup-models.test.ts"
+    },
+    {
+      "source": "tests/test-partial-startup.cjs",
+      "target": "tests/test-partial-startup.cjs"
+    },
+    {
+      "source": "tests/view-state.test.cjs",
+      "target": "tests/view-state.test.cjs"
+    },
+    {
+      "source": "tsconfig.electron.json",
+      "target": "tsconfig.electron.json"
+    },
+    {
+      "source": "scripts/public-source-gitattributes.txt",
+      "target": ".gitattributes"
+    },
+    {
+      "source": "scripts/verify-r8-first-run.cjs",
+      "target": "scripts/verify-r8-first-run.cjs"
+    },
+    {
+      "source": "scripts/verify-r8-native-picker.cjs",
+      "target": "scripts/verify-r8-native-picker.cjs"
+    }
+  ]
+}
