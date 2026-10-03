@@ -9,12 +9,13 @@ const { ModelDownload, ownedDirectory } = require("./real-client-model.cjs");
 const { productProfile, stateDir } = require("./product-identity.cjs");
 
 const PRODUCT = productProfile();
+const { UpdatePreferences } = require("./real-client-update-config.cjs");
 
 const ROOT = process.env.WECHATVIBE_CLIENT_ROOT ?
   path.resolve(process.env.WECHATVIBE_CLIENT_ROOT) : path.resolve(__dirname, "..");
 const THEMES = Object.freeze({
-  dark: { color: "#1b1b1b", symbolColor: "#e6e7eb", height: 36 },
-  light: { color: "#edf3f7", symbolColor: "#28333d", height: 36 },
+  dark: { color: PRODUCT.key === "qq" ? "#20394a" : "#1b1b1b", symbolColor: "#e6e7eb", height: 36 },
+  light: { color: PRODUCT.key === "qq" ? "#dff3fc" : "#edf3f7", symbolColor: "#28333d", height: 36 },
 });
 const DOC_URLS = new Set([
   "https://www.myersbriggs.org/my-mbti-personality-type/the-mbti-preferences/",
@@ -22,6 +23,8 @@ const DOC_URLS = new Set([
   "https://github.com/tswawa",
   "https://github.com/tswawa/WechatVibe",
   RELEASES_URL,
+  "https://github.com/xzyj50609/QQVibe/releases",
+  "https://github.com/xzyj50609/QQVibe",
 ]);
 
 function clientUrl(value) {
@@ -72,11 +75,12 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
   let updateNetwork = null;
   let modelDownload = null;
   let savedUpdateFallbackActive = false;
+  const updatePreferences = new UpdatePreferences(ROOT, PRODUCT);
   const testState = { themes: [], blockedPopups: 0, themeWaiter: null };
 
   async function checkWithUpdateNetwork(version) {
     if (!updateNetwork) return { status: "server-error" };
-    const options = { fetchImpl: updateNetwork.fetchImpl };
+    const options = { fetchImpl: updateNetwork.fetchImpl, profile: PRODUCT, channel: updatePreferences.get().channel };
     const first = await checkForUpdates(version, options);
     if ((first.status === "offline" || first.status === "timeout") &&
         !savedUpdateFallbackActive && await updateNetwork.enableSavedLoopbackFallback()) {
@@ -87,7 +91,7 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
   }
 
   async function stageWithUpdateNetwork(version, installRoot, onProgress) {
-    const options = { fetchImpl: updateNetwork.fetchImpl };
+    const options = { fetchImpl: updateNetwork.fetchImpl, profile: PRODUCT, channel: updatePreferences.get().channel };
     try {
       return await downloadAndStageUpdate(version, installRoot, onProgress, options);
     } catch (error) {
@@ -148,6 +152,23 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
     ipcMain.handle("real-client:app-version", (event) => {
       if (!trustedFrame(event)) return null;
       return app.getVersion();
+    });
+
+    let doctorProcess = null;
+    ipcMain.handle("real-client:qce-doctor", (event) => {
+      if (!trustedFrame(event) || PRODUCT.key !== "qq" || selfTest || updateValidation) return false;
+      if (doctorProcess && doctorProcess.exitCode === null) return true;
+      const script = path.join(ROOT, "scripts", "qce-doctor.ps1");
+      if (!fs.existsSync(script)) return false;
+      const powershell = path.join(process.env.SystemRoot || "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+      try {
+        doctorProcess = spawn(powershell, ["-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", script],
+          { cwd: ROOT, windowsHide: true, stdio: "ignore" });
+        doctorProcess.on("error", () => { doctorProcess = null; });
+        doctorProcess.on("exit", () => { doctorProcess = null; });
+        doctorProcess.unref();
+        return true;
+      } catch (_) { doctorProcess = null; return false; }
     });
 
     ipcMain.handle("real-client:model-download-state", (event) => {
@@ -238,8 +259,7 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
 
     ipcMain.handle("real-client:check-updates", (event) => {
       if (!trustedFrame(event)) return { status: "blocked" };
-      // The QQ product has no update feed of its own yet; it must never be pointed at
-      // the WeChat releases, which would overwrite this installation.
+      // Each product stays on its own configured release feed.
       if (!PRODUCT.updateChannelEnabled) return { status: "unconfigured" };
       if (updateController) return updateController.check();
       if (!updateCheckPromise) {
@@ -255,13 +275,40 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
       return updateController?.getState() || { phase: "idle", currentVersion: app.getVersion() };
     });
 
-    ipcMain.handle("real-client:begin-update", (event) => {
-      if (!trustedFrame(event) || !updateController) return { phase: "blocked" };
+    ipcMain.handle("real-client:update-preferences", (event, patch) => {
+      if (!trustedFrame(event) || !PRODUCT.updateChannelEnabled) return null;
+      try {
+        if (patch && (!updateController || ["downloading", "verifying", "extracting", "ready", "installing", "restarting"].includes(updateController.getState().phase))) return updatePreferences.get();
+        return patch ? updatePreferences.set(patch) : updatePreferences.get();
+      } catch (_) { return null; }
+    });
+
+    async function safeToRestart() {
+      if (dataOperationBusy || ["downloading", "verifying", "extracting"].includes(modelDownload?.getState().phase)) return false;
+      if (PRODUCT.key !== "qq") return true;
+      try {
+        const response = await fetch(new URL("/api/update/readiness", url), { signal: AbortSignal.timeout(5000) });
+        const result = await response.json();
+        return response.ok && result.ready === true;
+      } catch (_) { return false; }
+    }
+    ipcMain.handle("real-client:begin-update", async (event) => {
+      if (!trustedFrame(event) || !updateController || selfTest || updateValidation || !app.isPackaged) return { phase: "blocked" };
+      if (updateController.getState().phase === "available") return updateController.begin();
+      if (updateController.getState().phase !== "ready") return updateController.getState();
+      if (!(await safeToRestart())) return { ...updateController.getState(), error: "正在处理数据或下载模型，请任务结束后再重启更新。" };
+      const answer = await dialog.showMessageBox(window, { type: "question", title: "重启并更新 " + PRODUCT.displayName,
+        message: "更新包已下载并校验。现在重启安装？", detail: "聊天、设置和模型将保留；启动失败时恢复旧版本。", buttons: ["稍后", "重启并更新"], defaultId: 0, cancelId: 0 });
+      if (answer.response !== 1 || !(await safeToRestart())) return updateController.getState();
       return updateController.begin();
     });
 
-    ipcMain.handle("real-client:rollback-update", (event) => {
-      if (!trustedFrame(event) || !updateController) return { phase: "blocked" };
+    ipcMain.handle("real-client:rollback-update", async (event) => {
+      if (!trustedFrame(event) || !updateController || selfTest || updateValidation || !app.isPackaged) return { phase: "blocked" };
+      if (!(await safeToRestart())) return { ...updateController.getState(), error: "正在处理数据，请任务结束后再回退。" };
+      const answer = await dialog.showMessageBox(window, { type: "question", title: "回退 " + PRODUCT.displayName,
+        message: "回退将恢复上一版程序并保留当前数据；旧版可能不兼容新版数据格式。", detail: "建议先备份当前数据。程序和数据副本会保留。", buttons: ["取消", "回退版本"], defaultId: 0, cancelId: 0 });
+      if (answer.response !== 1 || !(await safeToRestart())) return updateController.getState();
       return updateController.rollback();
     });
 
@@ -346,7 +393,7 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
           stopped = !error && (result.stopped === true || result.alreadyStopped === true);
         } catch (_) { /* A missing result is a shutdown failure. */ }
         if (!stopped) {
-          dialog.showErrorBox(`${PRODUCT.productName} 退出提示`,
+          dialog.showErrorBox(`${PRODUCT.displayName} 退出提示`,
             "本地分析服务未能安全关闭，程序文件可能仍被占用。请在任务管理器中检查此安装目录的后台进程。");
         }
         app.quit();
@@ -389,6 +436,7 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
         }
       });
       window = new BrowserWindow({
+        title: PRODUCT.displayName,
         width: 1180,
         height: 780,
         minWidth: 720,
@@ -496,7 +544,7 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
         };
         const { createUpdateController } = require("./real-client-update-controller.cjs");
         updateController = PRODUCT.updateChannelEnabled && createUpdateController({
-          app, root: ROOT, port: Number(new URL(url).port), instanceId,
+          app, root: ROOT, port: Number(new URL(url).port), instanceId, profile: PRODUCT, splitDownload: PRODUCT.key === "qq",
           checkImpl: checkWithUpdateNetwork,
           stageImpl: stageWithUpdateNetwork,
           onState: state => {
@@ -517,6 +565,19 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
           quit: () => { updateHandoff = "ready"; app.quit(); },
         });
         startBridgeMonitor();
+        if (PRODUCT.key === "qq" && !updateFinalReady) {
+          const automaticCheck = async () => {
+            if (exiting || !updateController || !updatePreferences.due() ||
+                !["idle", "current", "preview-current", "available", "no-release", "offline", "timeout", "server-error", "rate-limited", "incomplete-release", "invalid-release", "failed"].includes(updateController.getState().phase)) return;
+            try {
+              updatePreferences.set({ lastCheckedAt: Date.now() });
+              const result = await updateController.check();
+              if (result.phase === "available" && updatePreferences.get().autoDownload) await updateController.download();
+            } catch (_) { /* Background check cannot stop startup or force a restart. */ }
+          };
+          setTimeout(() => { void automaticCheck(); }, 10000).unref();
+          setInterval(() => { void automaticCheck(); }, 60 * 60 * 1000).unref();
+        }
       }
       void contents.loadURL(url);
     }).catch((error) => {
@@ -527,7 +588,7 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
         app.exit(1);
         return;
       }
-      dialog.showErrorBox(`${PRODUCT.productName} 启动失败`, "客户端窗口初始化失败，请重新解压完整安装包。");
+      dialog.showErrorBox(`${PRODUCT.displayName} 启动失败`, "客户端窗口初始化失败，请重新解压完整安装包。");
       // Use normal shutdown so the bridge created before window initialization
       // is stopped instead of becoming an invisible background process. A reused
       // bridge is left alone by the before-quit guard.

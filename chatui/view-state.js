@@ -46,6 +46,7 @@
         conversationMood: null,
         followLatest: true,
         lastChatScrollTop: 0,
+        returnChatScroll: null,
       };
     },
     labels: function () {

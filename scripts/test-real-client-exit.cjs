@@ -77,6 +77,7 @@ async function startShell(extraEnv = {}, extraArgs = [], monitorDrain, options =
       if (name === "node:fs") return { mkdirSync() {}, existsSync: () => true };
       if (name === "node:path") return path;
       if (name === "./product-identity.cjs") return require("./product-identity.cjs");
+      if (name === "./real-client-update-config.cjs") return { UpdatePreferences: class { get() { return {channel: "stable"}; } } };
       if (name === "node:child_process") return {
         execFile(file, args, options, callback) {
           stopCalls.push({ file, args: Array.from(args), options, callback });

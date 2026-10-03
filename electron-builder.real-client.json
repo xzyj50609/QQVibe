@@ -25,25 +25,41 @@
     "scripts/real-client-update-helper.cjs",
     "scripts/update-signing.pub",
     "package.json",
-    "!node_modules/**"
+    "!node_modules/**",
+    "scripts/real-client-update-config.cjs",
+    "scripts/qq-update-signing.pub"
   ],
   "extraResources": [
     {
       "from": "__CLEAN_STAGE_CLIENT__",
       "to": "client",
-      "filter": ["**/*", "!node_modules/**"]
+      "filter": [
+        "**/*",
+        "!node_modules/**"
+      ]
     },
     {
       "from": "__CLEAN_STAGE_NODE_MODULES__",
       "to": "client/node_modules",
-      "filter": ["**/*"]
+      "filter": [
+        "**/*"
+      ]
     }
   ],
   "extraFiles": [
-    {"from": "__CLEAN_STAGE_GUIDE__", "to": "使用说明.html"}
+    {
+      "from": "__CLEAN_STAGE_GUIDE__",
+      "to": "使用说明.html"
+    },
+    {
+      "from": "__CLEAN_STAGE_CLIENT__/scripts/qce-doctor.cmd",
+      "to": "检查并修复QCE.cmd"
+    }
   ],
   "win": {
-    "target": ["dir"],
+    "target": [
+      "dir"
+    ],
     "icon": "__PRODUCT_ICON_ICO__",
     "executableName": "__PRODUCT_EXECUTABLE_NAME__"
   }

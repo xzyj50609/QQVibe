@@ -16,6 +16,7 @@ const ASSET_HOSTS = new Set(["github.com", "release-assets.githubusercontent.com
   "objects.githubusercontent.com", "github-releases.githubusercontent.com"]);
 const PUBLIC_KEY_PATH = path.join(__dirname, "update-signing.pub");
 const execFileAsync = promisify(execFile);
+const { updateConfig } = require("./real-client-update-config.cjs");
 
 class UpdateError extends Error {
   constructor(status, message = status) {
@@ -55,20 +56,23 @@ function compareVersions(left, right) {
   return 0;
 }
 
-function validAsset(asset, tag, name, maxBytes) {
+function validAsset(asset, tag, name, maxBytes, config) {
   if (!asset || asset.name !== name || asset.state !== "uploaded" ||
       !Number.isSafeInteger(asset.size) || asset.size <= 0 || asset.size > maxBytes ||
       typeof asset.digest !== "string" || !/^sha256:[a-f0-9]{64}$/.test(asset.digest)) return false;
-  const expected = `${RELEASES_URL}/download/${encodeURIComponent(tag)}/${encodeURIComponent(name)}`;
+  const expected = `${config.releasesUrl}/download/${encodeURIComponent(tag)}/${encodeURIComponent(name)}`;
   return asset.browser_download_url === expected;
 }
 
-function assessRelease(currentVersion, release) {
+function assessRelease(currentVersion, release, options = {}) {
+  const config = updateConfig(options.profile);
+  const preview = options.channel === "preview";
   const current = parseVersion(currentVersion);
   if (!current) return { status: "invalid-current" };
   const latest = parseVersion(release?.tag_name);
-  if (!latest || latest.prerelease.length || release?.draft !== false || release?.prerelease !== false ||
-      release?.html_url !== `${RELEASES_URL}/tag/${encodeURIComponent(release.tag_name)}`) {
+  if (!latest || (!preview && latest.prerelease.length) || release?.draft !== false ||
+      typeof release?.prerelease !== "boolean" || (!preview && release.prerelease) ||
+      release?.html_url !== `${config.releasesUrl}/tag/${encodeURIComponent(release.tag_name)}`) {
     return { status: "invalid-release" };
   }
   const latestVersion = latest.normalized;
@@ -76,16 +80,18 @@ function assessRelease(currentVersion, release) {
     return { status: current.prerelease.length ? "preview-current" : "current", latestVersion };
   }
   const assets = release.assets;
-  const packageName = `WechatVibe-${latestVersion}-windows-x64.zip`;
+  const packageName = `${config.productName}-${latestVersion}-windows-x64.zip`;
   const required = [["update-manifest.json", MAX_MANIFEST_BYTES],
     ["update-manifest.sig", 64], [packageName, MAX_ARCHIVE_BYTES],
-    ["SHA256SUMS.txt", MAX_SUMS_BYTES]];
+    [config.productName === "QQVibe" ? "UPDATE-SHA256SUMS.txt" : "SHA256SUMS.txt", MAX_SUMS_BYTES]];
   if (!Array.isArray(assets) || required.some(([name, maxBytes]) =>
     assets.filter(asset => asset?.name === name).length !== 1 ||
-    !validAsset(assets.find(asset => asset?.name === name), release.tag_name, name, maxBytes))) {
-    return { status: "incomplete-release", latestVersion, releaseUrl: RELEASES_URL };
+    !validAsset(assets.find(asset => asset?.name === name), release.tag_name, name, maxBytes, config))) {
+    return { status: "incomplete-release", latestVersion, releaseUrl: config.releasesUrl };
   }
-  return { status: "available", latestVersion, releaseUrl: RELEASES_URL };
+  return { status: "available", latestVersion, releaseUrl: config.releasesUrl,
+    ...(config.productName === "QQVibe" ? { notes: typeof release.body === "string" ? release.body.slice(0, 12000) : "",
+      totalBytes: asset(release, packageName).size, prerelease: release.prerelease } : {}) };
 }
 
 function sha256(bytes) {
@@ -184,22 +190,23 @@ function exactKeys(object, keys) {
     Object.keys(object).sort().join("|") === [...keys].sort().join("|");
 }
 
-function verifySignedManifest(raw, signature, version, archiveAsset, publicKey) {
+function verifySignedManifest(raw, signature, version, archiveAsset, publicKey, options = {}) {
+  const config = updateConfig(options.profile);
   if (!Buffer.isBuffer(raw) || !Buffer.isBuffer(signature) || signature.length !== 64) {
     throw new UpdateError("invalid-release", "manifest signature invalid");
   }
   let valid = false;
-  try { valid = crypto.verify(null, raw, publicKey || fs.readFileSync(PUBLIC_KEY_PATH), signature); }
+  try { valid = crypto.verify(null, raw, publicKey || fs.readFileSync(config.publicKeyPath), signature); }
   catch (_) { /* Fail closed on malformed key or signature. */ }
   if (!valid) throw new UpdateError("invalid-release", "manifest signature invalid");
   let manifest;
   try { manifest = JSON.parse(raw.toString("utf8")); }
   catch (_) { throw new UpdateError("invalid-release", "manifest JSON invalid"); }
-  const expectedName = "WechatVibe-" + version + "-windows-x64.zip";
+  const expectedName = config.productName + "-" + version + "-windows-x64.zip";
   if (!exactKeys(manifest, ["schema", "product", "version", "platform", "arch", "layout",
         "dataSchema", "archive"]) ||
       !exactKeys(manifest.archive, ["name", "size", "sha256"]) ||
-      manifest.schema !== 1 || manifest.product !== "WechatVibe" ||
+      manifest.schema !== 1 || manifest.product !== config.productName ||
       manifest.version !== version || manifest.platform !== "win32" ||
       manifest.arch !== "x64" || manifest.layout !== "win-unpacked" ||
       manifest.dataSchema !== "real-client-v1" || manifest.archive.name !== expectedName ||
@@ -220,10 +227,10 @@ function verifySums(raw, manifest, manifestBytes, signature) {
   if (raw.toString("utf8") !== expected) throw new UpdateError("invalid-release", "checksums mismatch");
 }
 
-async function readBoundedJson(response) {
+async function readBoundedJson(response, maxBytes = MAX_RESPONSE_BYTES) {
   const declared = response.headers?.get("content-length");
   if (declared !== null && declared !== undefined &&
-      (!/^\d+$/.test(declared) || Number(declared) > MAX_RESPONSE_BYTES)) {
+      (!/^\d+$/.test(declared) || Number(declared) > maxBytes)) {
     throw new UpdateError("invalid-release", "release response too large");
   }
   if (!response.body) throw new UpdateError("invalid-release", "empty release response");
@@ -231,7 +238,7 @@ async function readBoundedJson(response) {
   let length = 0;
   for await (const chunk of response.body) {
     length += chunk.byteLength;
-    if (length > MAX_RESPONSE_BYTES) throw new UpdateError("invalid-release", "release response too large");
+    if (length > maxBytes) throw new UpdateError("invalid-release", "release response too large");
     chunks.push(Buffer.from(chunk));
   }
   try { return JSON.parse(Buffer.concat(chunks).toString("utf8")); }
@@ -244,10 +251,13 @@ async function discover(currentVersion, options = {}) {
   const abort = abortAfter(options.timeoutMs || 8000, options.signal);
   let release;
   try {
-    const response = await fetchImpl(RELEASE_API, {
+    const config = updateConfig(options.profile);
+    const api = options.profile?.productName === "QQVibe"
+      ? `https://api.github.com/repos/${config.repository}/releases?per_page=30` : RELEASE_API;
+    const response = await fetchImpl(api, {
       method: "GET", redirect: "error", signal: abort.signal,
       headers: {
-        Accept: "application/vnd.github+json", "User-Agent": "WechatVibe-update-check",
+        Accept: "application/vnd.github+json", "User-Agent": config.productName + "-update-check",
         "X-GitHub-Api-Version": "2022-11-28",
       },
     });
@@ -257,24 +267,34 @@ async function discover(currentVersion, options = {}) {
       return { assessment: { status: "rate-limited" } };
     }
     if (!response.ok) return { assessment: { status: "server-error" } };
-    release = await readBoundedJson(response);
+    release = await readBoundedJson(response, options.profile?.productName === "QQVibe" ? 1024 * 1024 : MAX_RESPONSE_BYTES);
+    if (options.profile?.productName === "QQVibe") {
+      if (!Array.isArray(release)) throw new UpdateError("invalid-release", "release list invalid");
+      const candidates = release.filter(item => parseVersion(item?.tag_name) && item.draft === false &&
+        typeof item.prerelease === "boolean" && (options.channel === "preview" || !item.prerelease && !parseVersion(item.tag_name).prerelease.length) &&
+        item.html_url === `${config.releasesUrl}/tag/${encodeURIComponent(item.tag_name)}`);
+      candidates.sort((a, b) => compareVersions(parseVersion(b.tag_name), parseVersion(a.tag_name)));
+      if (!candidates.length) return { assessment: { status: "no-release" } };
+      release = candidates[0];
+    }
   } finally {
     abort.finish();
   }
-  const assessment = assessRelease(currentVersion, release);
+  const config = updateConfig(options.profile);
+  const assessment = assessRelease(currentVersion, release, options);
   if (assessment.status !== "available") return { assessment };
   const version = assessment.latestVersion;
-  const archiveAsset = asset(release, "WechatVibe-" + version + "-windows-x64.zip");
+  const archiveAsset = asset(release, config.productName + "-" + version + "-windows-x64.zip");
   const manifestAsset = asset(release, "update-manifest.json");
   const signatureAsset = asset(release, "update-manifest.sig");
-  const sumsAsset = asset(release, "SHA256SUMS.txt");
+  const sumsAsset = asset(release, config.productName === "QQVibe" ? "UPDATE-SHA256SUMS.txt" : "SHA256SUMS.txt");
   const timeout = options.assetTimeoutMs || 30000;
   const [manifestBytes, signature, sums] = await Promise.all([
     readAsset(manifestAsset, fetchImpl, timeout, MAX_MANIFEST_BYTES, options.signal),
     readAsset(signatureAsset, fetchImpl, timeout, 64, options.signal),
     readAsset(sumsAsset, fetchImpl, timeout, MAX_SUMS_BYTES, options.signal),
   ]);
-  const manifest = verifySignedManifest(manifestBytes, signature, version, archiveAsset);
+  const manifest = verifySignedManifest(manifestBytes, signature, version, archiveAsset, options.publicKey, options);
   verifySums(sums, manifest, manifestBytes, signature);
   return { assessment, archiveAsset, manifest };
 }
@@ -283,6 +303,7 @@ function errorStatus(error, options = {}) {
   if (options.signal?.aborted || error?.name === "AbortError" ||
       error?.name === "TimeoutError") return "timeout";
   if (error?.status) return error.status;
+  if (error?.code === "ENOSPC") return "no-space";
   if (["ENOTFOUND", "EAI_AGAIN", "ENETUNREACH", "EHOSTUNREACH",
       "ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "UND_ERR_CONNECT_TIMEOUT",
       "UND_ERR_HEADERS_TIMEOUT"].includes(error?.cause?.code || error?.code)) return "offline";
@@ -362,6 +383,11 @@ async function downloadAndStageUpdate(currentVersion, installRoot, onProgress, o
   const archivePath = path.join(workDir, discovered.archiveAsset.name);
   const candidatePath = path.join(workDir, "win-unpacked");
   try {
+    const free = await fs.promises.statfs(parent, { bigint: true });
+    const archiveSize = BigInt(discovered.archiveAsset.size);
+    if (free.bavail * free.bsize < archiveSize * 3n + 512n * 1024n * 1024n) {
+      throw new UpdateError("no-space", "可用空间不足，请先释放磁盘空间");
+    }
     await downloadArchive(discovered.archiveAsset, archivePath, options.fetchImpl || globalThis.fetch,
       onProgress, options);
     progress(onProgress, "extracting", discovered.archiveAsset.size, discovered.archiveAsset.size);
@@ -370,11 +396,11 @@ async function downloadAndStageUpdate(currentVersion, installRoot, onProgress, o
     const extractorPath = options.extractorPath ||
       path.join(root, "resources", "client", "scripts", "real-client-update-extract.py");
     await execFileAsync(pythonExe, ["-I", extractorPath, archivePath, workDir,
-      discovered.assessment.latestVersion], {
+      discovered.assessment.latestVersion, "--product-name", updateConfig(options.profile).productName], {
       cwd: workDir, windowsHide: true, timeout: options.extractTimeoutMs || 20 * 60 * 1000,
       maxBuffer: 16 * 1024,
     });
-    const exe = await fs.promises.stat(path.join(candidatePath, "WechatVibe.exe"));
+    const exe = await fs.promises.stat(path.join(candidatePath, updateConfig(options.profile).productName + ".exe"));
     if (!exe.isFile() || exe.size === 0) throw new UpdateError("invalid-release", "candidate executable missing");
     return { candidatePath, expectedVersion: discovered.assessment.latestVersion, workDir };
   } catch (error) {

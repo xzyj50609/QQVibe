@@ -1,6 +1,6 @@
 {
   "name": "qqvibe",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "QQVibe：QQ 单聊与群聊的情绪、意图和人物画像分析客户端",

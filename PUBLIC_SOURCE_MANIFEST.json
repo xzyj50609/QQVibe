@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "product": "QQVibe",
-  "sourceCommit": "26e3a10a4b8556df439039aa6c1281a0367b8d36",
+  "sourceCommit": "18a02ab1f3ace6e9f4f0aa572e31d1608331d406",
   "upstreamBaseline": "02b770821a1cf46b8ecc46b4f874ac6f922bd586",
   "gitHistoryExported": false,
   "allowlistReviewed": true,
@@ -27,8 +27,8 @@
     {
       "file": "README.md",
       "source": "README.md",
-      "bytes": 6938,
-      "sha256": "a9bbee9d15f405011fbd933791a1fe4f079d049b557cc8b32d02d9328ee088b2"
+      "bytes": 6064,
+      "sha256": "8d46e77462943474d55c3fc54b7f644ec28bf46ba88f8eac9311dd4486d3bb93"
     },
     {
       "file": "THIRD_PARTY_NOTICES.md",
@@ -87,8 +87,8 @@
     {
       "file": "bridge/backend_service.py",
       "source": "bridge/backend_service.py",
-      "bytes": 189089,
-      "sha256": "20cc33efaf295a982343858e443044f6b39397e9dfe0e1296641538e1ac2bd43"
+      "bytes": 188957,
+      "sha256": "af367563e192d446659f74202a3c6c6e7903b9ada6e2c316951f35c5ae919fe3"
     },
     {
       "file": "bridge/batch_engine.py",
@@ -207,8 +207,8 @@
     {
       "file": "bridge/product_profile.py",
       "source": "bridge/product_profile.py",
-      "bytes": 3977,
-      "sha256": "830262e0c44e1ab3246e8879fa0a1ff6990c9a603d4ba3217ac296ff351ce28c"
+      "bytes": 4096,
+      "sha256": "210dae30630f32d7214c03794145b56e1714ec46faf17b58bad07b16d3ea1c69"
     },
     {
       "file": "bridge/profile_signals.py",
@@ -297,8 +297,8 @@
     {
       "file": "bridge/qq_import.py",
       "source": "bridge/qq_import.py",
-      "bytes": 25352,
-      "sha256": "d9e2421e21b676a43a06bd96f7c51005efe3d6c79cca06a0d48454aacac5bf21"
+      "bytes": 25361,
+      "sha256": "41a675965030845a0bb6450e1e126758a83344032f4d8057cc721ca33fba573f"
     },
     {
       "file": "bridge/qq_import_reader.py",
@@ -315,8 +315,8 @@
     {
       "file": "bridge/qq_json_adapter.py",
       "source": "bridge/qq_json_adapter.py",
-      "bytes": 14010,
-      "sha256": "06944c9e8cf6e474ab689ec94b41b6c104b45b6d5803ffd6014a54929cbc586e"
+      "bytes": 14994,
+      "sha256": "0a9406f0c96c62c69ab9d3075be4be23f4caac76465a37de30eb17efe65e4cb7"
     },
     {
       "file": "bridge/test_qq_json_import.py",
@@ -327,8 +327,8 @@
     {
       "file": "docs/public/JSON-IMPORT.md",
       "source": "docs/public/JSON-IMPORT.md",
-      "bytes": 3670,
-      "sha256": "83669b255651ff704be9509e887b3b91791d4d39253fffb7c19d13652f48fb32"
+      "bytes": 3991,
+      "sha256": "58c2b971816c67ae02ad70e49fca88dc027b71258ea0db2d0ac1909df6dbdee9"
     },
     {
       "file": "bridge/qq_ingest_audit.py",
@@ -351,8 +351,8 @@
     {
       "file": "bridge/qq_normalize.py",
       "source": "bridge/qq_normalize.py",
-      "bytes": 27634,
-      "sha256": "75002c95cb0ff74c321a20a06ab2c62973e95981d51d44fe1d7b8750241fc83e"
+      "bytes": 28410,
+      "sha256": "1c166de8e5513ebe2718ee5dbae424bb63462985a692594ce9fb6d8e4da00125"
     },
     {
       "file": "bridge/qq_roles.py",
@@ -405,14 +405,14 @@
     {
       "file": "bridge/real_http.py",
       "source": "bridge/real_http.py",
-      "bytes": 41113,
-      "sha256": "4e1d63a7d8041894f1a29fd17113d7f15c55fbb0af53121ed25dcb551afc4b8e"
+      "bytes": 42742,
+      "sha256": "acb27b330b631aec54baacf05c2807c4d8299f3b481ea7772a789d279d0ee361"
     },
     {
       "file": "bridge/result_store.py",
       "source": "bridge/result_store.py",
-      "bytes": 52843,
-      "sha256": "049ea5ca9fb298c9d48f4bf9ef02be90e8a8965f82cc9566b608c951a0e60a4e"
+      "bytes": 53220,
+      "sha256": "c5e013031c5a5c075bf6eee62a6e5d678f619e826599b18451d8000e60fb6da1"
     },
     {
       "file": "bridge/snapshot_cache.py",
@@ -525,14 +525,14 @@
     {
       "file": "bridge/test_product_profile.py",
       "source": "bridge/test_product_profile.py",
-      "bytes": 4800,
-      "sha256": "c43bbdf5f8103c86b00ee5e080a60e0de064d8de1ee413c607f35b77c2b9f17b"
+      "bytes": 5106,
+      "sha256": "ae4a790b09731a6ba8b5ed6209a38bd410c1fe9974d9048640a44971daf21ffa"
     },
     {
       "file": "bridge/test_qq_accounts.py",
       "source": "bridge/test_qq_accounts.py",
-      "bytes": 14617,
-      "sha256": "8f266dc520e397bb19cb7b1b85bc0f1bf3cc206c52027d9f108a5aa4b6e2e675"
+      "bytes": 14727,
+      "sha256": "b3db68e03bc664e8a3e3650e2a53ba70d84b8c4e5d699a8564746e0f742c8b9c"
     },
     {
       "file": "bridge/test_qq_analysis_control.py",
@@ -753,26 +753,26 @@
     {
       "file": "chatui/app.js",
       "source": "chatui/app.js",
-      "bytes": 280827,
-      "sha256": "9b3f6a9bc59abc0df0a4b089ebefef54d7b88210fc5d17b97ee9b637216393f1"
+      "bytes": 283725,
+      "sha256": "01012630f7dc50f89c4751df30de05c3752690a0d30a10b2d4fe68e99278f012"
     },
     {
       "file": "chatui/assets/qqvibe-icon.ico",
       "source": "chatui/assets/qqvibe-icon.ico",
-      "bytes": 26840,
-      "sha256": "594e6e714b289b4085f54963497a083c639b2c1fb1db9fb958913744200da0bb"
+      "bytes": 46475,
+      "sha256": "d6a9a1a81d4ec3c89b1d33f98fa82bf25c96e60b644e40b0ea77df1c9b5f9020"
     },
     {
       "file": "chatui/assets/qqvibe-icon.png",
       "source": "chatui/assets/qqvibe-icon.png",
-      "bytes": 10957,
-      "sha256": "1baad56ad3020b0ff0e23cd1f3deee7d6b073f21c00d352f0156cc0b6cc23eb1"
+      "bytes": 200566,
+      "sha256": "d394f3ba3380c387ffc78121ef94a06e08ba496d5562af21daced09e0471d785"
     },
     {
       "file": "chatui/assets/qqvibe-icon.svg",
       "source": "chatui/assets/qqvibe-icon.svg",
-      "bytes": 696,
-      "sha256": "8cda0ab8e8bc6a2361ca08d7305b44b664f2388cd6b689afa97815b8fc129e41"
+      "bytes": 1176,
+      "sha256": "60170fc2827b857a90459cd585f04d1f248786dc5155dc824bc442a507bf8e63"
     },
     {
       "file": "chatui/assets/wechatvibe-icon.ico",
@@ -795,8 +795,8 @@
     {
       "file": "chatui/index.html",
       "source": "chatui/index.html",
-      "bytes": 48480,
-      "sha256": "834ede8bf84effdbea972397b43e2de3a4f05ec1bc703c7c13470a946aabaa9c"
+      "bytes": 49004,
+      "sha256": "b7b9ad838c02ddd1e0d6be8d69e7bcf38734bc5d7655c79892b4b8779071e5ad"
     },
     {
       "file": "chatui/kaomoji.js",
@@ -837,14 +837,14 @@
     {
       "file": "chatui/qq-support-ui.js",
       "source": "chatui/qq-support-ui.js",
-      "bytes": 8985,
-      "sha256": "bb272b2a887e474be2ac361fe4b8fc7badc2e4263a1c026fd34c841a54063c19"
+      "bytes": 9831,
+      "sha256": "cfd726f4fcc0de3d6262a9b42579a8c8d7d9c55ce5368feef760790a21095535"
     },
     {
       "file": "chatui/qq-sync-ui.js",
       "source": "chatui/qq-sync-ui.js",
-      "bytes": 12493,
-      "sha256": "6ed192c2428398d85979e954084163f1af5d4ecfb42a78e7a20f9f4b1a9eddde"
+      "bytes": 13171,
+      "sha256": "994e34fdc41303d8f42a614bbfad3a9cb00c5e0f58317a76c16b3522fc5a6e4e"
     },
     {
       "file": "chatui/style.css",
@@ -855,8 +855,8 @@
     {
       "file": "chatui/view-state.js",
       "source": "chatui/view-state.js",
-      "bytes": 6388,
-      "sha256": "e1ab15ddb82aa51a8bc15b7250efbd3c710fa59bb1126555cc136cc77436cb7d"
+      "bytes": 6420,
+      "sha256": "6c68b56d3286ce96ecaec9c9000e02bac1405acbb97a43070ef54be430650b73"
     },
     {
       "file": "docs/contracts/data-schema.md",
@@ -885,8 +885,8 @@
     {
       "file": "docs/public/BACKUP-UPGRADE.md",
       "source": "docs/public/BACKUP-UPGRADE.md",
-      "bytes": 2099,
-      "sha256": "dde42e63db3492f49c3058b874942dd5a89ec8092b2e59cacc020bb2e5079d04"
+      "bytes": 2568,
+      "sha256": "381c44158cd629e878e6d1664f9cbb62cef7237c847910f1fd3baaf800c00f0c"
     },
     {
       "file": "docs/public/BUILD.md",
@@ -897,14 +897,14 @@
     {
       "file": "docs/public/COMPATIBILITY.md",
       "source": "docs/public/COMPATIBILITY.md",
-      "bytes": 3309,
-      "sha256": "adb59e02b4d4fe50d81afb7dbd3451f214b74555a1dd4d4b02a2ac9e61209261"
+      "bytes": 3519,
+      "sha256": "2aeead16790cd5d28928938138c0336b80050f9a20442fca00b16d74cda0c59a"
     },
     {
       "file": "docs/public/FEEDBACK.md",
       "source": "docs/public/FEEDBACK.md",
-      "bytes": 2215,
-      "sha256": "3ad9acee122c25ebdcaeb308d6b5873dcd636bb1b954fd5cfe41ad595bd1b275"
+      "bytes": 2227,
+      "sha256": "cc7aef2852c260f9538ef25d40c66d83934b6d0f674158c2244b0349c968d467"
     },
     {
       "file": "docs/public/KNOWN-ISSUES.md",
@@ -921,26 +921,26 @@
     {
       "file": "docs/public/R9-TRIAL.md",
       "source": "docs/public/R9-TRIAL.md",
-      "bytes": 4057,
-      "sha256": "52d1f93dcb18fbdbf14f361ef6c6b3cbb6e31ad7b15b7ee416b835a674d2bb63"
+      "bytes": 4069,
+      "sha256": "d22cbefdfba43e4ffd861cdcdf731b2130a23894015ce69985f461dd4f3aba1c"
     },
     {
       "file": "docs/public/RELEASE-NOTES.md",
       "source": "docs/public/RELEASE-NOTES.md",
-      "bytes": 6437,
-      "sha256": "e05226530580a9883b682382aaa0d956bf717806c19449805f81c45df851683b"
+      "bytes": 3053,
+      "sha256": "2b3365e7a9e55d50b034655a787669cc4f2978628376dc729285255c8b40fc96"
     },
     {
       "file": "docs/public/SETUP.md",
       "source": "docs/public/SETUP.md",
-      "bytes": 10657,
-      "sha256": "1b24ec9e1cffe35bc3d59501575cd98583310bf3dac2be9f9b5cee3a7efcb8e4"
+      "bytes": 11013,
+      "sha256": "f37100eef6c08f97ba183d61823bb20816fbc80591293df2cd598d7a1d2dcfb4"
     },
     {
       "file": "electron-builder.real-client.json",
       "source": "electron-builder.real-client.json",
-      "bytes": 1359,
-      "sha256": "73d1c576ec23fdf9698c9e62ddb5d34d6e1a47f7072990ef891a6e012ff12971"
+      "bytes": 1624,
+      "sha256": "46df6f7f8b92ebc5c4707c737bc60bb7cececad579745ab83af2028d69004f91"
     },
     {
       "file": "electron/analysis.ts",
@@ -1294,13 +1294,13 @@
       "file": "package-lock.json",
       "source": "package-lock.json",
       "bytes": 176980,
-      "sha256": "f359a16cf2bc2d8b3a95b84af9ef93c0a17647f3f89f85dfde22e7b14a524493"
+      "sha256": "14552102482af5757aed52d8e9de41789b11f56ef494e4df895dd9bb337413ed"
     },
     {
       "file": "package.json",
       "source": "package.json",
       "bytes": 1899,
-      "sha256": "79613bed8cad1bb6412def90254e1714a458d07cb87e645c5b683a0f880c01f3"
+      "sha256": "b35a13f8847647b08160c5c37ae8b5841596012d230ac5453e16e7a40e156a37"
     },
     {
       "file": "probes/fake_qce_server.py",
@@ -1371,8 +1371,8 @@
     {
       "file": "scripts/build-portable-clean.py",
       "source": "scripts/build-portable-clean.py",
-      "bytes": 13232,
-      "sha256": "6381deee22b45c1572050e752569af2ee53e0e6868e721e577b28f1853eb5acd"
+      "bytes": 13715,
+      "sha256": "adea3ba8b67cbcdd189ac9b61388b7d6a6b9248b30555842a9e7b4af062d45e0"
     },
     {
       "file": "scripts/build-prerequisites.py",
@@ -1383,14 +1383,14 @@
     {
       "file": "scripts/build-update-manifest.cjs",
       "source": "scripts/build-update-manifest.cjs",
-      "bytes": 4835,
-      "sha256": "a9d96b6d851484d29046e9da473f7f5a70ec0cf4df7ad2ab8ff675d78fb7158d"
+      "bytes": 5515,
+      "sha256": "543280343771fb3f9858da7f27936403b16270540fb9912b846e798c02e497ec"
     },
     {
       "file": "scripts/build-windows-release.py",
       "source": "scripts/build-windows-release.py",
-      "bytes": 19654,
-      "sha256": "1573e50816e814340876a991ad3b799726c9f5ecc593d1e9cb21faed1df24bab"
+      "bytes": 20079,
+      "sha256": "e4795ecef3cf218908f0c9dfed4a33c009a115b92c09d0286e1fda16932f8b2e"
     },
     {
       "file": "scripts/check-public-source.py",
@@ -1443,14 +1443,14 @@
     {
       "file": "scripts/product-identity.cjs",
       "source": "scripts/product-identity.cjs",
-      "bytes": 3004,
-      "sha256": "3acc9866eba54e701abbef0fe31ec96e9fca7c48a256336de3620b41748f3aed"
+      "bytes": 3063,
+      "sha256": "5e8d19cc3defd5bbfa176e3508b762e3222e2e2d87a90d36265cd3b2d9146f6f"
     },
     {
       "file": "scripts/product-identity.json",
       "source": "scripts/product-identity.json",
-      "bytes": 959,
-      "sha256": "f8cee759e48194fa11fb467bd8e32daffcf38998495502d55f580ae47fa2ce88"
+      "bytes": 1016,
+      "sha256": "c930471506df0bbfd1a824c894f6e98b4c6a2e36574df21f4b0866f1610d5bc2"
     },
     {
       "file": "scripts/project_python.py",
@@ -1461,8 +1461,8 @@
     {
       "file": "scripts/public-source-allowlist.json",
       "source": "scripts/public-source-allowlist.json",
-      "bytes": 37665,
-      "sha256": "4ea5bcb6bc0443068e46844a463ef73321f2073d038b220143eda0bd5a53bc86"
+      "bytes": 40927,
+      "sha256": "c41e9ec3659056bd393d962ffc674d4efe926b502c636aa4bdae101f714c1bbb"
     },
     {
       "file": "scripts/public-source-gitattributes.txt",
@@ -1479,8 +1479,8 @@
     {
       "file": "scripts/real-client-preload.cjs",
       "source": "scripts/real-client-preload.cjs",
-      "bytes": 4764,
-      "sha256": "6cdcce2f0c5ad807ce21bd763e05c16be3eaa2a8fd4b9ce700ae8acf2279a735"
+      "bytes": 5362,
+      "sha256": "cd6e4113eb4fc1a6041df532ff8756b9c3987c7184e6f24a61fd5e1dad460824"
     },
     {
       "file": "scripts/real-client-recovery.cjs",
@@ -1491,26 +1491,26 @@
     {
       "file": "scripts/real-client-shell.cjs",
       "source": "scripts/real-client-shell.cjs",
-      "bytes": 27632,
-      "sha256": "c2f0e3925061981cf03c3fc362bda2117f0951550657887629538cf0de5966fb"
+      "bytes": 32480,
+      "sha256": "caccaacace924446fc4c31b7da849c20a36e4673046d6e00702ffe709fd0089d"
     },
     {
       "file": "scripts/real-client-update-controller.cjs",
       "source": "scripts/real-client-update-controller.cjs",
-      "bytes": 8544,
-      "sha256": "4bac860e1c3839506e38c16a8a1e66708179c6d65d786b026d841c0c5598fdd1"
+      "bytes": 9540,
+      "sha256": "c7120fb272df0339d2e336fd0f27557d7e01817761e8e4f6a294963ab0896b8e"
     },
     {
       "file": "scripts/real-client-update-extract.py",
       "source": "scripts/real-client-update-extract.py",
-      "bytes": 8831,
-      "sha256": "fce543e6a051ff389244cbafac1e678b171e52b0a71c05b3ca1c2bfe90ad3151"
+      "bytes": 9076,
+      "sha256": "0ccfd61add1e4f1ad1b8ed1f124f531fd09e3eb80a840d0f21c32b92703bdec5"
     },
     {
       "file": "scripts/real-client-update-helper.cjs",
       "source": "scripts/real-client-update-helper.cjs",
-      "bytes": 46796,
-      "sha256": "59d462a8cea4c85234259e2d9c2d0104857c114f1044b2b6110026a273fd7aa6"
+      "bytes": 48051,
+      "sha256": "84547a1021d86929f90c529a68d1f8f423aa3a73c005a4e4cc61ec9bc256408b"
     },
     {
       "file": "scripts/real-client-update-proxy.cjs",
@@ -1521,8 +1521,8 @@
     {
       "file": "scripts/real-client-update.cjs",
       "source": "scripts/real-client-update.cjs",
-      "bytes": 17645,
-      "sha256": "c90bbab62736379df97bfd138747e32a7ca8ef013a83532392730511b5f29627"
+      "bytes": 19925,
+      "sha256": "aaaabeb102d7052a73bc46a694f6738e88753e9a41529ebe7847c1ec87e2fa49"
     },
     {
       "file": "scripts/restore-qq-data.py",
@@ -1569,8 +1569,8 @@
     {
       "file": "scripts/stage-real-client.py",
       "source": "scripts/stage-real-client.py",
-      "bytes": 17128,
-      "sha256": "f420ea48b59290f8ee43eb9c6e50474beeadec6795d2561d2a79737944f0755a"
+      "bytes": 17479,
+      "sha256": "10e46ecb9d124c2865b2a9edb3df342d1e9ad2d44c55e77e5b6aaffe5d58e26b"
     },
     {
       "file": "scripts/stage-real-runtime.py",
@@ -1599,20 +1599,20 @@
     {
       "file": "scripts/test-build-portable-clean.py",
       "source": "scripts/test-build-portable-clean.py",
-      "bytes": 16268,
-      "sha256": "36587ea12eb84d07a3c795f56024b6dc9b076cf5b33d9ad30b6dce8930a29cf6"
+      "bytes": 16431,
+      "sha256": "cf18dc640ff09e69eb4336f41f31cd5027e9c2f598353c99aac6eeadf24ad5a7"
     },
     {
       "file": "scripts/test-build-prerequisites.py",
       "source": "scripts/test-build-prerequisites.py",
-      "bytes": 5647,
-      "sha256": "20f8ffde469de3efd0539e9d577b26bc7fdd9661ae9f19bbb69326b09fef34d5"
+      "bytes": 5673,
+      "sha256": "5d32f5781160acf2a17cb0489a45447977c61c96e2bda0fbb7ec18834e263bca"
     },
     {
       "file": "scripts/test-build-windows-release.py",
       "source": "scripts/test-build-windows-release.py",
-      "bytes": 14719,
-      "sha256": "f17351ead6057eef00dae420a74bfb825aaeeaa3fa22a3a583d1d3eb43d87bbe"
+      "bytes": 15555,
+      "sha256": "9bbc7860986f00cd92729e47f16575fa7c483aa55c915f286b452b2f4f15afac"
     },
     {
       "file": "scripts/test-desktop-main.cjs",
@@ -1641,8 +1641,8 @@
     {
       "file": "scripts/test-product-identity.cjs",
       "source": "scripts/test-product-identity.cjs",
-      "bytes": 2352,
-      "sha256": "6323eda225f0348b401beccb8fbccab01c426e83289fa5fbdf562f63e8b5e439"
+      "bytes": 2501,
+      "sha256": "afdf5553311de910ac04f9755439afae0d0dee4faed99665987a0275ced2d0b9"
     },
     {
       "file": "scripts/test-project-python.py",
@@ -1653,8 +1653,8 @@
     {
       "file": "scripts/test-real-client-exit.cjs",
       "source": "scripts/test-real-client-exit.cjs",
-      "bytes": 12436,
-      "sha256": "bf3df64281e4e8ad1d890d6195a76fbe8e87737813fa490760a295b3167ab9aa"
+      "bytes": 12569,
+      "sha256": "763a5b49ed7d6364eaf96d4176e020a578f30d5b2e54bfc734cbd022e61f420d"
     },
     {
       "file": "scripts/test-real-client-recovery.cjs",
@@ -1665,20 +1665,20 @@
     {
       "file": "scripts/test-real-client-shell-qq-update.cjs",
       "source": "scripts/test-real-client-shell-qq-update.cjs",
-      "bytes": 4319,
-      "sha256": "d5a666d457e9eda83b8dd2cc3f18453aa064cff0bb41b06a4969487b6237ad90"
+      "bytes": 4440,
+      "sha256": "c2c08da1759f0f4f31c30f36beb5f31936a4aea147929bc47b7a721b38792fc4"
     },
     {
       "file": "scripts/test-real-client-shell-update.cjs",
       "source": "scripts/test-real-client-shell-update.cjs",
-      "bytes": 4817,
-      "sha256": "63009929c1909fba368dc11107583e31f125a134d6d55fd5a5b49b1cfe6dabb9"
+      "bytes": 4950,
+      "sha256": "13436a4be340c5a9a162782aca6895a2ac6e502b30bbcc317bf1fd63d28f991e"
     },
     {
       "file": "scripts/test-real-client-update-controller.cjs",
       "source": "scripts/test-real-client-update-controller.cjs",
-      "bytes": 7625,
-      "sha256": "bd6e1fbc77316e431955647d55cb0b657413ca87d631d79b74ecaceed1c51a19"
+      "bytes": 7758,
+      "sha256": "4a8a3fce9d20a286068ae1e42deb23c54fb23a4be12717df9475050a806fd0da"
     },
     {
       "file": "scripts/test-real-client-update-extract.py",
@@ -1689,8 +1689,8 @@
     {
       "file": "scripts/test-real-client-update-final-ready.cjs",
       "source": "scripts/test-real-client-update-final-ready.cjs",
-      "bytes": 5175,
-      "sha256": "0b9819238763a6e6267595dbef8a4eb1dcde75d6b2dac5d3ae809fe4ddb064b7"
+      "bytes": 5308,
+      "sha256": "a975ba12be9459106101c39c54123484986a14ed993e5af44383321ebb485cf7"
     },
     {
       "file": "scripts/test-real-client-update-helper.cjs",
@@ -1707,8 +1707,8 @@
     {
       "file": "scripts/test-real-client-update-security.cjs",
       "source": "scripts/test-real-client-update-security.cjs",
-      "bytes": 8573,
-      "sha256": "9cb45c5ae4ced1003af1a3784ba66ce5d729ac73b1c9d35d7685a325036b43d2"
+      "bytes": 8704,
+      "sha256": "0c9317aaddec67e2fa13ea10d01471a839125b3f7736c7325233af9369a6f3be"
     },
     {
       "file": "scripts/test-real-client-update.cjs",
@@ -1948,13 +1948,13 @@
       "file": "tests/qq-support-ui.test.cjs",
       "source": "tests/qq-support-ui.test.cjs",
       "bytes": 6989,
-      "sha256": "eee1127413bd8c91156b51d04303e3fed1413f5ac4356c8480a809cf2eb3314d"
+      "sha256": "19c6913ff55d3b536234312b150ede173c1c7834f8dafd10f925d7216c17aa48"
     },
     {
       "file": "tests/qq-sync-ui.test.cjs",
       "source": "tests/qq-sync-ui.test.cjs",
-      "bytes": 10121,
-      "sha256": "07c46be6e06896d1789de21a91c84c0f77d05f5575a33354feb8e708bc1e0ccf"
+      "bytes": 12107,
+      "sha256": "4f2ce897e8c8fc3052935a818c7f940e3e00aa798c926dea4026a913fab2b7be"
     },
     {
       "file": "tests/setup-models.test.ts",
@@ -2001,8 +2001,8 @@
     {
       "file": "scripts/build-user-guide.py",
       "source": "scripts/build-user-guide.py",
-      "bytes": 9126,
-      "sha256": "e4eec8d908c27189e1d190cc3e33a67c42091c97ba6e64aa9dd58c2e5d4da87d"
+      "bytes": 9161,
+      "sha256": "7af83461724ef9c9c95cc6cd95dbcf1ba7418cf327709551579e69bb43e5cb05"
     },
     {
       "file": "scripts/capture-public-demo.cjs",
@@ -2013,62 +2013,242 @@
     {
       "file": "docs/public/USER-GUIDE.md",
       "source": "docs/public/USER-GUIDE.md",
-      "bytes": 8384,
-      "sha256": "56ee6f62292933a09a1d07a43c4a65fd1827faa3808054c0af94403d0303cadf"
+      "bytes": 9970,
+      "sha256": "f085767bcb0245d9ab38767812200e2f55c083efac46ac935fd804fbe2a0c045"
     },
     {
       "file": "docs/public/USER-GUIDE.html",
       "source": "docs/public/USER-GUIDE.html",
-      "bytes": 776365,
-      "sha256": "bf743fe342d47222ca244cd515e836d50aecb983e9d0c725aa4b24c4236a3434"
+      "bytes": 608994,
+      "sha256": "614af807f5f1bb654c67f6a02439cc69d25da26a5632bca98a39eddc3b9086a8"
     },
     {
       "file": "tests/qq-theme-default.test.cjs",
       "source": "tests/qq-theme-default.test.cjs",
-      "bytes": 4399,
-      "sha256": "5e666ff3c5b60078a1f0168105f0452729fc19a5571767773a8584d6040dca74"
+      "bytes": 4850,
+      "sha256": "aa6d99f07a4150964b682ab1cd23a58aee1f51fda5f57aa2470bc2dab836779c"
     },
     {
       "file": "docs/public/images/overview.png",
       "source": "docs/public/images/overview.png",
-      "bytes": 78035,
-      "sha256": "8e3653b6e31940b14753cc7863d5b717529e778174e0c3f99bb4d8ad92375ffc"
+      "bytes": 42924,
+      "sha256": "010608455863724da722d26e89efff0bc89c8f89632e2a07cdd104ad9d3592a1"
     },
     {
       "file": "docs/public/images/single-chat.png",
       "source": "docs/public/images/single-chat.png",
-      "bytes": 84913,
-      "sha256": "e62ea256e9ddce6306dbaf6b21aa5eaebf37937c67b776fc1a3881da590c0f58"
+      "bytes": 49869,
+      "sha256": "52ca03a6d38a85d541642bf7979aebd82d3a8f25d4b09c80b4d89c0f4ca29d35"
     },
     {
       "file": "docs/public/images/group-chat.png",
       "source": "docs/public/images/group-chat.png",
-      "bytes": 77272,
-      "sha256": "3f029e0fa1b7514f427ce55f071ae7fc357dc4d06847b2ac6e4f3e0f90c9fc11"
+      "bytes": 46527,
+      "sha256": "b86e731b51e5aa5ed4d1e6c93d0a36fc55e8133976f55736d1a9b94e382f545e"
     },
     {
       "file": "docs/public/images/settings.png",
       "source": "docs/public/images/settings.png",
-      "bytes": 86786,
-      "sha256": "63496c2f7a8cfcb6c9924188909e9185b321a9e0f4b69b56a5c763c2f3fd210d"
+      "bytes": 39570,
+      "sha256": "e0c79a74d115a8f705ed2708838bdeb4c07a22a20be8038bc342a8a74ddebd12"
     },
     {
       "file": "docs/public/images/first-run.png",
       "source": "docs/public/images/first-run.png",
-      "bytes": 32436,
-      "sha256": "1e453ec364feb1ae4c45112b2f66d4d3641f0a98c2584cce5367914c02913a8c"
+      "bytes": 42982,
+      "sha256": "9b25306ad34e5bf6fb03dde32436ef3cd0943a85f38e245aa14fee77d62c7825"
     },
     {
       "file": "docs/public/images/settings-connection.png",
       "source": "docs/public/images/settings-connection.png",
-      "bytes": 104381,
-      "sha256": "21010f5a301ed69c8e3ef9d4d137488957c4331f1d09430c45d2eb19f23cf40e"
+      "bytes": 51340,
+      "sha256": "dff1a752e3950ad2110a08ed52ed8b2cac5320cb89b58274362b20cee797d841"
     },
     {
       "file": "docs/public/images/group-labels.png",
       "source": "docs/public/images/group-labels.png",
-      "bytes": 82098,
-      "sha256": "4bdfa401eed9aa9c2b91483fe8ae76bc7d451e234ef01d11e11c4c29303c0db3"
+      "bytes": 46869,
+      "sha256": "73b54013d0c84b3f79d738dd5a5f54287a845d7518927ba79aaf4d90b06a5aa1"
+    },
+    {
+      "file": "scripts/qce-doctor-core.ps1",
+      "source": "scripts/qce-doctor-core.ps1",
+      "bytes": 34536,
+      "sha256": "bc08c35c5d0d3c2ad92013cd0f956887451e15e85b1e779224f39a0573ec1f93"
+    },
+    {
+      "file": "scripts/qce-doctor.ps1",
+      "source": "scripts/qce-doctor.ps1",
+      "bytes": 11421,
+      "sha256": "b121529f803a86141bf4bd5faec76819633eb0a15a2ea196a92cefeff69eddd2"
+    },
+    {
+      "file": "scripts/qce-doctor.cmd",
+      "source": "scripts/qce-doctor.cmd",
+      "bytes": 431,
+      "sha256": "0e961dc66c447da9a504fc57ceeab7e056c402b63e786753614c0a34a3c72132"
+    },
+    {
+      "file": "scripts/test-qce-doctor.ps1",
+      "source": "scripts/test-qce-doctor.ps1",
+      "bytes": 8293,
+      "sha256": "c382b70c25ae93430c328df3210b6080c79f8f129a3e6f0a081e3d6fd8fa7fc7"
+    },
+    {
+      "file": "scripts/test-qce-doctor-http.py",
+      "source": "scripts/test-qce-doctor-http.py",
+      "bytes": 6765,
+      "sha256": "cc785ea8ff5885b19bcc06648d3d2ccb4ad5c095bfbf736ed1f3e29b6538cdf8"
+    },
+    {
+      "file": "tests/qce-doctor-ui.test.cjs",
+      "source": "tests/qce-doctor-ui.test.cjs",
+      "bytes": 1706,
+      "sha256": "1d6e66a9c95a6cb12d366fb02d9ba59b8dad06918078c1596b17b7cbb8fb8d04"
+    },
+    {
+      "file": "docs/public/QCE-DOCTOR.md",
+      "source": "docs/public/QCE-DOCTOR.md",
+      "bytes": 4102,
+      "sha256": "c49bead63abd76bd947d99eb21e106c27c48dd2b5a0921c852f003b77dbddab0"
+    },
+    {
+      "file": "scripts/build-qce-doctor.py",
+      "source": "scripts/build-qce-doctor.py",
+      "bytes": 3745,
+      "sha256": "4a02e7c2a7773570296de3af0117b3994b4b549d05d55355ba68acd81613db7d"
+    },
+    {
+      "file": "tests/qce-doctor-host.test.cjs",
+      "source": "tests/qce-doctor-host.test.cjs",
+      "bytes": 4486,
+      "sha256": "96f9d726c4db366cc4e4e043b9fef8d6d25c747876dd78ca6961e56f8dc6e399"
+    },
+    {
+      "file": "scripts/real-client-update-config.cjs",
+      "source": "scripts/real-client-update-config.cjs",
+      "bytes": 3131,
+      "sha256": "c16fe0b4cf3b16a5b6d04fe586c3d9f1ca474c82594348c06b495568c482d668"
+    },
+    {
+      "file": "scripts/qq-update-signing.pub",
+      "source": "scripts/qq-update-signing.pub",
+      "bytes": 113,
+      "sha256": "78e2ae8233daa94bb5c25a7ba535d288f9da0399fdb709d1024ce769d8ebda0a"
+    },
+    {
+      "file": "scripts/init-qq-update-signing.cjs",
+      "source": "scripts/init-qq-update-signing.cjs",
+      "bytes": 1469,
+      "sha256": "360d22e4ad192b15bb18124ee2b1d17dc268e746c4e94e63b8e39bcfddf8a0e8"
+    },
+    {
+      "file": "scripts/test-qq-auto-update.cjs",
+      "source": "scripts/test-qq-auto-update.cjs",
+      "bytes": 12281,
+      "sha256": "83e8825a8a2b2e344016401fbdde349fa21316c8f8ece517082e9bf06468b23d"
+    },
+    {
+      "file": "bridge/test_update_readiness.py",
+      "source": "bridge/test_update_readiness.py",
+      "bytes": 2346,
+      "sha256": "5f514c2c5a1fb1dbd9783204aa1b34759a1627fda1983d2d9c1957903a869d1d"
+    },
+    {
+      "file": "docs/public/AUTO-UPDATE.md",
+      "source": "docs/public/AUTO-UPDATE.md",
+      "bytes": 2042,
+      "sha256": "84690f82f555d3858a681e8b5383497893e1f59c72a655450cff9c8937b60436"
+    },
+    {
+      "file": "chatui/chatbean-tokens.css",
+      "source": "chatui/chatbean-tokens.css",
+      "bytes": 2463,
+      "sha256": "73c6299ba52506f7ceb0d1da47278000bc1cd728b1decea99ee1a2ee51fd0200"
+    },
+    {
+      "file": "chatui/chatbean.css",
+      "source": "chatui/chatbean.css",
+      "bytes": 17633,
+      "sha256": "dac2348ce152f78658971c2badaba08e632562587d9b03a1f1bc9f50d463624b"
+    },
+    {
+      "file": "chatui/chatbean-ui.js",
+      "source": "chatui/chatbean-ui.js",
+      "bytes": 9693,
+      "sha256": "ea02b9ac5fd7f48c646191bfa54b74108745701fc3543fd7bbb2af8adb9f896b"
+    },
+    {
+      "file": "design.md",
+      "source": "design.md",
+      "bytes": 5704,
+      "sha256": "832a7148e45c2a5c6a8a85643e881ebefa680e37978dc9677d0c041feee64b11"
+    },
+    {
+      "file": "scripts/render-product-icon.cjs",
+      "source": "scripts/render-product-icon.cjs",
+      "bytes": 1689,
+      "sha256": "d1bc7113d3e981084a012cb2f55b3cf11dc2d9515d524cf83cf743e969ea4342"
+    },
+    {
+      "file": "docs/design/brand/chatbean-icon.svg",
+      "source": "docs/design/brand/chatbean-icon.svg",
+      "bytes": 1176,
+      "sha256": "60170fc2827b857a90459cd585f04d1f248786dc5155dc824bc442a507bf8e63"
+    },
+    {
+      "file": "tests/chatbean-navigation.test.cjs",
+      "source": "tests/chatbean-navigation.test.cjs",
+      "bytes": 2628,
+      "sha256": "d2b881ea36ab9831ee05871fc4f2df2839edaa62ba87e6e29089a8ce15d35fd1"
+    },
+    {
+      "file": "docs/design/brand/chatbean-user-design.png",
+      "source": "docs/design/brand/chatbean-user-design.png",
+      "bytes": 1803459,
+      "sha256": "1f06934f6ff7d1343305ff925ab7b0befaed9bf5ed6533de6de8b6a9d065d548"
+    },
+    {
+      "file": "docs/public/images/chatbean-overview.png",
+      "source": "docs/public/images/chatbean-overview.png",
+      "bytes": 42924,
+      "sha256": "010608455863724da722d26e89efff0bc89c8f89632e2a07cdd104ad9d3592a1"
+    },
+    {
+      "file": "docs/public/images/chatbean-portrait.png",
+      "source": "docs/public/images/chatbean-portrait.png",
+      "bytes": 49854,
+      "sha256": "a35b7b340f909b23de7e34897387735be11cad1acec405643ccdefc5de6617a9"
+    },
+    {
+      "file": "chatui/chatbean-splitter.js",
+      "source": "chatui/chatbean-splitter.js",
+      "bytes": 5822,
+      "sha256": "09c5894375b26210c99793681308f43abdf602a787f3b6dc85fc2cc01d6e98cb"
+    },
+    {
+      "file": "tests/chatbean-splitter.test.cjs",
+      "source": "tests/chatbean-splitter.test.cjs",
+      "bytes": 6046,
+      "sha256": "a59882746bf606fc04ce783386b361cac72756e6326868d47de017494ab51523"
+    },
+    {
+      "file": "bridge/test_qce63_import.py",
+      "source": "bridge/test_qce63_import.py",
+      "bytes": 8392,
+      "sha256": "7fb4bd5fb7e80c00eea0d8f8c1414d4bdfaa9e4552fa850fc2e2a57e1c4feae8"
+    },
+    {
+      "file": "bridge/test_resume_targets.py",
+      "source": "bridge/test_resume_targets.py",
+      "bytes": 1693,
+      "sha256": "5a60b15a21fe8fc423b2b01ddbc5996fcf2754c548ef6bc1b15baf415ff3d6e0"
+    },
+    {
+      "file": "CHANGELOG.md",
+      "source": "CHANGELOG.md",
+      "bytes": 7208,
+      "sha256": "9458eb69b1b1ca4a8d26bf1ad9a79d19ab051e139fd97c8c466492d783591916"
     }
   ]
 }

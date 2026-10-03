@@ -61,6 +61,8 @@ SENSITIVE_STEM_RE = re.compile(r"(?:auth|authorization|credentials?|secrets?|tok
 PUBLIC_CODE_SUFFIXES = {".py", ".pyi", ".pyd", ".js", ".cjs", ".mjs", ".ts", ".mts", ".md"}
 DATABASE_SUFFIX_RE = re.compile(r"\.(?:db|sqlite|sqlite3)(?:[-.](?:wal|shm|journal|bak|backup))?\Z")
 ALLOWED_APP_IMAGES = {
+    ("resources", "client", "docs", "public", "images", "chatbean-overview.png"),
+    ("resources", "client", "docs", "public", "images", "chatbean-portrait.png"),
     ("resources", "client", "chatui", "assets", "wechatvibe-icon.png"),
     ("resources", "client", "chatui", "assets", "wechatvibe-icon.ico"),
     ("resources", "client", "chatui", "assets", "qqvibe-icon.png"),
@@ -86,6 +88,7 @@ SDK_CODE_SUFFIXES = {".js", ".mjs", ".ts", ".mts", ".map"}
 # Keep the builder's preflight in lockstep with the receiving extractor.
 REQUIRED_FILES = extractor.required_files(PRODUCT.product_name)
 ALLOWED_PUBLIC_KEY = ("resources", "client", "scripts", "update-signing.pub")
+ALLOWED_QQ_PUBLIC_KEY = ("resources", "client", "scripts", "qq-update-signing.pub")
 ASAR_SCRIPTS = (
     "scripts/desktop-main.cjs",
     "scripts/product-identity.cjs",
@@ -99,6 +102,8 @@ ASAR_SCRIPTS = (
     "scripts/real-client-update-controller.cjs",
     "scripts/real-client-update-helper.cjs",
     "scripts/update-signing.pub",
+    "scripts/real-client-update-config.cjs",
+    "scripts/qq-update-signing.pub",
 )
 ASAR_CHECK = r"""
 const asar = require('@electron/asar');
@@ -141,7 +146,7 @@ def _check_private_path(relative: Path, *, directory: bool) -> None:
     if sdk_code_path and relative.suffix.casefold() not in SDK_CODE_SUFFIXES:
         raise ValueError(f"non-code file in SDK code directory is forbidden: {relative}")
     name = lowered[-1]
-    if lowered == ALLOWED_PUBLIC_KEY:
+    if lowered in (ALLOWED_PUBLIC_KEY, ALLOWED_QQ_PUBLIC_KEY):
         return
     if (name in FORBIDDEN_FILES or name.startswith(".env.") or
             name.startswith(("screenshot", "screen-shot", "screen_capture", "screencap")) or
@@ -230,8 +235,9 @@ def _require_package(rows: list[tuple[Path, Path, bool, os.stat_result]], versio
     for name in REQUIRED_FILES:
         if name not in files or files[name][1].st_size == 0:
             raise ValueError(f"packaged runtime file missing or empty: {name}")
-    public_key_name = "/".join(ALLOWED_PUBLIC_KEY)
-    if public_key_name in files:
+    for public_key_name in ("/".join(ALLOWED_PUBLIC_KEY), "/".join(ALLOWED_QQ_PUBLIC_KEY)):
+        if public_key_name not in files:
+            continue
         public_key, public_key_info = files[public_key_name]
         if public_key_info.st_size > 16 * 1024:
             raise ValueError("packaged public signing key is too large")

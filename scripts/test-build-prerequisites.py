@@ -75,7 +75,7 @@ class IconTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         qq = root / "chatui/assets/qqvibe-icon.png"
         with Image.open(qq) as image:
-            self.assertEqual(image.size, (256, 256)); self.assertEqual(image.mode, "RGBA")
+            self.assertEqual(image.size, (1024, 1024)); self.assertEqual(image.mode, "RGBA")
             self.assertEqual(image.getpixel((0, 0))[3], 0)
         with Image.open(root / "chatui/assets/qqvibe-icon.ico") as image:
             self.assertTrue({(16, 16), (32, 32), (256, 256)} <= image.ico.sizes())
@@ -86,7 +86,8 @@ class IconTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         package = json.loads((root / "package.json").read_text())
         locked = json.loads((root / "package-lock.json").read_text())
-        self.assertEqual(package["name"], "qqvibe"); self.assertEqual(package["version"], "0.1.0-preview.1")
+        self.assertEqual(package["name"], "qqvibe")
+        self.assertRegex(package["version"], r"^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$")
         self.assertEqual(package["name"], locked["name"])
         self.assertEqual(package["version"], locked["packages"][""]["version"])
 

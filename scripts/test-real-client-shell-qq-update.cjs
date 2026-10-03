@@ -36,6 +36,7 @@ async function main() {
       if (name === "node:fs") return { mkdirSync() {}, existsSync: () => true, readFileSync: () => "{}" };
       if (name === "node:path") return path;
       if (name === "./product-identity.cjs") return require("./product-identity.cjs");
+      if (name === "./real-client-update-config.cjs") return { UpdatePreferences: class { get() { return {channel: "preview"}; } } };
       if (name === "node:child_process") return { execFile() { throw new Error("self-test must not stop a bridge"); } };
       if (name === "./real-client-model.cjs") return { ModelDownload: class { constructor() { calls.modelDownload = (calls.modelDownload || 0) + 1; } getState() { return { phase: "idle" }; } cancel() {} } };
       if (name === "./real-client-recovery.cjs") return { monitorBridge() { return () => {}; } };
@@ -65,9 +66,9 @@ async function main() {
   await new Promise(resolve => setImmediate(resolve));
   const trusted = { sender: contents, senderFrame: frames.mainFrame };
 
-  assert.equal((await handles.get("real-client:check-updates")(trusted)).status, "unconfigured");
-  assert.equal(calls.update, 0, "the QQ product must never query the WeChat release feed");
-  assert.equal(handles.get("real-client:update-state")(trusted).phase, "unconfigured");
+  assert.equal((await handles.get("real-client:check-updates")(trusted)).status, "current");
+  assert.equal(calls.update, 1, "the QQ product uses its own explicitly supplied profile");
+  assert.equal(handles.get("real-client:update-state")(trusted).phase, "idle");
   assert.equal((await handles.get("real-client:begin-update")(trusted)).phase, "blocked");
   assert.equal((await handles.get("real-client:rollback-update")(trusted)).phase, "blocked");
   console.log("QQ_UPDATE_CHANNEL_ISOLATION_TESTS_PASSED");

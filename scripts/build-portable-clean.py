@@ -127,7 +127,7 @@ def generate_config(root: Path, build_dir: Path, electron_dist: Path) -> Path:
     stage = build_dir / "client"
     product = current_product()
     config["appId"] = product.app_id
-    config["productName"] = product.product_name
+    config["productName"] = product.display_name or product.product_name
     config["extraMetadata"]["name"] = product.product_name.lower()
     config["extraMetadata"]["description"] = product.product_name + " local chat analysis and portraits"
     config["win"]["executableName"] = product.product_name
@@ -137,9 +137,11 @@ def generate_config(root: Path, build_dir: Path, electron_dist: Path) -> Path:
     resources[0]["from"] = str(stage)
     resources[1]["from"] = str(stage / "node_modules")
     guide_files = config.get("extraFiles", [])
-    if guide_files != [{"from": "__CLEAN_STAGE_GUIDE__", "to": "使用说明.html"}]:
+    if guide_files != [{"from": "__CLEAN_STAGE_GUIDE__", "to": "使用说明.html"},
+                       {"from": "__CLEAN_STAGE_CLIENT__/scripts/qce-doctor.cmd", "to": "检查并修复QCE.cmd"}]:
         raise ValueError("offline manual template differs from reviewed path")
     guide_files[0]["from"] = str(stage / "docs/public/USER-GUIDE.html")
+    guide_files[1]["from"] = str(stage / "scripts/qce-doctor.cmd")
     output = build_dir / "electron-builder.generated.json"
     output.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return output
@@ -190,6 +192,10 @@ def verify_package(root: Path, build_dir: Path, node_exe: Path) -> dict:
         guide = unpacked / "使用说明.html"
         if not guide.is_file() or digest(guide) != expected["docs/public/user-guide.html"]["sha256"]:
             raise ValueError("root offline user manual differs from staged manual")
+    if "scripts/qce-doctor.cmd" in expected:
+        doctor = unpacked / "检查并修复QCE.cmd"
+        if not doctor.is_file() or digest(doctor) != expected["scripts/qce-doctor.cmd"]["sha256"]:
+            raise ValueError("root QCE doctor entry differs from staged script")
     return {"buildDirectory": str(build_dir), "preview": str(unpacked),
             "version": version, "verifiedFiles": len(expected),
             "sourcePackageSha256": client["sourcePackageSha256"]}

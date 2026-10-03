@@ -37,7 +37,7 @@ class BuildReleaseTests(unittest.TestCase):
         self.asar_source = self.root / "asar-source"
         for name in builder.ASAR_SCRIPTS:
             payload = (b"-----BEGIN PUBLIC KEY-----\nsynthetic\n-----END PUBLIC KEY-----\n"
-                       if name == "scripts/update-signing.pub" else
+                       if name in ("scripts/update-signing.pub", "scripts/qq-update-signing.pub") else
                        f"synthetic {name}".encode("utf-8"))
             self.add_file("resources/client/" + name, payload)
             target = self.asar_source / name
@@ -111,6 +111,16 @@ class BuildReleaseTests(unittest.TestCase):
         with zipfile.ZipFile(archive_path) as archive:
             self.assertEqual(archive.read("win-unpacked/" + image), b"synthetic reviewed demonstration image")
             self.assertEqual(archive.read("win-unpacked/使用说明.html"), b"<html>offline manual</html>")
+
+    def test_qq_key_and_brand_screenshots_are_reviewed_but_private_keys_are_not(self):
+        self.add_file("resources/client/docs/public/images/chatbean-overview.png", b"reviewed UI demo")
+        self.add_file("resources/client/docs/public/images/chatbean-portrait.png", b"reviewed portrait demo")
+        archive_path = builder.build_release(self.source, self.root / "chatbean", "1.0.2")
+        with zipfile.ZipFile(archive_path) as archive:
+            self.assertIn("win-unpacked/resources/client/scripts/qq-update-signing.pub", archive.namelist())
+        self.add_file("resources/client/scripts/qq-update-private.pem", b"private fixture")
+        with self.assertRaisesRegex(ValueError, "private or generated"):
+            builder.build_release(self.source, self.root / "bad-key", "1.0.2")
 
     def test_version_and_required_artifacts(self):
         for version in ("1.0.2-preview.1", "v1.0.2", "01.0.2", "1.0.2+build", "1.0.2.3", "1.٠.2"):

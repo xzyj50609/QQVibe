@@ -36,6 +36,7 @@ class ProductProfile:
     update_repository: str | None
     icon_png: str
     icon_ico: str
+    display_name: str = ""
 
     @property
     def update_channel_enabled(self) -> bool:
@@ -85,7 +86,8 @@ def load_product(key: str | None = None) -> ProductProfile:
                              control_token_header=record["controlTokenHeader"],
                              storage_namespace=record["storageNamespace"],
                              update_repository=record["updateRepository"],
-                             icon_png=record["iconPng"], icon_ico=record["iconIco"])
+                             icon_png=record["iconPng"], icon_ico=record["iconIco"],
+                             display_name=record.get("displayName", record["productName"]))
     _CACHE[chosen] = profile
     return profile
 

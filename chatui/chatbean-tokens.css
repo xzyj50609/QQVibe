@@ -1,0 +1,36 @@
+/* ChatBean · user-approved 2026-10-03. Tokens apply only to the QQ product. */
+body.chatbean {
+  --cb-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  --cb-ink: #e5f3fc; --cb-muted: #b0cbd7; --cb-accent: #7edfff;
+  --cb-accent-ink: #083544; --cb-bubble-self: #3eaccb; --cb-bubble: #233b4a;
+  --cb-surface: #233b4a; --cb-surface-hover: #304b5c; --cb-border: #55778866;
+  --cb-selected: #517c934d; --cb-field: #203746; --cb-quote: #7aa2b3;
+  --cb-wash: linear-gradient(118deg, #132f3d, #1b2d40 52%, #263746);
+  --cb-sidebar: linear-gradient(155deg, #1b3444cc, #273749cc);
+  --cb-rail: #28475866; --cb-header: #20394a38; --cb-scrim: #0b243e77;
+  --cb-shadow: 0 16px 48px #061a2938;
+  --cb-rail-width: clamp(56px, calc(4.3vw * var(--zoom-inverse, 1)), 80px);
+  --cb-list-width: clamp(224px, calc(17.2vw * var(--zoom-inverse, 1)), 330px);
+  --cb-header-height: 72px; --cb-avatar: 40px;
+  --cb-space-1: 4px; --cb-space-2: 8px; --cb-space-3: 12px; --cb-space-4: 16px; --cb-space-6: 24px;
+  --cb-radius-control: 4px; --cb-radius-panel: 6px; --cb-radius-dialog: 8px; --cb-radius-bubble: 14px;
+  --cb-duration: 160ms; --cb-ease: cubic-bezier(.2,.8,.2,1);
+  --color-green: var(--cb-accent); --text-green: var(--cb-accent);
+  --text-main: var(--cb-ink); --text-secondary: var(--cb-muted); --text-muted: var(--cb-muted);
+  --border-color: var(--cb-border); --border-subtle: var(--cb-border);
+  --bg-rail: var(--cb-rail); --bg-rail-hover: var(--cb-selected); --bg-session: transparent;
+  --bg-session-hover: var(--cb-selected); --bg-session-active: var(--cb-selected);
+  --bg-chat: transparent; --bg-chat-header: var(--cb-header); --bg-input: var(--cb-field);
+  --bg-search: var(--cb-selected); --bg-bubble-left: var(--cb-bubble); --bg-bubble-right: var(--cb-bubble-self);
+  --scrollbar-thumb: var(--cb-selected); --scrollbar-hover: var(--cb-muted);
+}
+body.chatbean.theme-light {
+  --cb-ink: #173b48; --cb-muted: #607f8b; --cb-accent: #087ea4;
+  --cb-accent-ink: #083544; --cb-bubble-self: #17bfee; --cb-bubble: #f5fbff;
+  --cb-surface: #f3f9fd; --cb-surface-hover: #e3f3fb; --cb-border: #b6d1de70;
+  --cb-selected: #abc8d34d; --cb-field: #f7fbfe; --cb-quote: #9ebdcb;
+  --cb-wash: linear-gradient(118deg, #cff4fc 0%, #e0f2fe 52%, #f9fcff 100%);
+  --cb-sidebar: linear-gradient(155deg, #bfd9e3b3, #cbd7e8b3);
+  --cb-rail: #daf0f766; --cb-header: #f1fbff38; --cb-scrim: #173b484d;
+  --cb-shadow: 0 16px 48px #294d6629;
+}

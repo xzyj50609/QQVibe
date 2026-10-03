@@ -95,6 +95,7 @@ async function main() {
     const moduleDir = path.join(temp, "module");
     fs.mkdirSync(moduleDir);
     fs.copyFileSync(source, path.join(moduleDir, "real-client-update.cjs"));
+    fs.copyFileSync(path.join(__dirname, "real-client-update-config.cjs"), path.join(moduleDir, "real-client-update-config.cjs"));
     const { publicKey, privateKey } = crypto.generateKeyPairSync("ed25519");
     fs.writeFileSync(path.join(moduleDir, "update-signing.pub"),
       publicKey.export({ type: "spki", format: "pem" }));

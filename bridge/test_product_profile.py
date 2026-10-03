@@ -9,6 +9,12 @@ import product_profile as profile
 
 
 class ManifestTests(unittest.TestCase):
+    def test_chatbean_display_name_keeps_legacy_identity_for_updates_and_data(self):
+        qq = profile.load_product("qq")
+        self.assertEqual(qq.display_name, "句豆 · ChatBean")
+        self.assertEqual(qq.product_name, "QQVibe")
+        self.assertEqual(qq.data_dir, "QQVibeData")
+
     def test_every_named_product_is_isolated_from_the_other(self):
         wechat = profile.load_product("wechat")
         qq = profile.load_product("qq")
@@ -54,10 +60,10 @@ class ManifestTests(unittest.TestCase):
 
 
 class UpdateChannelTests(unittest.TestCase):
-    def test_qq_has_no_configured_update_source(self):
+    def test_qq_has_its_own_update_source(self):
         qq = profile.load_product("qq")
-        self.assertIsNone(qq.update_repository)
-        self.assertFalse(qq.update_channel_enabled)
+        self.assertEqual(qq.update_repository, "xzyj50609/QQVibe")
+        self.assertTrue(qq.update_channel_enabled)
 
     def test_wechat_keeps_its_upstream_feed(self):
         wechat = profile.load_product("wechat")

@@ -44,6 +44,7 @@ function productProfile(explicit) {
   return {
     key,
     productName: record.productName,
+    displayName: record.displayName || record.productName,
     appId: record.appId,
     dataDir: record.dataDir,
     instanceSalt: record.instanceSalt,

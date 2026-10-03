@@ -1,4 +1,4 @@
-# QQVibe 问题反馈
+# 句豆 · ChatBean 问题反馈
 
 你可以把下面的模板直接发给提供软件的同学，不需要注册或学会使用 GitHub。熟悉 GitHub 的人也可以在 [Issues](https://github.com/xzyj50609/QQVibe/issues)提交。
 

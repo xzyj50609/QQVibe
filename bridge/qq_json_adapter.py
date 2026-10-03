@@ -75,9 +75,14 @@ def get(row, path):
     return row
 
 
-def field(row, name, options):
+def field(row, name, options, *, qce=False):
     if options.get(name):
         return get(row, options[name])
+    if name == 'time' and qce and isinstance(row.get('sender'), dict) and isinstance(row.get('content'), dict):
+        # QCE documents define timestamp as authoritative and time as display
+        # text. This source-specific rule does not relax unknown JSON conflicts.
+        if row.get('timestamp') is not None:
+            return row['timestamp']
     values = []
     for path in FIELD_ALIASES[name]:
         value = get(row, path)
@@ -179,6 +184,15 @@ def native_document(document, options):
             and re.fullmatch(r'6\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?', metadata['version']))
 
 
+def qce_time_options(row, options):
+    if (isinstance(row.get('timestamp'), (int, float)) and options.get('time', 'timestamp') in ('timestamp', '/timestamp')
+            and options.get('timeUnit', 'auto') == 'auto'):
+        if type(row['timestamp']) is not int:
+            raise NormalizationError('invalid-time')
+        return {**options, 'timeUnit': 'milliseconds'}
+    return options
+
+
 def header(document, options):
     declared = document.get('chatInfo')
     if declared is not None and not isinstance(declared, dict):
@@ -222,9 +236,10 @@ def adapt(row, options, *, snapshot, index, qce=False, chatlab=False):
         raise NormalizationError('not-an-object')
     # A QCE clean row is already losslessly understood; pre-V6 flags are also
     # handled by normalize_export_row. Only its timestamp may need conversion.
-    if qce and isinstance(row.get('sender'), dict) and isinstance(row.get('content'), dict) and row.get('messageId') and not any(k in options for k in FIELD_ALIASES):
+    if qce and isinstance(row.get('sender'), dict) and isinstance(row.get('content'), dict) and (row.get('messageId') or row.get('id')) and not any(k in options for k in FIELD_ALIASES if k != 'time'):
         result = dict(row)
-        result['timestamp'] = timestamp(row.get('timestamp'), options)
+        result['messageId'] = row.get('messageId', row.get('id'))
+        result['timestamp'] = timestamp(field(row, 'time', options, qce=True), qce_time_options(row, options))
         return result, 'qce-msgId'
     source_sender = field(row, 'sender', options)
     name = field(row, 'senderName', options)
@@ -274,7 +289,8 @@ def adapt(row, options, *, snapshot, index, qce=False, chatlab=False):
         for key in ('elements', 'reply'):
             if key in row['content']:
                 body[key] = row['content'][key]
-    result = {'messageId': identifier, 'timestamp': timestamp(field(row, 'time', options), options),
+    time_options = qce_time_options(row, options) if qce else options
+    result = {'messageId': identifier, 'timestamp': timestamp(field(row, 'time', options, qce=qce), time_options),
               'sender': {'uin': sender, 'uid': uid, 'name': str(name or source_sender or '')[:128]},
               'messageType': 2 if text is not None else 0, 'content': body,
               'system': system, 'recalled': recalled}

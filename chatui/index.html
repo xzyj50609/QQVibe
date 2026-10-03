@@ -6,6 +6,8 @@
   <title>WechatVibe</title>
   <link rel="icon" type="image/png" href="/assets/wechatvibe-icon.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="chatbean-tokens.css">
+  <link rel="stylesheet" href="chatbean.css">
 </head>
 <body class="theme-light">
 
@@ -528,6 +530,8 @@
             <summary>QQ 连接与自动同步</summary>
             <p id="qqSyncGate" class="qq-import-help"></p>
             <button type="button" class="settings-action-btn" id="btnConnectStandardQQ">连接本机 QQ / QCE</button>
+            <button type="button" class="settings-action-btn" id="btnQCEDoctor" hidden>检测并修复 QCE</button>
+            <p id="qceDoctorStatus" class="qq-import-help" role="status" hidden></p>
             <p class="qq-import-help">先打开 QQ Chat Exporter 并登录 QQ，再点连接。仅此操作读取标准安装的受控配置，并在本机加密保存凭证；添加单聊后首次读取最近 90 天、最多 200 条消息，随后同步新消息。自定义安装使用下方高级设置。</p>
             <details>
             <summary>高级连接设置（自定义地址 / token）</summary>
@@ -733,10 +737,18 @@
         <button type="button" id="btnRollbackUpdate">回退版本</button>
       </div>
     </div>
+    <div id="updatePreferences" hidden style="padding: 0 24px 16px;">
+      <label style="display: block; margin-bottom: 10px;"><input type="checkbox" id="updateAutoCheck"> 自动检查更新</label>
+      <label style="display: block; margin-bottom: 10px;"><input type="checkbox" id="updateAutoDownload"> 自动下载更新（安装前仍会提示重启）</label>
+      <label style="display: block; margin-bottom: 10px;">更新渠道 <select id="updateChannel"><option value="preview">预发布版（含正式版）</option><option value="stable">仅正式版</option></select></label>
+      <small id="updatePreferenceStatus" role="status"></small>
+    </div>
+    <div id="updateNotes" hidden style="padding: 0 24px 16px; max-height: 160px; overflow: auto; white-space: pre-wrap;"></div>
+    <div id="updateDownloadSize" hidden style="padding: 0 24px 16px;"></div>
     <div class="update-modal-actions">
-      <a id="updateReleaseLink" href="https://github.com/tswawa/WechatVibe/releases" target="_blank" rel="noopener noreferrer">官方发布页</a>
+      <a id="updateReleaseLink" href="https://github.com/xzyj50609/QQVibe/releases" target="_blank" rel="noopener noreferrer">官方发布页</a>
       <button type="button" class="update-check-button" id="btnCheckUpdates">检查更新</button>
-      <button type="button" class="update-primary-button" id="btnBeginUpdate" hidden>下载并安装</button>
+      <button type="button" class="update-primary-button" id="btnBeginUpdate" hidden>下载更新</button>
     </div>
   </div>
 </div>
@@ -745,6 +757,8 @@
 <script src="message-insight-adapters.js"></script>
 <script src="message-labels.js"></script>
 <script src="/product-config.js"></script>
+<script src="chatbean-splitter.js"></script>
+<script src="chatbean-ui.js"></script>
 <script src="qq-startup.js"></script>
 <script src="qq-import-ui.js"></script>
 <script src="qq-sync-ui.js"></script>
@@ -753,4 +767,3 @@
 <script src="app.js"></script>
 </body>
 </html>
-

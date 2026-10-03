@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path, PurePosixPath
 
 from qq_identity import canonical_uin
@@ -371,6 +371,16 @@ def chunk_paths(document):
 
 
 def _export_timestamp(value):
+    # QCE 6.3 CleanMessage.timestamp is an i64 millisecond clock. Its `time`
+    # field is a localized display string, not a second source to guess from.
+    if type(value) is int:
+        try:
+            if value < 0:
+                raise ValueError("pre-epoch")
+            datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(milliseconds=value)
+            return value
+        except (ValueError, OverflowError):
+            raise NormalizationError("invalid-time") from None
     if not isinstance(value, str):
         raise NormalizationError("invalid-time")
     try:
@@ -420,10 +430,13 @@ def normalize_export_row(row, owner, peer_uid, *, expected_kind='friend', self_u
             elif element["type"] == "reply" and quote is None and isinstance(data, dict):
                 quote = data if isinstance(data.get("content"), str) else None
         authored_text = "".join(pieces) if pieces else None
-    raw = {"msgId": row.get("messageId"), "msgSeq": None, "msgTime": str(timestamp // 1000),
+    raw = {"msgId": row.get("messageId", row.get("id")), "msgSeq": None, "msgTime": str(timestamp // 1000),
            "chatType": 2 if expected_kind=='group' else 1, "peerUid": peer_uid, "senderUin": sender.get("uin"),
            "senderUid": sender.get("uid"), "sendType": "3" if system else None,
-           "msgType": row.get("messageType"), "text": authored_text,
+           # QCE's parsed CleanMessage uses semantic `type`; raw msgType
+           # numbering remains untouched. Only its documented text type is
+           # promoted to analyzable text; other kinds remain placeholders.
+           "msgType": row.get("messageType", 2 if row.get("type") == "text" else None), "text": authored_text,
            "quote": quote.get("content") if quote else None, "recallTime": None}
     record, flags = normalize_message(raw, self_uin=owner,expected_kind=expected_kind,self_uid=self_uid)
     record["time_ms"] = timestamp

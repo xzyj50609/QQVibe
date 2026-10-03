@@ -209,6 +209,13 @@ class ResultStore:
             conn.execute('INSERT OR REPLACE INTO qq_analysis_resume_v1 VALUES (?,?,?,?,?)',
                 (account,user,version,json.dumps(targets),max(limit,row[1] if row else 0)))
 
+    def complete_resume_targets(self, account, user, version, stable_ids):
+        """Complete a scoped batch inside the repository's own transaction."""
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            for stable_id in dict.fromkeys(stable_ids):
+                self.complete_resume_target(conn, account, user, version, stable_id)
+
     @staticmethod
     def complete_resume_target(conn,account,user,version,stable_id):
         row=conn.execute('SELECT targets FROM qq_analysis_resume_v1 WHERE account=? AND session=? AND version=?',

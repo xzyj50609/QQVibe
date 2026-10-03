@@ -64,7 +64,7 @@ function getVisibleUnreadCount(session) {
   if (hasNewTime || hasNewPreview) return serverUnread;
   return 0;
 }
-const defaults = { theme: "light", zoom: "1.0", intent: true, labelDetails: false };
+const defaults = { theme: "light", zoom: "1.0", intent: true, labelDetails: window.ProductConfig?.key === "qq" };
 const CURRENT_LABEL_SCHEMA = "generic-v9";
 const GENERIC_INTENT_LABELS = Object.freeze({
   small_talk: "闲聊", share_news: "分享", ask_question: "提问", seek_help: "求助", deny: "否认",
@@ -101,7 +101,7 @@ delete settingsState.settings.historyLimit;
 if (!["dark", "light"].includes(settingsState.settings.theme)) settingsState.settings.theme = defaults.theme;
 if (!["0.9", "1.0", "1.1", "1.25", "1.5"].includes(settingsState.settings.zoom)) settingsState.settings.zoom = "1.0";
 if (typeof settingsState.settings.intent !== "boolean") settingsState.settings.intent = true;
-if (typeof settingsState.settings.labelDetails !== "boolean") settingsState.settings.labelDetails = false;
+if (typeof settingsState.settings.labelDetails !== "boolean") settingsState.settings.labelDetails = defaults.labelDetails;
 const save = () => localStorage.setItem("real-ui-settings-1", JSON.stringify(settingsState.settings));
 chatState.sessions = new Map();
 chatState.selectedConversations = new Set();
@@ -1232,7 +1232,8 @@ function messageNode(message) {
   avatarColumn.appendChild(message.side === "self" ? avatar(chatState.self?.avatar, "msg-avatar", chatState.self?.avatarCandidates, chatState.self?.name || "我") : avatar(message.senderAvatar || (session?.isGroup ? null : session?.avatar), "msg-avatar", message.senderAvatarCandidates || (session?.isGroup ? [] : session?.avatarCandidates), message.senderName || session?.name || message.senderId, session?.isGroup && !message.senderId));
   item.appendChild(avatarColumn);
   const wrap = element("div", "msg-content-wrap");
-  if (session?.isGroup && message.side !== "self") wrap.appendChild(element("span", "msg-sender", message.senderName || message.senderId || "未知成员"));
+  if (window.ChatBeanUI) wrap.appendChild(window.ChatBeanUI.messageHeading(message, session, chatState.self));
+  else if (session?.isGroup && message.side !== "self") wrap.appendChild(element("span", "msg-sender", message.senderName || message.senderId || "未知成员"));
   wrap.appendChild(messageBubble(message));
   if (window.ProductConfig?.key === "qq" && window.QQProvenanceUI && message.historyCursor)
     wrap.appendChild(window.QQProvenanceUI.create({ document, api,
@@ -2058,6 +2059,9 @@ function switchSession(user, force = false) {
 }
 function switchView(target) {
   if (target === "persona" && (!chatState.messageSourceReady || !chatState.currentUser)) return;
+  if (target === "persona" && chatState.view === "chat") chatState.returnChatScroll = {
+    account: chatState.currentAccount, user: chatState.currentUser, top: byId("chatMessages").scrollTop,
+  };
   if (target !== "chat") clearReplyPrediction();
   if (target !== "persona") cancelApiPortraitPoll();
   chatState.view = target;
@@ -2065,8 +2069,15 @@ function switchView(target) {
   byId("personaView").classList.toggle("active", target === "persona");
   byId("navChat").classList.toggle("active", target === "chat");
   byId("navPersona").classList.toggle("active", target === "persona");
+  window.ChatBeanUI?.setView(target);
   if (target === "persona") loadProfile(portraitState.activeMember);
-  else if (!chatState.historyState) scrollToLatest();
+  else {
+    const saved = chatState.returnChatScroll;
+    chatState.returnChatScroll = null;
+    if (saved?.account === chatState.currentAccount && saved?.user === chatState.currentUser)
+      byId("chatMessages").scrollTop = saved.top;
+    else if (!chatState.historyState) scrollToLatest();
+  }
 }
 portraitState.activeMember = "";
 portraitState.profilePending = false;
@@ -4771,7 +4782,7 @@ byId("btnTestApiModel").addEventListener("click", () => { void testApiModel(); }
 byId("btnActivateLocal").addEventListener("click", () => { void activateModelSource("local"); });
 byId("btnActivateApi").addEventListener("click", () => { void activateModelSource("api"); });
 byId("btnClearApiKey").addEventListener("click", () => { void clearStoredApiKey(); });
-const OFFICIAL_RELEASES_URL = "https://github.com/tswawa/WechatVibe/releases";
+const OFFICIAL_RELEASES_URL = window.ProductConfig?.key === "qq" ? "https://github.com/xzyj50609/QQVibe/releases" : "https://github.com/tswawa/WechatVibe/releases";
 const UPDATE_BUSY_PHASES = new Set(["downloading", "verifying", "extracting", "installing", "restarting"]);
 let aboutVersionPromise = null;
 let versionLoadFailed = false;
@@ -4833,17 +4844,18 @@ function updateStatusMessage(state) {
     idle: "准备检查更新",
     current: "已是最新版本",
     "preview-current": "已是最新版本",
-    available: latest ? `发现新版本 ${latest}` : "发现新版本",
+    available: latest ? `发现新版本 ${latest}${state.prerelease ? "（预发布）" : ""}` : "发现新版本",
     downloading: "正在下载更新",
     verifying: "正在校验更新包",
     extracting: "正在解压更新包",
-    ready: "更新已下载，准备安装",
+    ready: error || "更新已下载，点击重启并更新",
+    "no-space": "磁盘空间不足，请释放空间后重试",
     installing: "正在安装更新",
     restarting: "正在重启",
     rolled_back: "已回退到上一版本",
     failed: error ? `更新失败：${error}` : "更新失败，请重试",
     "incomplete-release": latest ? `发现 ${latest}，发布文件尚未齐全` : "发布文件尚未齐全",
-    "no-release": "暂无正式发布版本",
+    "no-release": "所选渠道暂无发布版本",
     "invalid-current": "当前版本信息异常",
     "invalid-release": "发布信息异常，请稍后重试",
     "rate-limited": "检查次数受限，请稍后重试",
@@ -4894,7 +4906,18 @@ function renderUpdateState() {
     (phase === "available" || phase === "ready");
   byId("btnBeginUpdate").hidden = !canBegin;
   byId("btnBeginUpdate").disabled = updateCheckPending || updateActionPending;
-  text("btnBeginUpdate", phase === "ready" ? "立即安装" : "下载并安装");
+  text("btnBeginUpdate", phase === "ready" ? "重启并更新" : window.ProductConfig?.key === "qq" ? "下载更新" : "下载并安装");
+  if (byId("updateNotes")) {
+    byId("updateNotes").hidden = !updateState.notes;
+    text("updateNotes", typeof updateState.notes === "string" ? updateState.notes : "");
+  }
+  if (byId("updateDownloadSize")) {
+    byId("updateDownloadSize").hidden = !Number.isFinite(total) || total <= 0;
+    text("updateDownloadSize", total > 0 ? `更新包 ${(total / 1000000).toFixed(1)} MB，已有本地模型将保留。` : "");
+  }
+  if (["available", "ready"].includes(phase)) {
+    text("aboutCurrentVersion", phase === "ready" ? "更新已就绪" : "有新版本");
+  } else if (updateState.currentVersion) setDisplayedVersion(updateState.currentVersion);
 }
 function applyUpdateState(next) {
   if (!updatePhase(next)) return false;
@@ -4938,11 +4961,30 @@ function openUpdateModal() {
   byId("btnCloseUpdate").focus();
   void loadAboutVersion();
   void refreshUpdateState();
+  void loadUpdatePreferences();
   renderUpdateState();
 }
 function closeUpdateModal() {
   byId("updateModal").classList.remove("show");
   if (updatePreviousFocus?.isConnected) updatePreviousFocus.focus();
+}
+async function loadUpdatePreferences() {
+  if (window.ProductConfig?.key !== "qq" || typeof window.desktopHost?.getUpdatePreferences !== "function") return;
+  const prefs = await window.desktopHost.getUpdatePreferences().catch(() => null);
+  if (!prefs) return;
+  byId("updatePreferences").hidden = false;
+  byId("updateAutoCheck").checked = prefs.autoCheck;
+  byId("updateAutoDownload").checked = prefs.autoDownload;
+  byId("updateChannel").value = prefs.channel;
+}
+for (const id of ["updateAutoCheck", "updateAutoDownload", "updateChannel"]) {
+  byId(id)?.addEventListener("change", async () => {
+    const patch = { autoCheck: byId("updateAutoCheck").checked, autoDownload: byId("updateAutoDownload").checked, channel: byId("updateChannel").value };
+    const saved = await window.desktopHost?.setUpdatePreferences(patch).catch(() => null);
+    text("updatePreferenceStatus", saved && saved.autoCheck === patch.autoCheck && saved.autoDownload === patch.autoDownload && saved.channel === patch.channel ? "设置已保存" : "设置未保存，更新完成后再试");
+    await loadUpdatePreferences();
+    if (id === "updateChannel" && saved?.channel === patch.channel) void checkForUpdates();
+  });
 }
 byId("btnAboutVersion").addEventListener("click", openUpdateModal);
 byId("btnCloseUpdate").addEventListener("click", closeUpdateModal);
@@ -5061,6 +5103,7 @@ if (window.ProductConfig?.key === "qq") {
       await loadSessions();
     } });
   setInterval(() => { void qqConnectionUI.load(); }, 5000);
+  window.ChatBeanUI?.mount({ switchView, addConversation: qqConnectionUI.addConversation });
   window.QQImportUI.mount({ document, api,
     chooseFile: typeof window.desktopHost?.chooseQQExport === "function" ?
       () => window.desktopHost.chooseQQExport() : undefined,

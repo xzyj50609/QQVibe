@@ -26,6 +26,47 @@ function harness(api, options = {}) {
   const node = id => document.getElementById(id);
   return { ui, node, click: async id => { await node(id).events.click(); await settle(); } };
 }
+
+test("quick-add delegates contact and group to the existing connection operations", async () => {
+  const posts = []; let refreshes = 0;
+  const view = harness(async (url, options) => {
+    if (options) posts.push([url, JSON.parse(options.body)]);
+    return state({ enabled: true, state: "online" });
+  }, { onChange: async () => { refreshes++; } });
+  await settle();
+  assert.equal((await view.ui.addConversation("contact", "12345678")).ok, true);
+  assert.equal((await view.ui.addConversation("group", "87654321")).ok, true);
+  assert.deepEqual(posts, [
+    ["/api/qq/connection/add-contact", { peerUin: "12345678", name: "" }],
+    ["/api/qq/connection/add-group", { groupCode: "87654321" }],
+  ]);
+  assert.equal(refreshes, 2);
+});
+
+test("quick-add rejects disconnected and malformed requests without posting", async () => {
+  let posts = 0;
+  const view = harness(async (_url, options) => { if (options) posts++; return state(); });
+  await settle();
+  assert.equal((await view.ui.addConversation("contact", "12345678")).ok, false);
+  for (const [kind, number] of [["group", "x"], ["contact", "123"], ["unknown", "12345678"]])
+    assert.equal((await view.ui.addConversation(kind, number)).ok, false);
+  assert.equal(posts, 0);
+});
+
+test("quick-add propagates safe errors and blocks a duplicate in-flight request", async () => {
+  let finish, posts = 0;
+  const pending = new Promise((_resolve, reject) => { finish = reject; });
+  const view = harness(async (_url, options) => options ? (posts++, pending) : state({ enabled: true }));
+  await settle();
+  const first = view.ui.addConversation("group", "12345678");
+  assert.equal((await view.ui.addConversation("group", "12345678")).ok, false);
+  finish(Object.assign(new Error("must not expose server details"), { code: "qq-offline" }));
+  const result = await first;
+  assert.equal(result.ok, false);
+  assert.match(result.error, /离线/);
+  assert.doesNotMatch(result.error, /server details/);
+  assert.equal(posts, 1);
+});
 test("pending live validation keeps connect and contact reads disabled", async () => {
   const calls = [], view = harness(async url => { calls.push(url); return state({ liveValidated: false, state: "unavailable", reason: "connector-awaiting-validation" }); });
   await settle();

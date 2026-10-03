@@ -74,7 +74,10 @@ def _member_kind(info: zipfile.ZipInfo) -> bool:
 def required_files(product_name="WechatVibe"):
     if not isinstance(product_name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]{0,63}", product_name):
         raise ValueError("invalid product name")
-    return (product_name + ".exe", *REQUIRED_FILES[1:])
+    extras = ("resources/client/scripts/real-client-update-config.cjs",
+              "resources/client/scripts/qq-update-signing.pub",
+              "resources/client/scripts/product-identity.json") if product_name == "QQVibe" else ()
+    return (product_name + ".exe", *REQUIRED_FILES[1:], *extras)
 
 
 def inspect(archive: zipfile.ZipFile, *, requirements=None) -> list[tuple[zipfile.ZipInfo, tuple[str, ...], bool]]:

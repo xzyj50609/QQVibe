@@ -1,12 +1,12 @@
-# QQVibe 首次使用说明
+# 句豆 · ChatBean 首次使用说明
 
-这份说明面向第一次使用 QQVibe 的人。完成后，你可以在 QQVibe 中打开自己的一个单聊或群聊，并查看本地分析结果。不需要会编程。程序旁的 **「使用说明.html」**也可直接打开，离线查看图文步骤。
+这份说明面向第一次使用句豆的人。完成后，你可以在句豆中打开自己的一个单聊或群聊，并查看本地分析结果。不需要会编程。程序旁的 **「使用说明.html」**也可直接打开，离线查看图文步骤。
 
 ## 1. 下载正确的程序包
 
-点击 **[下载 QQVibe 0.1.2 Windows 完整包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64-full.zip)**。如果不能直接下载，打开[下载页面](https://github.com/xzyj50609/QQVibe/releases/tag/v0.1.2)，在下方的 **Assets**（文件列表）里点击：
+点击 **[下载 QQVibe 1.0.0 Windows 完整包](https://github.com/xzyj50609/QQVibe/releases/download/v1.0.0/QQVibe-1.0.0-windows-x64-full.zip)**。如果不能直接下载，打开[下载页面](https://github.com/xzyj50609/QQVibe/releases/tag/v1.0.0)，在下方的 **Assets**（文件列表）里点击：
 
-**QQVibe-0.1.2-windows-x64-full.zip**
+**QQVibe-1.0.0-windows-x64-full.zip**
 
 这个文件包含程序和 Laya 模型，第一次使用优先选它。**不要下载「Source code」或点击绿色「Code」按钮**，那些是给开发者的源码。公开下载不需要注册 GitHub 账号。
 
@@ -37,6 +37,8 @@ QCE 的全名是 **QQ Chat Exporter**。它负责在你的电脑上连接 QQ，Q
 
 本说明固定使用 6.3.0，方便定位问题。QQ 与 QCE 的变化可能影响连接；若安装或登录失败，记录版本和提示，不要盲目反复更换 QQ 版本。
 
+如果一直显示「正在生成二维码」或「NapCat WebUI 未响应」，使用单独的检测工具包；集成此功能的新构建版也提供程序旁的 **「检查并修复QCE.cmd」**。它自动检查启动各关口，提供适用的最小修复和复检，不需要自己翻日志。操作见[检测与修复说明](QCE-DOCTOR.md)。
+
 <details>
 <summary>我已经用过 QCE 或 NapCat，想沿用自己的安装</summary>
 
@@ -46,7 +48,7 @@ QCE 的全名是 **QQ Chat Exporter**。它负责在你的电脑上连接 QQ，Q
 
 </details>
 
-## 4. 在 QQVibe 中连接自己的 QQ
+## 4. 在句豆中连接自己的 QQ
 
 1. 回到 QQVibe，点击 **「首次设置：连接 QQ、选择模型与会话」**。
 2. 在 **「QQ 连接与自动同步」**中点击 **「连接本机 QQ / QCE」**。
@@ -107,7 +109,7 @@ Laya 是用于分析文字的本地模型。完整包已经带有它，一般不
 
 ## 无模型标准包：下载或选择模型
 
-如果你已经有模型，或希望自己配置服务，可以下载[标准程序包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64.zip)。它不含 Laya 模型，程序本身仍可启动。
+如果你已经有模型，或希望自己配置服务，可以下载[标准程序包](https://github.com/xzyj50609/QQVibe/releases/download/v1.0.0/QQVibe-1.0.0-windows-x64.zip)。它不含 Laya 模型，程序本身仍可启动。
 
 - 在「本地部署」下点 **「下载模型」**，等待下载与检查完成。下载失败可以重试，不会妨碍进入 API 设置。
 - 已有完整 Laya 文件夹时点 **「选择目录」**，选择包含 `model.onnx` 的目录；不要只选其中一个文件。选定的外部模型目录以后也要保留。

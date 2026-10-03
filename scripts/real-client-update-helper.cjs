@@ -117,6 +117,7 @@ function version(value) {
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/.test(value);
 }
 function validateOperation(op, operationFile, { recovery = false } = {}) {
+  if (op?.productName !== undefined && !["WechatVibe", "QQVibe"].includes(op.productName)) fail("invalid update product");
   if (!op || typeof op !== "object" || Array.isArray(op) || op.schema !== 1 ||
       !["install", "rollback"].includes(op.action) ||
       !Number.isSafeInteger(op.parentPid) || op.parentPid <= 0 ||
@@ -153,17 +154,23 @@ function validateOperation(op, operationFile, { recovery = false } = {}) {
   }
   return op;
 }
-function validateCandidate(candidate, expectedVersion, fresh) {
+function validateCandidate(candidate, expectedVersion, fresh, productName = "WechatVibe") {
+  if (!["WechatVibe", "QQVibe"].includes(productName)) fail("invalid candidate product");
   checkTree(candidate, fresh);
-  regular(path.join(candidate, "WechatVibe.exe"));
+  regular(path.join(candidate, productName + ".exe"));
   regular(path.join(candidate, "resources", "app.asar"));
   regular(path.join(candidate, "resources", "client", "runtime", "python", "python.exe"));
   regular(path.join(candidate, "resources", "client", "scripts", "start-real-client.py"));
   const metadata = path.join(candidate, "resources", "client", "package.json");
   if (regular(metadata).size > 64 * 1024) fail("oversized candidate metadata");
   const pkg = readJson(metadata, 64 * 1024);
-  if (pkg.name !== "wechatvibe-runtime" || pkg.version !== expectedVersion) {
+  if (pkg.name !== productName.toLowerCase() + "-runtime" || pkg.version !== expectedVersion) {
     fail("candidate version mismatch");
+  }
+  if (productName === "QQVibe") {
+    const identity = readJson(path.join(candidate, "resources", "client", "scripts", "product-identity.json"), MAX_OPERATION_BYTES);
+    if (identity.default !== "qq" || identity.products?.qq?.productName !== "QQVibe" ||
+        identity.products.qq.dataDir !== "QQVibeData") fail("candidate product identity mismatch");
   }
 }
 function hash(file) {
@@ -393,24 +400,24 @@ async function waitHealthy(op, check = healthy, timeout = HEALTH_MS, requiredVer
   } while (Date.now() < end);
   fail("updated client failed health or UI check");
 }
-function launchClient(root, spawnImpl = spawn) {
-  const env = { ...process.env, CHATUI_PORT: "", WECHATVIBE_CLIENT_ROOT: "" };
+function launchClient(root, spawnImpl = spawn, productName = "WechatVibe") {
+  const env = { ...process.env, QQVIBE_PRODUCT: productName === "QQVibe" ? "qq" : "wechat", CHATUI_PORT: "", WECHATVIBE_CLIENT_ROOT: "" };
   delete env.WECHATVIBE_UPDATE_VALIDATE;
   delete env.WECHATVIBE_UPDATE_READY_FILE;
   delete env.WECHATVIBE_UPDATE_READY_NONCE;
   delete env.WECHATVIBE_UPDATE_FINAL_READY_FILE;
   delete env.WECHATVIBE_UPDATE_FINAL_READY_NONCE;
-  const child = spawnImpl(path.join(root, "WechatVibe.exe"), [], { cwd: root,
+  const child = spawnImpl(path.join(root, productName + ".exe"), [], { cwd: root,
     detached: true, stdio: "ignore", env });
   return new Promise((resolve, reject) => {
     child.once("error", reject);
     child.once("spawn", () => { child.unref(); resolve(child); });
   });
 }
-function launchValidation(root, _op, readyFile, nonce, spawnImpl = spawn) {
-  const child = spawnImpl(path.join(root, "WechatVibe.exe"), [], { cwd: root,
+function launchValidation(root, op, readyFile, nonce, spawnImpl = spawn) {
+  const child = spawnImpl(path.join(root, (op.productName || "WechatVibe") + ".exe"), [], { cwd: root,
     detached: true, stdio: "ignore",
-    env: { ...process.env, CHATUI_PORT: "", WECHATVIBE_CLIENT_ROOT: "",
+    env: { ...process.env, QQVIBE_PRODUCT: op.productName === "QQVibe" ? "qq" : "wechat", CHATUI_PORT: "", WECHATVIBE_CLIENT_ROOT: "",
       WECHATVIBE_UPDATE_VALIDATE: "1", WECHATVIBE_UPDATE_READY_FILE: readyFile,
       WECHATVIBE_UPDATE_READY_NONCE: nonce } });
   return new Promise((resolve, reject) => {
@@ -418,14 +425,14 @@ function launchValidation(root, _op, readyFile, nonce, spawnImpl = spawn) {
     child.once("spawn", () => resolve(child));
   });
 }
-function launchFinalClient(root, _op, readyFile, nonce, spawnImpl = spawn) {
-  const env = { ...process.env, CHATUI_PORT: "", WECHATVIBE_CLIENT_ROOT: "",
+function launchFinalClient(root, op, readyFile, nonce, spawnImpl = spawn) {
+  const env = { ...process.env, QQVIBE_PRODUCT: op.productName === "QQVibe" ? "qq" : "wechat", CHATUI_PORT: "", WECHATVIBE_CLIENT_ROOT: "",
     WECHATVIBE_UPDATE_FINAL_READY_FILE: readyFile,
     WECHATVIBE_UPDATE_FINAL_READY_NONCE: nonce };
   delete env.WECHATVIBE_UPDATE_VALIDATE;
   delete env.WECHATVIBE_UPDATE_READY_FILE;
   delete env.WECHATVIBE_UPDATE_READY_NONCE;
-  const child = spawnImpl(path.join(root, "WechatVibe.exe"), [], { cwd: root,
+  const child = spawnImpl(path.join(root, (op.productName || "WechatVibe") + ".exe"), [], { cwd: root,
     detached: true, stdio: "ignore", env });
   return new Promise((resolve, reject) => {
     child.once("error", reject);
@@ -601,7 +608,7 @@ function paths(op) {
 function cleanupArchive(op) {
   const archiveVersion = op.action === "install" ? op.expectedVersion : op.previousVersion;
   if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(archiveVersion)) return;
-  const archive = path.join(op.workDir, `WechatVibe-${archiveVersion}-windows-x64.zip`);
+  const archive = path.join(op.workDir, `${op.productName || "WechatVibe"}-${archiveVersion}-windows-x64.zip`);
   if (!present(archive)) return;
   noReparse(archive);
   if (!fs.lstatSync(archive).isFile()) fail("archive cleanup target is not a file");
@@ -642,7 +649,7 @@ function pruneOldWorkDirs(op, { runOnceAbsent: isAbsent = runOnceAbsent,
   removeOldWorkDir = removeOwnedTree } = {}) {
   const current = readJson(journalPath(op), MAX_JOURNAL_BYTES);
   if (!terminalJournal(current, op.workDir, op.installRoot)) return [];
-  validateCandidate(path.join(op.workDir, "backup"), current.previousVersion, false);
+  validateCandidate(path.join(op.workDir, "backup"), current.previousVersion, false, op.productName || "WechatVibe");
   if (!isAbsent(op)) fail("current RunOnce recovery registration remains");
   const parent = path.dirname(op.installRoot);
   const currentTime = Date.parse(current.updatedAt);
@@ -696,7 +703,7 @@ async function openCommittedClient(op, journal, deps) {
     } else if (!(present(op.candidatePath) && !present(currentBackup))) {
       fail("rollback backup commit topology is unsafe");
     }
-    validateCandidate(op.candidatePath, op.previousVersion, false);
+    validateCandidate(op.candidatePath, op.previousVersion, false, op.productName || "WechatVibe");
     save(journal, "succeeded", { backupCommitPending: false });
   };
   if (journal.phase === "succeeded" && journal.guiStarted === true) {
@@ -749,22 +756,22 @@ async function openCommittedClient(op, journal, deps) {
 async function relaunchOldIfSafe(op, deps) {
   if (!present(op.installRoot)) return "old installation is missing";
   try {
-    validateCandidate(op.installRoot, op.previousVersion, false);
+    validateCandidate(op.installRoot, op.previousVersion, false, op.productName || "WechatVibe");
     if (!(await deps.portVacant(op.port))) return "bridge port is occupied";
-    await deps.launchClient(op.installRoot);
+    await deps.launchClient(op.installRoot, undefined, op.productName || "WechatVibe");
     return null;
   } catch (error) { return error.message; }
 }
 async function finishRestored(op, journal, deps, operationFile) {
   if (journal.restoreGuiStarted !== true) {
-    validateCandidate(op.installRoot, op.previousVersion, false);
+    validateCandidate(op.installRoot, op.previousVersion, false, op.productName || "WechatVibe");
     const vacant = await deps.portVacant(op.port);
     if (!vacant && !(await deps.healthy(op, op.previousVersion))) {
       fail("occupied port does not serve restored client version");
     }
     // A healthy bridge can be running without a GUI. Electron's single-instance
     // lock safely focuses an already open window when one exists.
-    await deps.launchClient(op.installRoot);
+    await deps.launchClient(op.installRoot, undefined, op.productName || "WechatVibe");
     save(journal, "rolled_back", { restoreGuiStarted: true, restoreLaunchError: null });
   }
   if (op.action === "rollback") restorePriorJournal(op, operationFile);
@@ -865,7 +872,7 @@ async function runOperation(op, operationFile, overrides = {}) {
   let validationChild;
   try {
     await waitVacant(op.port, deps.portVacant);
-    validateCandidate(op.candidatePath, op.expectedVersion, op.action === "install");
+    validateCandidate(op.candidatePath, op.expectedVersion, op.action === "install", op.productName || "WechatVibe");
     if (present(paths(op).backup) || present(paths(op).failed)) fail("swap target already exists");
     const dataDir = localDataDirName(path.join(op.installRoot, "resources", "client"));
     const local = path.join(op.installRoot, "resources", "client", dataDir);
@@ -982,6 +989,7 @@ async function main(argv = process.argv.slice(2)) {
   const op = validateOperation(readJson(operationFile, MAX_OPERATION_BYTES), operationFile,
     { recovery });
   if (process.platform !== "win32") fail("Windows update helper requires Windows");
+  if (op.productName) process.env.QQVIBE_PRODUCT = op.productName === "QQVibe" ? "qq" : "wechat";
   if (!samePath(__filename, path.join(op.workDir, "helper", "real-client-update-helper.cjs"))) {
     fail("helper must run from its stable copied location");
   }

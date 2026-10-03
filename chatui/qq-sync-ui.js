@@ -110,7 +110,7 @@
       }
     }
     async function send(action, body = {}) {
-      if (busy) return;
+      if (busy) return { ok: false, error: "连接操作正在进行，请稍后重试。" };
       busy = true;
       const request = ++serial;
       render(snapshot);
@@ -127,6 +127,7 @@
         if (action === "configure" || action === "clear-token") get("qqSyncToken").value = "";
         render(data);
         await onChange?.(data);
+        return { ok: true };
       } catch (error) {
         if (request === serial) {
           busy = false;
@@ -134,6 +135,7 @@
           get("qqSyncStatus").textContent = message(error.code);
           if(error.code==='unverified-version')await load();
         }
+        return { ok: false, error: message(error.code) };
       }
     }
     get("btnSaveQQConnection").addEventListener("click", () => {
@@ -193,7 +195,14 @@
     get("qqSyncPanel").addEventListener("toggle", () => { if (get("qqSyncPanel").open) void load(); });
     render(null);
     void load();
-    return { load, dispose() { serial++; } };
+    return { load, addConversation(kind, number) {
+      if (!['contact', 'group'].includes(kind) || !/^\d{5,20}$/.test(number || ''))
+        return Promise.resolve({ ok: false, error: '请输入有效的 QQ 号或群号。' });
+      if (!snapshot?.enabled || snapshot.liveValidated !== true)
+        return Promise.resolve({ ok: false, error: '请先在“连接与导入”中连接 QQ。' });
+      return kind === 'group' ? send('add-group', { groupCode: number }) :
+        send('add-contact', { peerUin: number, name: '' });
+    }, dispose() { serial++; } };
   }
   global.QQSyncUI = { mount, message };
 })(typeof window === "object" ? window : globalThis);

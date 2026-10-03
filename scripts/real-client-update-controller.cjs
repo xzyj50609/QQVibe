@@ -18,7 +18,7 @@ function directChild(candidate, parent) {
   return samePath(path.dirname(candidate), parent);
 }
 
-function readRollback(parent, installRoot, currentVersion) {
+function readRollback(parent, installRoot, currentVersion, productName = "WechatVibe") {
   let entries;
   try { entries = fs.readdirSync(parent, { withFileTypes: true }); }
   catch (_) { return null; }
@@ -33,7 +33,7 @@ function readRollback(parent, installRoot, currentVersion) {
       if (journal.schema !== 1 || journal.phase !== "succeeded" ||
           !samePath(journal.installRoot, installRoot) || journal.expectedVersion !== currentVersion ||
           typeof journal.previousVersion !== "string" || !fs.statSync(backup).isDirectory() ||
-          !fs.statSync(path.join(backup, "WechatVibe.exe")).isFile()) continue;
+          !fs.statSync(path.join(backup, productName + ".exe")).isFile()) continue;
       candidates.push({ workDir, backup, version: journal.previousVersion,
         mtime: fs.statSync(path.join(workDir, "journal.json")).mtimeMs });
     } catch (_) { /* A damaged operation must not become a rollback option. */ }
@@ -83,7 +83,8 @@ function spawnHelper(helper, operationFile, workDir) {
 }
 
 function createUpdateController({ app, root, port, instanceId, onState, pauseRecovery,
-  resumeRecovery, quit, checkImpl = checkForUpdates, stageImpl = downloadAndStageUpdate }) {
+  resumeRecovery, quit, profile, splitDownload = false, checkImpl = checkForUpdates, stageImpl = downloadAndStageUpdate }) {
+  const productName = profile?.productName || "WechatVibe";
   const requestedInstallRoot = path.resolve(root, "..", "..");
   // Staging uses real paths. Resolve ancestor aliases before comparing or
   // handing paths to the helper; keep the install directory itself subject
@@ -102,17 +103,18 @@ function createUpdateController({ app, root, port, instanceId, onState, pauseRec
   };
 
   function getState() {
-    const rollback = readRollback(parent, installRoot, currentVersion);
+    const rollback = readRollback(parent, installRoot, currentVersion, productName);
     return { ...state, rollbackVersion: rollback?.version || null };
   }
 
   async function check() {
-    if (busy || BUSY.has(state.phase)) return getState();
+    if (busy || BUSY.has(state.phase) || state.phase === "ready") return getState();
     busy = true;
     try {
-      const result = await checkImpl(currentVersion);
+      const result = await checkImpl(currentVersion, { profile, channel: profile?.key === "qq" ? "preview" : "stable" });
       staged = null;
-      return notify(result.status, { ...result, rollbackVersion: getState().rollbackVersion });
+      return notify(result.status, { notes: "", totalBytes: 0, error: null, latestVersion: null,
+        ...result, rollbackVersion: getState().rollbackVersion });
     } catch (_) {
       return notify("server-error", { error: null });
     } finally { busy = false; }
@@ -121,7 +123,7 @@ function createUpdateController({ app, root, port, instanceId, onState, pauseRec
   async function handoff(action, candidatePath, workDir, expectedVersion) {
     if (!app.isPackaged || process.platform !== "win32" || !directChild(workDir, parent) ||
         !samePath(path.dirname(candidatePath), workDir) ||
-        !fs.existsSync(path.join(candidatePath, "WechatVibe.exe"))) {
+        !fs.existsSync(path.join(candidatePath, productName + ".exe"))) {
       throw new Error("更新包或安装位置不可用");
     }
     const python = path.join(root, "runtime", "python", "python.exe");
@@ -129,7 +131,7 @@ function createUpdateController({ app, root, port, instanceId, onState, pauseRec
     const operationFile = path.join(workDir, `${action}-${randomUUID()}.json`);
     const operation = { schema: 1, action, installRoot, candidatePath, workDir,
       expectedVersion, previousVersion: currentVersion, parentPid: process.pid,
-      port, instanceId };
+      port, instanceId, productName };
     fs.writeFileSync(operationFile, JSON.stringify(operation), { flag: "wx" });
     let stopped = false;
     try {
@@ -159,7 +161,20 @@ function createUpdateController({ app, root, port, instanceId, onState, pauseRec
     }
   }
 
+  async function download() {
+    if (busy || state.phase !== "available") return getState();
+    busy = true;
+    try {
+      staged = await stageImpl(currentVersion, installRoot, value => notify(value.phase, value),
+        { profile, channel: profile?.key === "qq" ? "preview" : "stable" });
+      return notify("ready", { latestVersion: staged.expectedVersion });
+    } catch (error) {
+      return notify("failed", { error: error?.message || "下载失败，请重试" });
+    } finally { busy = false; }
+  }
+
   async function begin() {
+    if (splitDownload && state.phase === "available") return download();
     if (busy) return getState();
     if (state.phase !== "available" && state.phase !== "ready") return getState();
     busy = true;
@@ -172,7 +187,7 @@ function createUpdateController({ app, root, port, instanceId, onState, pauseRec
             downloadedBytes: progress.downloadedBytes,
             totalBytes: progress.totalBytes,
           });
-        });
+        }, { profile, channel: profile?.key === "qq" ? "preview" : "stable" });
       }
       notify("ready", { latestVersion: staged.expectedVersion });
       return await handoff("install", staged.candidatePath, staged.workDir, staged.expectedVersion);
@@ -183,7 +198,7 @@ function createUpdateController({ app, root, port, instanceId, onState, pauseRec
 
   async function rollback() {
     if (busy) return getState();
-    const candidate = readRollback(parent, installRoot, currentVersion);
+    const candidate = readRollback(parent, installRoot, currentVersion, productName);
     if (!candidate) return notify("failed", { error: "没有可用的回退版本" });
     busy = true;
     try {
@@ -193,7 +208,7 @@ function createUpdateController({ app, root, port, instanceId, onState, pauseRec
     } finally { busy = false; }
   }
 
-  return { getState, check, begin, rollback };
+  return { getState, check, download, begin, rollback };
 }
 
 module.exports = { createUpdateController, readRollback };

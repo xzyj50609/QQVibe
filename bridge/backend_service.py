@@ -2072,8 +2072,7 @@ class Backend:
                 if current and labels_eligible(self.source,current[-1]) and current[-1]['kind']=='text' and current[-1]['text'].strip():
                     targets.setdefault(stable_id,current[-1])
                 else:
-                    with base.connect() as conn:
-                        base.complete_resume_target(conn,key[0],key[2],key[3],stable_id)
+                    base.complete_resume_targets(key[0],key[2],key[3],[stable_id])
         if state is not None:
             state["limit"] = max(state["limit"], limit)
             if window is not None:
@@ -2302,8 +2301,7 @@ class Backend:
         else:
             known = store.fine_known(account, user, version, [item["id"] for _index, item in selected])
         if grouped and known:
-            with store.connect() as conn:
-                for stable_id in known:store.complete_resume_target(conn,account,user,version,stable_id)
+            store.complete_resume_targets(account,user,version,known)
         job["total"] = len(selected)
         job["processed"] = sum(item["id"] in known for _index, item in selected)
         contexts = {}

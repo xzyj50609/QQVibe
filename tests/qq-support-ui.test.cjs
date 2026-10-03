@@ -73,7 +73,7 @@ test("switching scope invalidates a late response and clears the old summary", a
   f.setScope({ account: "a:other", user: "u:other", generation: 2 });
   f.ui.scopeChanged(); finish(data()); await pending;
   assert.doesNotMatch(f.get("qqDataScopeRows").text, /100 条|qq-v3/);
-  assert.match(f.get("qqDataScopeRows").text, /单聊已变化/);
+  assert.match(f.get("qqDataScopeRows").text, /会话已变化/);
 });
 
 test("a mismatching account response cannot be displayed", async () => {

@@ -20,6 +20,8 @@ function withoutProductEnv(run) {
 
 const wechat = identity.productProfile("wechat");
 const qq = identity.productProfile("qq");
+assert.equal(qq.displayName, "句豆 · ChatBean");
+assert.equal(qq.productName, "QQVibe", "branding must not change update matching");
 
 for (const field of ["productName", "appId", "dataDir", "instanceSalt", "controlTokenEnv",
   "controlTokenHeader", "storageNamespace", "iconPng", "iconIco"]) {
@@ -28,11 +30,11 @@ for (const field of ["productName", "appId", "dataDir", "instanceSalt", "control
 
 withoutProductEnv(() => {
   assert.equal(identity.productProfile().key, "qq", "this repository is the QQ product");
-  assert.equal(identity.productProfile().updateChannelEnabled, false,
+  assert.equal(identity.productProfile().updateChannelEnabled, true,
     "QQ must not inherit the upstream update feed");
 });
 assert.equal(wechat.updateChannelEnabled, true);
-assert.equal(qq.updateRepository, null);
+assert.equal(qq.updateRepository, "xzyj50609/QQVibe");
 
 assert.equal(identity.dataRoot(qq, "C:/app"), path.join("C:/app", "QQVibeData"));
 assert.equal(identity.stateDir(qq, "real-client-data", "C:/app"),

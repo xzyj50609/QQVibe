@@ -8,6 +8,19 @@
     panel.hidden = false;
     get("qqDiagnosticsRow").hidden = false;
     exportStatus.hidden = false;
+    const doctorButton = get("btnQCEDoctor"), doctorStatus = get("qceDoctorStatus");
+    if (doctorButton && doctorStatus && typeof global.desktopHost?.openQCEDoctor === "function") {
+      doctorButton.hidden = false;
+      doctorButton.addEventListener("click", async () => {
+        doctorButton.disabled = true;
+        doctorStatus.hidden = false;
+        try {
+          const opened = await global.desktopHost.openQCEDoctor();
+          doctorStatus.textContent = opened ? "检测工具已打开。修复和扫码完成后，再点“连接本机 QQ / QCE”。" : "检测工具未能打开，可双击程序目录中的 QCE 检测入口。";
+        } catch (_) { doctorStatus.textContent = "检测工具未能打开，请使用程序目录中的 QCE 检测入口。"; }
+        finally { doctorButton.disabled = false; }
+      });
+    }
     const paragraph = value => { const node = document.createElement("p"); node.textContent = value; rows.appendChild(node); };
     const amount = value => Number.isSafeInteger(value) && value >= 0 ? String(value) : "未知";
     const date = (value, scan = false) => {

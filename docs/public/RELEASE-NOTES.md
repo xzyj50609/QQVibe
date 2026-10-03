@@ -1,76 +1,39 @@
-# QQVibe 0.1.2 预发布
+# 句豆 · ChatBean 1.0.0
 
-日期：2026-10-03。此版本扩展聊天记录 JSON 导入能力，保留现有 QCE 导入方式，并增加更多常见导出结构的识别与字段映射。
+**首个正式版本，整合原 0.1.3 候选的全部已确认更新。** 项目原名 QQVibe，程序文件仍为 `QQVibe.exe`，数据目录仍为 `QQVibeData`。
 
-## 下载
+## 新界面与操作
 
-**[QQVibe-0.1.2-windows-x64-full.zip：含 Laya 完整程序包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64-full.zip)**
+- 新名称、新图标、浅蓝渐变界面，圆头像、QQ 风格消息气泡和气泡内引用。
+- 聊天 / 画像在顶部直接切换，返回聊天保留同一会话的阅读位置。
+- 会话列表分界线可拖动并记忆；双击或 Delete 恢复默认，方向键微调。
+- 搜索旁「+」添加联系人或群聊；设置、输入、导入和更新弹窗沿用统一样式。
+- 新用户默认显示标签百分比，已有用户选择保留；画像保留样本门槛和依据说明。
 
-第一次使用优先下载完整包。已有 Laya 模型或计划配置 API/Ollama 的用户可下载[无模型标准包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64.zip)。SHA256 和文件清单会随发布页提供。
+## 自动更新
 
-## JSON 导入改进
+- 后台自动检查，支持手动检查和可选自动下载；新用户默认正式版渠道。
+- 下载完成后确认重启，进行签名/哈希校验并保留聊天、配置与模型；失败时尝试恢复旧程序。
+- 正在导入、分析、备份或下载模型时提示稍后重试。完整包首次使用，已有模型的后续更新使用标准包。
 
-- 保留 QCE V6 单文件、manifest 和分块 JSONL；新增顶层数组、嵌套消息列表、JSONL/NDJSON、QQ ChatLab 与常见 OneBot/NapCat 字段适配。
-- 对结构不同的记录，可以指定消息列表、正文、发送者和时间字段，并手动映射昵称和时区。
-- 大文件分批读取，预览使用本机临时存储。当前单次上限 2 GiB / 200 万条；文件仍需完整且身份映射正确。
-- 预览会显示样本、有效/拒绝/冲突条数。修改字段后须重新预览；含坏行时须明确同意跳过。
-- 不能保证任意 JSON 都能自动识别。平台、本人或会话身份不清时会提示补充确认，不编造 QQ 身份或日期。
+## QCE 与 JSON 导入
 
-已有 0.1.1 用户仍可按[备份升级回退说明](BACKUP-UPGRADE.md)备份、另目录安装并核对恢复结果。
+- 随包提供 QCE 检测与最小修复工具，自动检查 17 个安装、启动、端口、登录和连接关口；有适用修复时保留配置备份并复检。
+- 支持 QCE 单 JSON / 分块 JSONL、通用消息数组、嵌套列表、QQ ChatLab 与常见 OneBot/NapCat 结构。
+- 陌生字段可映射时间、正文、发送者、消息编号和会话身份；大文件分批处理并先预览后导入。
+- 修复 QCE 6.3.0/6.3.1 自动导入：按毫秒读取 timestamp，避免与 time 展示字段冲突，识别 id 和 text 类型，保留旧 ISO 时间及原始编号去重。
+- 分析恢复目标的批量完成由存储层事务处理，失败时整批回滚。
 
-## 试用范围
+## 下载与升级
 
-程序仍为 Windows x64 预发布。Windows 11 / QCE 6.3.0 / 本地 Laya / CPU 是本机优先路线；另一台电脑、Windows 10、其他显卡、多显示器以及真实 API/Ollama 仍需按条件验证。群聊标签和人物画像应结合原消息核对，结果不代表对人的事实判断。
+[完整包（含 Laya）](https://github.com/xzyj50609/QQVibe/releases/download/v1.0.0/QQVibe-1.0.0-windows-x64-full.zip) · [标准包](https://github.com/xzyj50609/QQVibe/releases/download/v1.0.0/QQVibe-1.0.0-windows-x64.zip) · [发布页](https://github.com/xzyj50609/QQVibe/releases/tag/v1.0.0)
 
-# QQVibe 0.1.1
+全部解压后打开 `win-unpacked/QQVibe.exe`。从 0.1.2 或更早版本升级，先备份，在另一个新目录解压后恢复；首次迁移仍需手动下载，后续可在应用内更新。[升级步骤](BACKUP-UPGRADE.md)
 
-QQVibe 是一款 Windows 桌面应用，用来回顾自己的 QQ 单聊与群聊：查找旧消息、查看情绪与意图标签，以及自己或某位成员在这段会话中的人物画像。首次使用推荐随包提供的本地 Laya / CPU，分析在自己的电脑上完成。
+## 使用范围
 
-## 下载哪个文件
+Windows 11 x64 是当前本机已验证路线。真实 API/Ollama、其他电脑与显卡、多屏以及全部标签/画像质量仍需按环境继续验证。正式版标记表示本次发布渠道，不把这些未验证项目写成通过。[兼容表](COMPATIBILITY.md)
 
-**[QQVibe-0.1.1-windows-x64-full.zip：含 Laya 完整程序包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.1/QQVibe-0.1.1-windows-x64-full.zip)**
+标签百分比不是准确率，群聊标签和画像需结合原文判断。更新附件带签名校验；Windows 程序本体尚无发布者证书，系统可能提示来源未知。[已知问题](KNOWN-ISSUES.md)
 
-第一次使用优先下载完整包。全部解压后打开 **win-unpacked/QQVibe.exe**，不需要 Git、Node、Python 或编译工具。程序旁的 **「使用说明.html」**可直接打开查看离线图文手册。
-
-[QQVibe-0.1.1-windows-x64.zip：无模型标准程序包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.1/QQVibe-0.1.1-windows-x64.zip)适合已有 Laya 或打算自己配置 API/Ollama 的人。**「Source code」是源码，不能直接当程序打开。** 下载页同时提供 SHA256 和发布清单，记录程序包与源码的对应关系。
-
-## 这次更新
-
-- 新用户默认改为浅色界面；恢复旧版深色设置后，可在「主题外观」中选「浅色模式」。
-- 补齐项目介绍和浅色应用截图，清楚说明单聊、群聊与本地分析用途。
-- 新增面向普通用户的使用手册与包内离线图文说明，重写下载、QCE 安装、模型选择与聊天查看步骤。
-- 把兼容表、已知问题、一页试用清单和反馈模板整理成可直接照做的说明。
-
-已有单聊、群聊、搜索、人物画像、分析控制、备份恢复和模型服务入口继续保留。本次沿用既有功能，没有通过删功能改变原来的验证任务。
-
-## 开始使用
-
-1. 下载完整程序包并全部解压，打开 **win-unpacked/QQVibe.exe**。
-2. 按[首次使用说明](https://github.com/xzyj50609/QQVibe/blob/preview/docs/public/SETUP.md)准备 **QCE 6.3.0**，用自己的 QQ 登录并保持运行。
-3. 在 QQVibe 点 **「连接本机 QQ / QCE」**，核对本人身份。
-4. 选择 **「本地部署」**和 **「CPU」**，等待模型就绪。
-5. 添加一个单聊或群聊并打开，查看消息标签与 **「人物画像」**。
-
-[项目介绍与截图](https://github.com/xzyj50609/QQVibe) · [使用手册](https://github.com/xzyj50609/QQVibe/blob/preview/docs/public/USER-GUIDE.md)
-
-## 使用范围与已知问题
-
-**本机已验证，跨机正在测试。** 本版本供首批用户使用，GitHub 保留 Pre-release 标记；不宣称跨机或完整正式版验收已经完成。
-
-当前优先路线是 **Windows 11 x64、QCE 6.3.0、本地 Laya / CPU**。开发机的 Intel UHD WebGPU 与单屏系统缩放已有实测，Windows 10、其他显卡、多显示器及非开发者安装仍在验证。真实 API/Ollama 也尚未完成验证，本机假服务结果只代表界面与流程。
-
-**群聊标签是实验候选**，引用、转发、讽刺和多人语境可能误判。标签分数不是准确率，人物画像不是对人的事实；完整语义与画像质量仍需人工审阅。
-
-程序尚未签名，采用手动更新；已读范围不代表 QQ 全部历史。QQVibe 不使用 WechatVibe 的应用更新源。升级前请备份，并将新版解压到新目录，保留旧目录到确认可用。
-
-[兼容表](https://github.com/xzyj50609/QQVibe/blob/preview/docs/public/COMPATIBILITY.md) · [已知问题](https://github.com/xzyj50609/QQVibe/blob/preview/docs/public/KNOWN-ISSUES.md) · [备份与回退](https://github.com/xzyj50609/QQVibe/blob/preview/docs/public/BACKUP-UPGRADE.md)
-
-## 试用与反馈
-
-请按[一页试用清单](https://github.com/xzyj50609/QQVibe/blob/preview/docs/public/R9-TRIAL.md)检查启动、连接、身份归属、标签、自然新消息和关闭后重开。没有服务或设备的项目写「没试」即可。
-
-遇到问题可按[反馈模板](https://github.com/xzyj50609/QQVibe/blob/preview/docs/public/FEEDBACK.md)发给提供软件的同学，或到 [GitHub Issues](https://github.com/xzyj50609/QQVibe/issues)提交。只需版本、失败步骤和匿名诊断，不上传聊天、账号、Key/token、数据库或完整备份。启动、数据安全和身份归属问题优先处理。
-
-## 来源与许可
-
-程序基于 [tswawa/WechatVibe](https://github.com/tswawa/WechatVibe)，沿用 Apache-2.0，并保留上游署名和第三方声明。完整包中的固定 Laya 模型已按对应来源和许可保留说明，详见[模型许可](https://github.com/xzyj50609/QQVibe/blob/preview/docs/public/MODEL-LICENSE.md)。QQ、QCE 与 NapCat 为外部软件，不随包提供。
+截图使用合成聊天和演示分析缓存，不包含真实用户聊天。旧 0.1.2/0.1.1 包仍保留在[历史发布页](https://github.com/xzyj50609/QQVibe/releases)。

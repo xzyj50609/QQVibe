@@ -88,7 +88,9 @@ class QQAccountTests(unittest.TestCase):
             self.assertIn('"key": "qq"', config)
             self.assertNotIn("Token", config)
             html = get("/")[1]
-            self.assertIn("<title>QQVibe</title>", html)
+            self.assertIn("<title>句豆 · ChatBean</title>", html)
+            self.assertIn("chatbean-ui.js", html)
+            self.assertIn("chatbean.css", html)
             self.assertIn("已保存的 QQ 账号", html)
             self.assertIn("github.com/tswawa/WechatVibe", html, "upstream attribution stays intact")
             self.assertNotIn("微信账号", html)

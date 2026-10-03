@@ -22,6 +22,7 @@ const DOC_URLS = new Set([
   "https://github.com/tswawa",
   "https://github.com/tswawa/WechatVibe",
   "https://github.com/tswawa/WechatVibe/releases",
+  "https://github.com/xzyj50609/QQVibe/releases",
 ]);
 
 document.addEventListener("click", (event) => {
@@ -67,6 +68,10 @@ contextBridge.exposeInMainWorld("desktopHost", Object.freeze({
     if (window.top !== window) return Promise.resolve(null);
     return ipcRenderer.invoke("real-client:app-version");
   },
+  openQCEDoctor() {
+    if (window.top !== window || !navigator.userActivation.isActive) return Promise.resolve(false);
+    return ipcRenderer.invoke("real-client:qce-doctor");
+  },
   getModelDownloadState() {
     if (window.top !== window) return Promise.resolve({ phase: "blocked" });
     return ipcRenderer.invoke("real-client:model-download-state");
@@ -95,6 +100,14 @@ contextBridge.exposeInMainWorld("desktopHost", Object.freeze({
   checkForUpdates() {
     if (window.top !== window) return Promise.resolve({ status: "blocked" });
     return ipcRenderer.invoke("real-client:check-updates");
+  },
+  getUpdatePreferences() {
+    if (window.top !== window) return Promise.resolve(null);
+    return ipcRenderer.invoke("real-client:update-preferences");
+  },
+  setUpdatePreferences(value) {
+    if (window.top !== window || !navigator.userActivation.isActive) return Promise.resolve(null);
+    return ipcRenderer.invoke("real-client:update-preferences", value);
   },
   getUpdateState() {
     if (window.top !== window) return Promise.resolve({ phase: "blocked" });

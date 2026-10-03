@@ -20,8 +20,9 @@ SCRIPTS = (
     "real-client-update.cjs", "real-client-update-proxy.cjs", "real-client-model.cjs",
     "real-client-update-controller.cjs",
     "real-client-update-helper.cjs", "real-client-update-extract.py",
-    "update-signing.pub", "model-files.json", "model-asset.json",
+    "update-signing.pub", "qq-update-signing.pub", "real-client-update-config.cjs", "model-files.json", "model-asset.json",
     "restore-qq-data.py",
+    "qce-doctor.ps1", "qce-doctor-core.ps1", "qce-doctor.cmd",
     "product-identity.json", "product-identity.cjs",
 )
 BRIDGE = (
@@ -81,6 +82,8 @@ MODEL_PINS = {name: (entry["bytes"], entry["sha256"])
 if _model_manifest.get("schema") != 1 or set(MODEL_FILES) != set(MODEL_PINS):
     raise RuntimeError("pinned model manifest differs from stage allowlist")
 PUBLIC_FILES = (
+    "chatui/chatbean-tokens.css", "chatui/chatbean.css", "chatui/chatbean-ui.js", "chatui/chatbean-splitter.js",
+    "docs/public/images/chatbean-overview.png", "docs/public/images/chatbean-portrait.png",
     "LICENSE", "THIRD_PARTY_NOTICES.md", "README.md", "licenses/jieba-0.42.1-LICENSE.txt",
     "licenses/standardwebhooks-1.1.1-LICENSE.txt", "licenses/supplemental-sources.json",
     "NOTICE", "chatui/index.html",
@@ -88,6 +91,7 @@ PUBLIC_FILES = (
     "docs/public/BACKUP-UPGRADE.md", "docs/public/FEEDBACK.md", "docs/public/RELEASE-NOTES.md",
     "docs/public/R9-TRIAL.md", "docs/public/MODEL-LICENSE.md", "docs/public/BUILD.md",
     "docs/public/USER-GUIDE.md", "docs/public/USER-GUIDE.html", "docs/public/JSON-IMPORT.md",
+    "docs/public/QCE-DOCTOR.md",
     "docs/public/images/overview.png", "docs/public/images/single-chat.png",
     "docs/public/images/group-chat.png", "docs/public/images/settings.png",
     "docs/public/images/first-run.png", "docs/public/images/settings-connection.png",
@@ -273,7 +277,7 @@ def stage_public(source: Path, models: Path, output: Path, *, with_model: bool =
             "candidate": version + "-light-guide", "sourceCommit": source_commit,
             "variant": "full" if with_model else "standard",
             "modelIncluded": with_model, "dataDirectory": "resources/client/QQVibeData",
-            "automaticUpdates": False, "releaseIntent": "friends-pre-release",
+            "automaticUpdates": True, "releaseIntent": "first-stable",
             "crossMachineAccepted": False, "realApiOllamaAccepted": False,
             "modelRedistribution": "Apache-2.0-with-attached-attribution" if with_model else "not-included"
             }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

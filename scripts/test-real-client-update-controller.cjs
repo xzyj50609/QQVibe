@@ -67,6 +67,7 @@ async function checkJunctionParent(parent) {
       if (name === "./real-client-update.cjs") return {};
       if (["node:crypto", "node:fs", "node:path"].includes(name)) return require(name);
       if (name === "./product-identity.cjs") return require("./product-identity.cjs");
+      if (name === "./real-client-update-config.cjs") return { UpdatePreferences: class { get() { return {channel: "stable"}; } } };
       throw new Error(`Unexpected controller import: ${name}`);
     },
     process: { platform: "win32", pid: process.pid, env: {} }, setImmediate,

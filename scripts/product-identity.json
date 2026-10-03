@@ -16,13 +16,14 @@
     },
     "qq": {
       "productName": "QQVibe",
+      "displayName": "句豆 · ChatBean",
       "appId": "com.local.qqvibe.real-client",
       "dataDir": "QQVibeData",
       "instanceSalt": "qqvibe",
       "controlTokenEnv": "QQVIBE_CONTROL_TOKEN",
       "controlTokenHeader": "X-QQVibe-Control-Token",
       "storageNamespace": "qq-real",
-      "updateRepository": null,
+      "updateRepository": "xzyj50609/QQVibe",
       "iconPng": "chatui/assets/qqvibe-icon.png",
       "iconIco": "chatui/assets/qqvibe-icon.ico"
     }

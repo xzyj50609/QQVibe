@@ -208,7 +208,7 @@ class QQImport:
                                     unmapped.add(str(sender)[:256])
                             if len(samples) < 3:
                                 samples.append({'sender': str(sender or '')[:128],
-                                    'time': str(json_adapter.field(value, 'time', job['mapping']) or '')[:128],
+                                    'time': str(json_adapter.field(value, 'time', job['mapping'], qce=qce) or '')[:128],
                                     'text': (json_adapter.text_content(json_adapter.field(value, 'text', job['mapping'])) or '[非文本消息]')[:200]})
                         if not reason:
                             value, id_kind = json_adapter.adapt(value, job['mapping'],

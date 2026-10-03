@@ -174,7 +174,10 @@ class CleanPortableBuildTests(unittest.TestCase):
         self.assertEqual(config["win"]["icon"], builder.current_product().icon_ico)
         self.assertEqual(config["extraResources"][0]["from"], str(self.client))
         self.assertEqual(config["extraResources"][1]["from"], str(self.client / "node_modules"))
-        self.assertEqual(config["extraFiles"], [{"from": str(self.client / "docs/public/USER-GUIDE.html"), "to": "使用说明.html"}])
+        self.assertEqual(config["extraFiles"], [
+            {"from": str(self.client / "docs/public/USER-GUIDE.html"), "to": "使用说明.html"},
+            {"from": str(self.client / "scripts/qce-doctor.cmd"), "to": "检查并修复QCE.cmd"},
+        ])
         template = json.loads((self.source / "electron-builder.real-client.json").read_text())
         self.assertEqual(template["extraResources"][0]["from"], builder.PLACEHOLDERS["stage"])
 
@@ -187,7 +190,7 @@ class CleanPortableBuildTests(unittest.TestCase):
             with self.subTest(product=key), mock.patch.dict(os.environ, {"QQVIBE_PRODUCT": key}):
                 config = json.loads(builder.generate_config(self.source, self.build, electron).read_text(encoding="utf-8"))
                 self.assertEqual((config["appId"], config["productName"], config["win"]["executableName"]),
-                                 (app_id, name, name))
+                                 (app_id, "句豆 · ChatBean" if key == "qq" else name, name))
                 self.assertEqual(config["extraMetadata"]["name"], name.lower())
                 self.assertEqual(config["win"]["icon"], builder.current_product().icon_ico)
 

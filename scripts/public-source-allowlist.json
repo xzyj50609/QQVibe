@@ -1378,6 +1378,126 @@
     {
       "source": "docs/public/images/group-labels.png",
       "target": "docs/public/images/group-labels.png"
+    },
+    {
+      "source": "scripts/qce-doctor-core.ps1",
+      "target": "scripts/qce-doctor-core.ps1"
+    },
+    {
+      "source": "scripts/qce-doctor.ps1",
+      "target": "scripts/qce-doctor.ps1"
+    },
+    {
+      "source": "scripts/qce-doctor.cmd",
+      "target": "scripts/qce-doctor.cmd"
+    },
+    {
+      "source": "scripts/test-qce-doctor.ps1",
+      "target": "scripts/test-qce-doctor.ps1"
+    },
+    {
+      "source": "scripts/test-qce-doctor-http.py",
+      "target": "scripts/test-qce-doctor-http.py"
+    },
+    {
+      "source": "tests/qce-doctor-ui.test.cjs",
+      "target": "tests/qce-doctor-ui.test.cjs"
+    },
+    {
+      "source": "docs/public/QCE-DOCTOR.md",
+      "target": "docs/public/QCE-DOCTOR.md"
+    },
+    {
+      "source": "scripts/build-qce-doctor.py",
+      "target": "scripts/build-qce-doctor.py"
+    },
+    {
+      "source": "tests/qce-doctor-host.test.cjs",
+      "target": "tests/qce-doctor-host.test.cjs"
+    },
+    {
+      "source": "scripts/real-client-update-config.cjs",
+      "target": "scripts/real-client-update-config.cjs"
+    },
+    {
+      "source": "scripts/qq-update-signing.pub",
+      "target": "scripts/qq-update-signing.pub"
+    },
+    {
+      "source": "scripts/init-qq-update-signing.cjs",
+      "target": "scripts/init-qq-update-signing.cjs"
+    },
+    {
+      "source": "scripts/test-qq-auto-update.cjs",
+      "target": "scripts/test-qq-auto-update.cjs"
+    },
+    {
+      "source": "bridge/test_update_readiness.py",
+      "target": "bridge/test_update_readiness.py"
+    },
+    {
+      "source": "docs/public/AUTO-UPDATE.md",
+      "target": "docs/public/AUTO-UPDATE.md"
+    },
+    {
+      "source": "chatui/chatbean-tokens.css",
+      "target": "chatui/chatbean-tokens.css"
+    },
+    {
+      "source": "chatui/chatbean.css",
+      "target": "chatui/chatbean.css"
+    },
+    {
+      "source": "chatui/chatbean-ui.js",
+      "target": "chatui/chatbean-ui.js"
+    },
+    {
+      "source": "design.md",
+      "target": "design.md"
+    },
+    {
+      "source": "scripts/render-product-icon.cjs",
+      "target": "scripts/render-product-icon.cjs"
+    },
+    {
+      "source": "docs/design/brand/chatbean-icon.svg",
+      "target": "docs/design/brand/chatbean-icon.svg"
+    },
+    {
+      "source": "tests/chatbean-navigation.test.cjs",
+      "target": "tests/chatbean-navigation.test.cjs"
+    },
+    {
+      "source": "docs/design/brand/chatbean-user-design.png",
+      "target": "docs/design/brand/chatbean-user-design.png"
+    },
+    {
+      "source": "docs/public/images/chatbean-overview.png",
+      "target": "docs/public/images/chatbean-overview.png"
+    },
+    {
+      "source": "docs/public/images/chatbean-portrait.png",
+      "target": "docs/public/images/chatbean-portrait.png"
+    },
+    {
+      "source": "chatui/chatbean-splitter.js",
+      "target": "chatui/chatbean-splitter.js"
+    },
+    {
+      "source": "tests/chatbean-splitter.test.cjs",
+      "target": "tests/chatbean-splitter.test.cjs"
+    },
+    {
+      "source": "bridge/test_qce63_import.py",
+      "target": "bridge/test_qce63_import.py"
+    },
+    {
+      "source": "bridge/test_resume_targets.py",
+      "target": "bridge/test_resume_targets.py"
+    },
+    {
+      "source": "CHANGELOG.md",
+      "target": "CHANGELOG.md"
     }
   ]
 }

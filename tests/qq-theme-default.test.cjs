@@ -57,6 +57,13 @@ test("a clean profile starts in light mode and sends the light titlebar theme", 
   assert.equal(view.nodes.get("selectThemeMode").value, "light");
   assert.deepEqual(view.desktopThemes, ["light"]);
   assert.equal(view.values.has("real-ui-settings-1"), false);
+  assert.equal(view.ui.settings.labelDetails, true, "QQ labels show percentages by default");
+});
+
+test("an explicitly saved compact label choice is preserved while invalid values use the new default", () => {
+  assert.equal(harness('{"labelDetails":false}').ui.settings.labelDetails, false);
+  for (const saved of ['{}', '{"labelDetails":null}', '{"labelDetails":"false"}', 'broken'])
+    assert.equal(harness(saved).ui.settings.labelDetails, true);
 });
 
 test("existing valid theme choices and other preferences survive initialization", () => {

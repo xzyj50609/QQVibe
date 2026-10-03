@@ -63,6 +63,7 @@ async function main() {
         if (name === "node:fs") return fs;
         if (name === "node:path") return path;
         if (name === "./product-identity.cjs") return require("./product-identity.cjs");
+      if (name === "./real-client-update-config.cjs") return { UpdatePreferences: class { get() { return {channel: "stable"}; } } };
         if (name === "node:child_process") return { execFile() { throw new Error("ready check must not stop a bridge"); } };
         if (name === "./real-client-model.cjs") return { ModelDownload: class { cancel() {} } };
         if (name === "./real-client-update-proxy.cjs") return {

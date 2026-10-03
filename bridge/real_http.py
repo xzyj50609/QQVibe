@@ -162,9 +162,30 @@ def make_handler(backend, accounts=None, control_token=None):
                         result["source"] = accounts.source_status()
                     return self.send(200, result)
                 if parsed.path == "/product-config.js":
-                    config = {"key": PRODUCT.key, "name": PRODUCT.product_name}
+                    config = {"key": PRODUCT.key, "name": PRODUCT.product_name,
+                              "displayName": PRODUCT.display_name or PRODUCT.product_name}
                     return self.send(200, ("window.ProductConfig = Object.freeze(" +
                         json.dumps(config, ensure_ascii=True) + ");\n").encode("utf-8"), JAVASCRIPT_MIME)
+                if parsed.path == "/api/update/readiness":
+                    with backend.jobs_lock:
+                        busy_analysis = any(job.get("status") in ("queued", "running") for job in backend.jobs.values())
+                        engine = getattr(backend, "batch_engine", None)
+                        busy_analysis = busy_analysis or bool(getattr(backend, "recent_windows", {})) or bool(engine and any(
+                            job.get("status") in ("queued", "running") for job in engine.member_jobs.values()))
+                    api_tasks = getattr(backend, "api_tasks", None)
+                    busy_api = False
+                    if api_tasks is not None:
+                        with api_tasks.condition:
+                            busy_api = api_tasks.inflight > 0
+                    importer = getattr(accounts, "imports", None)
+                    busy_import = False
+                    if importer is not None:
+                        with importer.lock:
+                            busy_import = bool(importer.job and (importer.job["public"].get("state") in ("reading", "previewing", "committing", "scanning", "normalizing") or
+                                importer.job.get("thread") and importer.job["thread"].is_alive()))
+                    with backend.request_condition:
+                        busy_requests = backend.active_requests > 1
+                    return self.send(200, {"ready": not (busy_analysis or busy_api or busy_import or busy_requests)})
                 if parsed.path == "/api/runtime":
                     return self.send(200, backend.runtime())
                 if parsed.path == "/api/local-model":
@@ -285,10 +306,10 @@ def make_handler(backend, accounts=None, control_token=None):
                 payload = target.read_bytes()
                 if target.name == "index.html" and PRODUCT.key == "qq":
                     html = payload.decode("utf-8")
-                    for old, new in (("<title>WechatVibe</title>", "<title>QQVibe</title>"),
+                    for old, new in (("<title>WechatVibe</title>", "<title>句豆 · ChatBean</title>"),
                                      ("/assets/wechatvibe-icon.png", "/assets/" + Path(PRODUCT.icon_png).name),
-                                     ("<strong>WechatVibe</strong>", "<strong>QQVibe</strong>"),
-                                     ("关于 WechatVibe", "关于 QQVibe"),
+                                     ("<strong>WechatVibe</strong>", "<strong>句豆 · ChatBean</strong>"),
+                                     ("关于 WechatVibe", "关于句豆 · ChatBean"),
                                      ("连接当前微信账号", "打开本地 QQ 账号"),
                                      ("正在连接当前微信账号…", "正在读取 QQ 本地账号…"),
                                      ("正在连接微信…", "正在读取 QQ 本地账号…"),
