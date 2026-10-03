@@ -1,3 +1,27 @@
+# QQVibe 0.1.2 预发布
+
+日期：2026-10-03。此版本扩展聊天记录 JSON 导入能力，保留现有 QCE 导入方式，并增加更多常见导出结构的识别与字段映射。
+
+## 下载
+
+**[QQVibe-0.1.2-windows-x64-full.zip：含 Laya 完整程序包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64-full.zip)**
+
+第一次使用优先下载完整包。已有 Laya 模型或计划配置 API/Ollama 的用户可下载[无模型标准包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64.zip)。SHA256 和文件清单会随发布页提供。
+
+## JSON 导入改进
+
+- 保留 QCE V6 单文件、manifest 和分块 JSONL；新增顶层数组、嵌套消息列表、JSONL/NDJSON、QQ ChatLab 与常见 OneBot/NapCat 字段适配。
+- 对结构不同的记录，可以指定消息列表、正文、发送者和时间字段，并手动映射昵称和时区。
+- 大文件分批读取，预览使用本机临时存储。当前单次上限 2 GiB / 200 万条；文件仍需完整且身份映射正确。
+- 预览会显示样本、有效/拒绝/冲突条数。修改字段后须重新预览；含坏行时须明确同意跳过。
+- 不能保证任意 JSON 都能自动识别。平台、本人或会话身份不清时会提示补充确认，不编造 QQ 身份或日期。
+
+已有 0.1.1 用户仍可按[备份升级回退说明](BACKUP-UPGRADE.md)备份、另目录安装并核对恢复结果。
+
+## 试用范围
+
+程序仍为 Windows x64 预发布。Windows 11 / QCE 6.3.0 / 本地 Laya / CPU 是本机优先路线；另一台电脑、Windows 10、其他显卡、多显示器以及真实 API/Ollama 仍需按条件验证。群聊标签和人物画像应结合原消息核对，结果不代表对人的事实判断。
+
 # QQVibe 0.1.1
 
 QQVibe 是一款 Windows 桌面应用，用来回顾自己的 QQ 单聊与群聊：查找旧消息、查看情绪与意图标签，以及自己或某位成员在这段会话中的人物画像。首次使用推荐随包提供的本地 Laya / CPU，分析在自己的电脑上完成。

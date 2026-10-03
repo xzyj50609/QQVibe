@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "product": "QQVibe",
-  "sourceCommit": "3cf76025fa046baaf3729b7f6053e1f27c756dc4",
+  "sourceCommit": "26e3a10a4b8556df439039aa6c1281a0367b8d36",
   "upstreamBaseline": "02b770821a1cf46b8ecc46b4f874ac6f922bd586",
   "gitHistoryExported": false,
   "allowlistReviewed": true,
@@ -27,8 +27,8 @@
     {
       "file": "README.md",
       "source": "README.md",
-      "bytes": 6841,
-      "sha256": "2ea43849f799c191b56d683303a1b9604d526a46f0bf334a1b5754c42481a345"
+      "bytes": 6938,
+      "sha256": "a9bbee9d15f405011fbd933791a1fe4f079d049b557cc8b32d02d9328ee088b2"
     },
     {
       "file": "THIRD_PARTY_NOTICES.md",
@@ -327,8 +327,8 @@
     {
       "file": "docs/public/JSON-IMPORT.md",
       "source": "docs/public/JSON-IMPORT.md",
-      "bytes": 3660,
-      "sha256": "6fce879bb2c875517b18858688cef24b89803103924931a50cc79bdf7c03badc"
+      "bytes": 3670,
+      "sha256": "83669b255651ff704be9509e887b3b91791d4d39253fffb7c19d13652f48fb32"
     },
     {
       "file": "bridge/qq_ingest_audit.py",
@@ -927,14 +927,14 @@
     {
       "file": "docs/public/RELEASE-NOTES.md",
       "source": "docs/public/RELEASE-NOTES.md",
-      "bytes": 4642,
-      "sha256": "18fecbdc533f8d403d262ec0b4bcc83a46e379e063992baab6a2c3141c18a8b0"
+      "bytes": 6437,
+      "sha256": "e05226530580a9883b682382aaa0d956bf717806c19449805f81c45df851683b"
     },
     {
       "file": "docs/public/SETUP.md",
       "source": "docs/public/SETUP.md",
       "bytes": 10657,
-      "sha256": "c241ae12c4e070b89300aabb89fc72d9796cc08a91dc995b3eed8529486457f3"
+      "sha256": "1b24ec9e1cffe35bc3d59501575cd98583310bf3dac2be9f9b5cee3a7efcb8e4"
     },
     {
       "file": "electron-builder.real-client.json",
@@ -1294,13 +1294,13 @@
       "file": "package-lock.json",
       "source": "package-lock.json",
       "bytes": 176980,
-      "sha256": "8174844f773ca7e1cc58ea1ac82189161660857058a50e293acacb89e28cb378"
+      "sha256": "f359a16cf2bc2d8b3a95b84af9ef93c0a17647f3f89f85dfde22e7b14a524493"
     },
     {
       "file": "package.json",
       "source": "package.json",
       "bytes": 1899,
-      "sha256": "e6b42a756926df43dc00e39b87624db06b44dc79d5f8dc16eee93be34a0b9750"
+      "sha256": "79613bed8cad1bb6412def90254e1714a458d07cb87e645c5b683a0f880c01f3"
     },
     {
       "file": "probes/fake_qce_server.py",
@@ -2001,8 +2001,8 @@
     {
       "file": "scripts/build-user-guide.py",
       "source": "scripts/build-user-guide.py",
-      "bytes": 8942,
-      "sha256": "a4e614631920b66882b2d425348150687bfed51bdd23797953b477358d2c61ba"
+      "bytes": 9126,
+      "sha256": "e4eec8d908c27189e1d190cc3e33a67c42091c97ba6e64aa9dd58c2e5d4da87d"
     },
     {
       "file": "scripts/capture-public-demo.cjs",
@@ -2013,14 +2013,14 @@
     {
       "file": "docs/public/USER-GUIDE.md",
       "source": "docs/public/USER-GUIDE.md",
-      "bytes": 8489,
-      "sha256": "e09ca8c5c2b45538098180b3462efa290004b5c4e9e3da8cd775cebd1be897d7"
+      "bytes": 8384,
+      "sha256": "56ee6f62292933a09a1d07a43c4a65fd1827faa3808054c0af94403d0303cadf"
     },
     {
       "file": "docs/public/USER-GUIDE.html",
       "source": "docs/public/USER-GUIDE.html",
-      "bytes": 772009,
-      "sha256": "b5c4a8d8a878ed08755c83f44d670cc882c5d4a4690c9541c9df8d83e35aebf7"
+      "bytes": 776365,
+      "sha256": "bf743fe342d47222ca244cd515e836d50aecb983e9d0c725aa4b24c4236a3434"
     },
     {
       "file": "tests/qq-theme-default.test.cjs",

@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QQVibe 使用说明</title><style>
 :root{color-scheme:light;font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#26302e;background:#f3f6f5}*{box-sizing:border-box}body{margin:0;line-height:1.85}header{background:#fff;border-bottom:1px solid #dce5e0;padding:26px max(24px,calc((100vw - 1040px)/2))}header h1{margin:0;font-size:30px;color:#17634b}header p{margin:4px 0;color:#61736b}nav{display:flex;gap:10px 22px;flex-wrap:wrap;margin-top:16px}a{color:#136649;text-decoration:none;border-bottom:1px solid #bcdace}a:hover{text-decoration:underline}main{max-width:1040px;margin:28px auto;padding:0 24px}section{background:#fff;padding:28px 36px;margin-bottom:22px;border:1px solid #e1e9e5;border-radius:14px;scroll-margin-top:20px}h2{margin-top:0;font-size:25px;color:#17634b}h3{margin-top:30px;font-size:20px}h4{font-size:17px}p{margin:12px 0}li{margin:8px 0}figure{margin:22px 0}img{display:block;width:100%;height:auto;border:1px solid #dce5e0;border-radius:10px}blockquote{margin:16px 0;padding:12px 18px;background:#edf6f1;border-left:4px solid #318065;color:#3c6252}code{font-family:Consolas,monospace;font-size:.92em;background:#eef2ef;padding:2px 5px;border-radius:4px}pre{overflow:auto;padding:16px;background:#eef2ef}pre code{padding:0}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #dfe7e2;padding:9px 12px;vertical-align:top;text-align:left}th{background:#edf5f0}.table-scroll{overflow:auto}footer{max-width:1040px;margin:24px auto;padding:0 24px 30px;color:#61736b;font-size:13px}summary{cursor:pointer;color:#17634b;font-weight:600}@media(max-width:650px){main{padding:0 12px}section{padding:20px 18px;border-radius:9px}header{padding:20px}h2{font-size:22px}}@media print{body{background:white}section{border:0;break-inside:auto}nav{display:none}a{color:inherit}img{max-height:18cm;object-fit:contain}}
-</style><header><h1>QQVibe 使用说明</h1><p>版本 0.1.1 · 这份手册可以离线打开，图中聊天为演示数据。</p><nav><a href="#user-guide">开始使用</a><a href="#setup">安装与连接</a><a href="#compatibility">支持的电脑</a><a href="#known-issues">遇到问题</a><a href="#backup-upgrade">备份和升级</a><a href="#r9-trial">逐项检查</a><a href="#feedback">反馈问题</a></nav></header><main><section id="user-guide"><h2>QQVibe 使用手册</h2>
+</style><header><h1>QQVibe 使用说明</h1><p>版本 0.1.2 · 这份手册可以离线打开，图中聊天为演示数据。</p><nav><a href="#user-guide">开始使用</a><a href="#setup">安装与连接</a><a href="#compatibility">支持的电脑</a><a href="#known-issues">遇到问题</a><a href="#backup-upgrade">备份和升级</a><a href="#r9-trial">逐项检查</a><a href="#feedback">反馈问题</a></nav></header><main><section id="user-guide"><h2>QQVibe 使用手册</h2>
 <p>QQVibe 用来回顾自己选择的 QQ 单聊和群聊。它把原始消息、模型标签与人物画像放在同一应用里，方便你回看交流、查找上下文。第一次安装和连接请先看<a href="#setup">首次使用说明</a>。解压目录的 <strong>「使用说明.html」</strong>可在浏览器中离线打开。</p>
 <p>本文和截图中的账号、昵称与聊天都是演示资料，分析内容仅作界面展示。</p>
 <h3>认识主界面</h3>
@@ -81,6 +81,7 @@
 <p>升级时先保留旧程序，<strong>把新版解压到另一个目录</strong>，再通过 <strong>「恢复备份」</strong>导入旧备份。不要直接覆盖运行中的程序。恢复后核对账号、会话、消息与结果，再重新连接；换电脑或 Windows 账号后需要重新配置凭证。</p>
 <p>详细步骤见<a href="#backup-upgrade">备份、升级与回退</a>。跨机恢复仍在验证，旧目录和原备份应保留到新版确认可用。</p>
 <h3>导入已有 QCE 文件</h3>
+<p>0.1.2 支持更多 JSON 列表结构、字段映射和大文件分批读取。具体用法见 <a href="#json-import">JSON 导入说明</a>。</p>
 <p>已有 QCE 导出记录时，可在设置中选择导出文件，确认「哪一个 QQ 号是本人」，查看预览后再确认导入。支持的入口包括 QCE 单 JSON 与分块 manifest 文件，具体会话类型以导入预览为准。</p>
 <p>导入是在本机补充历史，不代表已经连接在线 QQ；要同步自然新增的消息，仍需正常登录 QCE 并连接。</p>
 <h3>删除自己的本地副本</h3>
@@ -98,8 +99,8 @@
 <section id="setup"><h2>QQVibe 首次使用说明</h2>
 <p>这份说明面向第一次使用 QQVibe 的人。完成后，你可以在 QQVibe 中打开自己的一个单聊或群聊，并查看本地分析结果。不需要会编程。程序旁的 <strong>「使用说明.html」</strong>也可直接打开，离线查看图文步骤。</p>
 <h3>1. 下载正确的程序包</h3>
-<p>点击 <strong><a href="https://github.com/xzyj50609/QQVibe/releases/download/v0.1.1/QQVibe-0.1.1-windows-x64-full.zip">下载 QQVibe 0.1.1 Windows 完整包</a></strong>。如果不能直接下载，打开<a href="https://github.com/xzyj50609/QQVibe/releases/tag/v0.1.1">下载页面</a>，在下方的 <strong>Assets</strong>（文件列表）里点击：</p>
-<p><strong>QQVibe-0.1.1-windows-x64-full.zip</strong></p>
+<p>点击 <strong><a href="https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64-full.zip">下载 QQVibe 0.1.2 Windows 完整包</a></strong>。如果不能直接下载，打开<a href="https://github.com/xzyj50609/QQVibe/releases/tag/v0.1.2">下载页面</a>，在下方的 <strong>Assets</strong>（文件列表）里点击：</p>
+<p><strong>QQVibe-0.1.2-windows-x64-full.zip</strong></p>
 <p>这个文件包含程序和 Laya 模型，第一次使用优先选它。<strong>不要下载「Source code」或点击绿色「Code」按钮</strong>，那些是给开发者的源码。公开下载不需要注册 GitHub 账号。</p>
 <p>目前提供 Windows x64 程序，推荐先在 Windows 11 上使用。Windows 10、其他电脑与更多硬件的实际情况见<a href="#compatibility">兼容表</a>。</p>
 <h3>2. 解压并打开</h3>
@@ -173,7 +174,7 @@
 <p>群聊标签是实验候选，可能误读引用、讽刺或多人对话。百分比不是准确率；画像也不是对人的定论。显示「样本不足」「待判断」时，不代表程序损坏。</p>
 <p>接下来可以按<a href="#user-guide">使用手册</a>了解搜索和分析控制，按<a href="#r9-trial">第一次试用清单</a>记录这台电脑的结果。第一次走通后，在设置的 <strong>「完整数据备份与恢复」</strong>中做一份备份。</p>
 <h3>无模型标准包：下载或选择模型</h3>
-<p>如果你已经有模型，或希望自己配置服务，可以下载<a href="https://github.com/xzyj50609/QQVibe/releases/download/v0.1.1/QQVibe-0.1.1-windows-x64.zip">标准程序包</a>。它不含 Laya 模型，程序本身仍可启动。</p>
+<p>如果你已经有模型，或希望自己配置服务，可以下载<a href="https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64.zip">标准程序包</a>。它不含 Laya 模型，程序本身仍可启动。</p>
 <ul>
 <li>在「本地部署」下点 <strong>「下载模型」</strong>，等待下载与检查完成。下载失败可以重试，不会妨碍进入 API 设置。</li>
 <li>已有完整 Laya 文件夹时点 <strong>「选择目录」</strong>，选择包含 <code>model.onnx</code> 的目录；不要只选其中一个文件。选定的外部模型目录以后也要保留。</li>
@@ -373,4 +374,35 @@ QCE 版本：
 <li>如果是结果不合理：记录「标签判断不符」「引用归错作者」「画像对象混淆」等问题类型。尽量用自己编的一小段示例复现，不贴真实聊天。</li>
 <li>如果愿意：补充问题发生时间、能否重复、已经试过的处理方法，以及<a href="#r9-trial">试用清单</a>中的失败序号。</li>
 </ul>
-<p>启动失败、数据丢失或账号/成员串数据需要优先处理。遇到这些情况先停止继续分析，保留原程序目录与提示，不要删除数据或反复覆盖安装。</p></section></main><footer>QQVibe · 基于 WechatVibe 开源项目。模型分析是交流参考，不是对人的事实判断。应用本体采用 Apache-2.0，完整来源和许可随程序保留。</footer></html>
+<p>启动失败、数据丢失或账号/成员串数据需要优先处理。遇到这些情况先停止继续分析，保留原程序目录与提示，不要删除数据或反复覆盖安装。</p></section>
+<section id="json-import"><h2>JSON 聊天记录导入</h2>
+<p>这页说明 QQVibe 0.1.2 的 JSON 导入功能。旧版 0.1.1 程序包没有本页介绍的扩展适配与字段映射功能。</p>
+<p>在「设置 → 导入聊天 JSON」选择文件，先点「预览」。程序只在本机读取，确认导入前不会写入聊天库。预览会显示发送者、时间、正文样本、有效/拒绝/冲突条数；请核对后再确认。</p>
+<h3>可识别的内容</h3>
+<ul>
+<li>QCE V6 单文件 JSON、manifest.json 和完整 JSONL 分块目录；也适配使用相同消息字段的旧版 QCE 导出。</li>
+<li>顶层消息数组、<code>messages</code> / <code>records</code> / <code>data.messages</code> 等嵌套列表。</li>
+<li>JSONL / NDJSON，一行一条消息；多行 JSONL 即使扩展名是 <code>.json</code> 也按内容识别。</li>
+<li>QQ 的 ChatLab JSON/JSONL、常见 OneBot 和 NapCat 消息字段。</li>
+<li>UTF-8，以及带 BOM 编码标记的 UTF-16 / UTF-32。</li>
+</ul>
+<p>这不代表任意 JSON 都是聊天记录，也不保证所有软件版本的导出都自动识别。其他平台声明的记录不能归入 QQ 账号；没有发送者、正文或时间的内容不会凭空补齐。</p>
+<h3>没有自动识别时</h3>
+<p>展开「识别不准确？指定字段与会话」，按原文件填写：</p>
+<div class="table-scroll"><table><thead><tr><th>设置</th><th>示例</th></tr></thead><tbody>
+<tr><td>消息列表位置</td><td>顶层数组填 <code>/</code>，嵌套列表填 <code>/payload/entries</code>；界面会列出发现的列表</td></tr>
+<tr><td>正文、发送者、时间字段</td><td><code>content.text</code>、<code>sender.uin</code>、<code>timestamp</code>；特殊字段名可使用 <code>/content/text</code> 形式</td></tr>
+<tr><td>消息 ID 字段</td><td>有可靠原始 ID 时填写；没有可留空</td></tr>
+<tr><td>时间单位</td><td>自动识别常见秒/毫秒；不明确时手动选择</td></tr>
+<tr><td>无时区日期的时区</td><td>原记录写 <code>2026-10-02 08:00:00</code> 这类日期时，明确选择它所属的时区</td></tr>
+<tr><td>会话类型与身份</td><td>QQ 群聊填写群号；QQ 单聊缺少对方 UID 时，填写核对过的 <code>u_...</code> UID</td></tr>
+</tbody></table></div>
+<p>只有昵称时，预览会提供「某昵称对应的 QQ 号」输入框。填写正确 QQ 号后再次预览。本人身份仍需要明确确认，不能把对方选成本人；一个文件内出现多个群或多个单聊时，需要分别导出/选择单个会话列表。</p>
+<p>修改文件或字段设置后，旧预览不能继续确认，需要重新预览。存在坏行时会说明拒绝原因，只有明确选择跳过后才允许导入其余记录。</p>
+<h3>大文件与重复消息</h3>
+<p>程序分批读取、用临时数据库暂存，不将整个聊天数组放入内存。当前每次上限为 <strong>2 GiB、200 万条</strong>；manifest 的全部消息分块合计计算，单条消息仍有约 2 Mi 字符的解析上限。更大范围可按时间分次导出，分块目录要完整保留并选择 <code>manifest.json</code>。</p>
+<p>有原始消息 ID 时，在相同账号和会话中按对应来源的 ID 去重。没有 ID 时按文件快照和行号保留：同一文件重复导入会去重，文件内同文消息不会被合并；不同文件、不同时间范围、不同封装方式的重叠消息可能重复，因此优先使用含原始 ID 的导出。</p>
+<p>群号、QQ 号和对方 UID 不会自动编造。缺失身份的文件可以先查看提取样本，但要补足身份才能正式导入。图片/语音等保留为非文本记录，本功能不做图片 OCR 或语音转写。</p>
+<h3>预览失败时</h3>
+<p>报错会区分格式/编码不完整、列表位置不明、缺少字段、身份冲突、文件大小限制、权限和存储问题。经过链接或云端占位路径的文件，复制完整导出到普通本地文件夹后重试。</p>
+<p>如仍失败，反馈 QQVibe 版本、导出工具和版本、文件大小、报错文字即可。必要时提供仅保留字段结构的合成样例，不需要发送完整私人聊天。</p></section></main><footer>QQVibe · 基于 WechatVibe 开源项目。模型分析是交流参考，不是对人的事实判断。应用本体采用 Apache-2.0，完整来源和许可随程序保留。</footer></html>

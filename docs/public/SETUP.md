@@ -4,9 +4,9 @@
 
 ## 1. 下载正确的程序包
 
-点击 **[下载 QQVibe 0.1.1 Windows 完整包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.1/QQVibe-0.1.1-windows-x64-full.zip)**。如果不能直接下载，打开[下载页面](https://github.com/xzyj50609/QQVibe/releases/tag/v0.1.1)，在下方的 **Assets**（文件列表）里点击：
+点击 **[下载 QQVibe 0.1.2 Windows 完整包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64-full.zip)**。如果不能直接下载，打开[下载页面](https://github.com/xzyj50609/QQVibe/releases/tag/v0.1.2)，在下方的 **Assets**（文件列表）里点击：
 
-**QQVibe-0.1.1-windows-x64-full.zip**
+**QQVibe-0.1.2-windows-x64-full.zip**
 
 这个文件包含程序和 Laya 模型，第一次使用优先选它。**不要下载「Source code」或点击绿色「Code」按钮**，那些是给开发者的源码。公开下载不需要注册 GitHub 账号。
 
@@ -107,7 +107,7 @@ Laya 是用于分析文字的本地模型。完整包已经带有它，一般不
 
 ## 无模型标准包：下载或选择模型
 
-如果你已经有模型，或希望自己配置服务，可以下载[标准程序包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.1/QQVibe-0.1.1-windows-x64.zip)。它不含 Laya 模型，程序本身仍可启动。
+如果你已经有模型，或希望自己配置服务，可以下载[标准程序包](https://github.com/xzyj50609/QQVibe/releases/download/v0.1.2/QQVibe-0.1.2-windows-x64.zip)。它不含 Laya 模型，程序本身仍可启动。
 
 - 在「本地部署」下点 **「下载模型」**，等待下载与检查完成。下载失败可以重试，不会妨碍进入 API 设置。
 - 已有完整 Laya 文件夹时点 **「选择目录」**，选择包含 `model.onnx` 的目录；不要只选其中一个文件。选定的外部模型目录以后也要保留。
