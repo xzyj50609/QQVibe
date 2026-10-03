@@ -180,7 +180,7 @@ test("Electron export picker enforces trusted QQ frames and handles selection/ca
   const end = shell.indexOf('ipcMain.handle("real-client:check-updates"', start);
   assert.ok(start >= 0 && end > start);
   let handler, calls = 0, result = { canceled: false, filePaths: ["D:/合成 导出.json"] };
-  const context = { ipcMain: { handle(_name, value) { handler = value; } },
+  const context = { ipcMain: { handle(name, value) { if (name === 'real-client:qq-choose-export') handler = value; } },
     PRODUCT: { key: "qq" }, selfTest: false, updateValidation: false, window: {},
     trustedFrame: event => event.trusted,
     dialog: { async showOpenDialog(_window, options) { calls++; assert.deepEqual(Array.from(options.properties), ["openFile"]); return result; } } };
@@ -193,4 +193,54 @@ test("Electron export picker enforces trusted QQ frames and handles selection/ca
   context.PRODUCT.key = "wechat";
   assert.equal(await handler({ trusted: true }), null);
   assert.equal(calls, 2);
+});
+
+test("custom field choices travel through the real preview request and editing invalidates confirmation", async () => {
+  const calls = [], view = harness(async (_url, options) => { calls.push(JSON.parse(options.body)); return ready(); });
+  view.node('qqImportPath').value = 'D:/synthetic.json';
+  view.node('qqImportRecordPath').value = '/payload/entries';
+  view.node('qqImportTextField').value = 'words';
+  view.node('qqImportSenderField').value = 'who';
+  view.node('qqImportTimeField').value = 'when';
+  view.node('qqImportTimeUnit').value = 'auto';
+  view.node('qqImportTimeZone').value = '+08:00';
+  view.node('qqImportKind').value = 'group';
+  view.node('qqImportTarget').value = '20001';
+  await view.click('btnPreviewQQExport');
+  assert.deepEqual(calls[0].mapping, {recordPath:'/payload/entries',text:'words',sender:'who',time:'when',timeZone:'+08:00',kind:'group',groupCode:'20001'});
+  view.node('qqImportTextField').value = 'other';
+  view.node('qqImportTextField').events.input();
+  assert.equal(view.node('btnCommitQQImport').hidden, true);
+  assert.equal(view.view.getCurrent(), null);
+  assert.match(view.node('qqImportStatus').text, /重新预览/);
+});
+
+test("multiple array hints and sender mapping are visible plain text, and group code is submitted", async () => {
+  const view = harness(async () => ({ jobId:'synth',state:'mapping',reason:'multiple-message-arrays',
+    schema:{arrayPaths:['/messages','/records'],senders:['<script>小明</script>'],fields:['words'],samples:[],generatedIds:2} }));
+  view.node('qqImportPath').value='D:/synthetic.json';
+  await view.click('btnPreviewQQExport');
+  assert.equal(view.node('qqImportMapping').open,true);
+  assert.match(view.node('qqImportSchema').text,/\/records/);
+  assert.match(view.node('qqImportSchema').text,/不同文件/);
+  assert.match(view.node('qqImportSenderMappings').text,/<script>小明<\/script>/);
+  assert.equal(view.node('btnCommitQQImport').hidden,true);
+  const calls = [], group = harness(async (_url, options) => { calls.push(JSON.parse(options.body));
+    return {jobId:'synth',state:'identity',reason:'group-code-required',ownerUin:'10001',participants:[]}; });
+  group.node('qqImportPath').value='D:/group.json';
+  await group.click('btnPreviewQQExport');
+  assert.equal(group.node('qqImportPeerUid').hidden,false);
+  assert.match(group.node('qqImportPeerLabel').text,/群号/);
+  group.node('qqImportPeerUid').value='20001';
+  await group.click('btnMapQQImport');
+  assert.equal(calls[1].peerUid,'20001');
+});
+
+test('group preview shows its group number without a fabricated peer UID', async () => {
+  const view = harness(async () => ready({kind:'group',groupCode:'20001',peerUid:null,peerUin:null,name:'合成群'}));
+  view.node('qqImportPath').value='D:/group.json';
+  await view.click('btnPreviewQQExport');
+  assert.match(view.node('qqImportPreview').text,/群号 20001/);
+  assert.match(view.node('qqImportPreview').text,/其他成员/);
+  assert.doesNotMatch(view.node('qqImportPreview').text,/null/);
 });

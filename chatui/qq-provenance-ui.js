@@ -1,7 +1,7 @@
 (function (global) {
   "use strict";
   const kinds = { forward: "前向同步", history: "旧历史补读", reconcile: "近期核对", "file-import": "文件导入" };
-  const formats = { "qce-api": "QCE 接口", "qce-single-json": "JSON 导出", "qce-chunked-jsonl": "分块 JSONL 导出" };
+  const formats = { "qce-api": "QCE 接口", "qce-single-json": "QCE JSON 导出", "qce-chunked-jsonl": "QCE 分块 JSONL 导出", "generic-json": "适配 JSON", "generic-jsonl": "适配 JSONL" };
   const states = { complete: "窗口读取完成", "complete-empty": "窗口读取完成（无消息）", partial: "部分读取", error: "读取失败" };
   const dispositions = { inserted: "首次入库", unchanged: "重复观察", recalled: "撤回证据", revised: "修订证据", conflicts: "冲突证据" };
   const amount = value => Number.isSafeInteger(value) && value >= 0 ? String(value) : "未知";

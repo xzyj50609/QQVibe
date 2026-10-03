@@ -204,6 +204,22 @@
       "target": "bridge/qq_import_reader.py"
     },
     {
+      "source": "bridge/qq_json_reader.py",
+      "target": "bridge/qq_json_reader.py"
+    },
+    {
+      "source": "bridge/qq_json_adapter.py",
+      "target": "bridge/qq_json_adapter.py"
+    },
+    {
+      "source": "bridge/test_qq_json_import.py",
+      "target": "bridge/test_qq_json_import.py"
+    },
+    {
+      "source": "docs/public/JSON-IMPORT.md",
+      "target": "docs/public/JSON-IMPORT.md"
+    },
+    {
       "source": "bridge/qq_ingest_audit.py",
       "target": "bridge/qq_ingest_audit.py"
     },

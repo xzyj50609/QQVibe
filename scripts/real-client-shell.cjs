@@ -175,8 +175,8 @@ if (process.platform !== "win32" || !url || (!selfTest && !/^[a-f0-9]{64}$/.test
     ipcMain.handle("real-client:qq-choose-export", async (event) => {
       if (!trustedFrame(event) || PRODUCT.key !== "qq" || selfTest || updateValidation || !window) return null;
       const choice = await dialog.showOpenDialog(window, {
-        title: "选择 QQChatExporter 单聊文件或 manifest.json",
-        properties: ["openFile"], filters: [{ name: "QQ 聊天导出", extensions: ["json"] }],
+        title: "选择聊天 JSON、JSONL 或 manifest.json",
+        properties: ["openFile"], filters: [{ name: "聊天记录", extensions: ["json", "jsonl", "ndjson"] }],
       });
       return choice.canceled ? null : choice.filePaths[0] || null;
     });

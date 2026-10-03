@@ -14,6 +14,8 @@ QQVibe 是一款 Windows 桌面应用。它连接你电脑上的 QQ Chat Exporte
 
 完整包包含程序和本地 Laya 模型，适合第一次使用。无需安装 Git、Node、Python，也无需注册 GitHub 账号。**请下载上面的程序包；绿色「Code」按钮和「Source code」下载的是源码，不能直接运行。**
 
+GitHub 的源码预览分支已加入更多聊天 JSON / JSONL 结构适配、字段映射和分批读取；这些变化还没有进入上方 0.1.1 下载包。格式说明见 [JSON 导入指南](docs/public/JSON-IMPORT.md)。
+
 目前提供 **Windows x64** 程序。Windows 11 的本机使用已验证，其他电脑正在试用；Windows 10 还在验证。首次使用建议选择 **本地 Laya / CPU**，新用户默认使用浅色界面。
 
 1. **下载、完整解压。** 在普通文件夹中解压 ZIP，打开里面的 `win-unpacked` 文件夹，双击 **QQVibe.exe**。不要直接在压缩包里运行。
@@ -74,7 +76,7 @@ QQVibe 用于读取和回顾聊天，**不会替你发送 QQ 消息**。本地 L
 
 普通用户使用上面的程序包即可。需要研究或修改代码时，再看[源码构建说明](docs/public/BUILD.md)。公开源码通过白名单导出，包含必要源码、锁文件、构建脚本和合成测试；不包含研发仓库历史、真实聊天、凭证、日志或私人交接记录。
 
-[0.1.1 更新说明](docs/public/RELEASE-NOTES.md) · [源码仓库](https://github.com/xzyj50609/QQVibe)
+[0.1.1 更新说明](docs/public/RELEASE-NOTES.md) · [JSON 导入指南](docs/public/JSON-IMPORT.md) · [源码仓库](https://github.com/xzyj50609/QQVibe)
 
 ## 来源与许可
 

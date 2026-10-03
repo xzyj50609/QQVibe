@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "product": "QQVibe",
-  "sourceCommit": "97553db38049dd612ab76167c4dca9006954cadb",
+  "sourceCommit": "3cf76025fa046baaf3729b7f6053e1f27c756dc4",
   "upstreamBaseline": "02b770821a1cf46b8ecc46b4f874ac6f922bd586",
   "gitHistoryExported": false,
   "allowlistReviewed": true,
@@ -27,8 +27,8 @@
     {
       "file": "README.md",
       "source": "README.md",
-      "bytes": 6562,
-      "sha256": "660d4f382d3d6d9a70e01bae038491bfe6894ea96185917d54936afe423055a2"
+      "bytes": 6841,
+      "sha256": "2ea43849f799c191b56d683303a1b9604d526a46f0bf334a1b5754c42481a345"
     },
     {
       "file": "THIRD_PARTY_NOTICES.md",
@@ -297,20 +297,44 @@
     {
       "file": "bridge/qq_import.py",
       "source": "bridge/qq_import.py",
-      "bytes": 17782,
-      "sha256": "450572363013ae967f285a4736126df1f30f703b35600d0e99e7bd1464195f26"
+      "bytes": 25352,
+      "sha256": "d9e2421e21b676a43a06bd96f7c51005efe3d6c79cca06a0d48454aacac5bf21"
     },
     {
       "file": "bridge/qq_import_reader.py",
       "source": "bridge/qq_import_reader.py",
-      "bytes": 7288,
-      "sha256": "0344b72ce3812ea8c316025d6813fee0850b67a1cf464b1faa65e53a9fa1b796"
+      "bytes": 7903,
+      "sha256": "fa149de64a5e60e2451a9e5a5d94ecc4757c006d17ee11aeaab2a778f4955e4d"
+    },
+    {
+      "file": "bridge/qq_json_reader.py",
+      "source": "bridge/qq_json_reader.py",
+      "bytes": 8237,
+      "sha256": "b0e2d9849e0c30f12a596d309b78e035d2b42ff826aa826bd25a2d5c231097a6"
+    },
+    {
+      "file": "bridge/qq_json_adapter.py",
+      "source": "bridge/qq_json_adapter.py",
+      "bytes": 14010,
+      "sha256": "06944c9e8cf6e474ab689ec94b41b6c104b45b6d5803ffd6014a54929cbc586e"
+    },
+    {
+      "file": "bridge/test_qq_json_import.py",
+      "source": "bridge/test_qq_json_import.py",
+      "bytes": 15373,
+      "sha256": "1125e7461eeba464ff333dcd134cfa3a12deae21bb5dc7aa1b12899f0aab20af"
+    },
+    {
+      "file": "docs/public/JSON-IMPORT.md",
+      "source": "docs/public/JSON-IMPORT.md",
+      "bytes": 3660,
+      "sha256": "6fce879bb2c875517b18858688cef24b89803103924931a50cc79bdf7c03badc"
     },
     {
       "file": "bridge/qq_ingest_audit.py",
       "source": "bridge/qq_ingest_audit.py",
-      "bytes": 16068,
-      "sha256": "deabb40de88608ffd9c0c0fa6144909debc5df2621668d7e4b7f7c9f753691c5"
+      "bytes": 17306,
+      "sha256": "323a5a6d2449da8dfbfcd61a0bbe598c321ff699c50fc000d11337940bd0bd07"
     },
     {
       "file": "bridge/qq_message_display.py",
@@ -321,14 +345,14 @@
     {
       "file": "bridge/qq_message_store.py",
       "source": "bridge/qq_message_store.py",
-      "bytes": 50410,
-      "sha256": "a6017a33c29271ae40a41afe4bb131659170f045c67b3ba4af1149d7de757919"
+      "bytes": 50726,
+      "sha256": "10ed1c156f703a1e87ee7c0091c784bbd27695c7db679676047866983ff065bd"
     },
     {
       "file": "bridge/qq_normalize.py",
       "source": "bridge/qq_normalize.py",
-      "bytes": 27601,
-      "sha256": "e5773a4c8912557a6865c519c15f207f8f593dea554447dfcf53702f5260980e"
+      "bytes": 27634,
+      "sha256": "75002c95cb0ff74c321a20a06ab2c62973e95981d51d44fe1d7b8750241fc83e"
     },
     {
       "file": "bridge/qq_roles.py",
@@ -381,8 +405,8 @@
     {
       "file": "bridge/real_http.py",
       "source": "bridge/real_http.py",
-      "bytes": 41035,
-      "sha256": "2fcb1357b1f46636536199109822d887bdfa85cce33f1aface535fb7960cf505"
+      "bytes": 41113,
+      "sha256": "4e1d63a7d8041894f1a29fd17113d7f15c55fbb0af53121ed25dcb551afc4b8e"
     },
     {
       "file": "bridge/result_store.py",
@@ -597,8 +621,8 @@
     {
       "file": "bridge/test_qq_ingest_audit.py",
       "source": "bridge/test_qq_ingest_audit.py",
-      "bytes": 16257,
-      "sha256": "f165237715b1bc7073e9c3c697a1738be179ec5c802ff23b7dd5ae7c8b54e574"
+      "bytes": 16276,
+      "sha256": "a9182a88c0d349f9b94ee71774b8b07f1596ff80b25812f8b621ecee87a60ea0"
     },
     {
       "file": "bridge/test_qq_local_integrity.py",
@@ -771,8 +795,8 @@
     {
       "file": "chatui/index.html",
       "source": "chatui/index.html",
-      "bytes": 45301,
-      "sha256": "110fae5b8bd6c46af4a01e725a26ab09bcec6c42ef280d6dd1f38a5291e1d05f"
+      "bytes": 48480,
+      "sha256": "834ede8bf84effdbea972397b43e2de3a4f05ec1bc703c7c13470a946aabaa9c"
     },
     {
       "file": "chatui/kaomoji.js",
@@ -795,14 +819,14 @@
     {
       "file": "chatui/qq-import-ui.js",
       "source": "chatui/qq-import-ui.js",
-      "bytes": 11470,
-      "sha256": "eb107272b18e3f73e3ef4040288df87219cdd112d5cb6744e20e8a9509ac8e76"
+      "bytes": 18916,
+      "sha256": "5e9047a1b2536bbb6197cb90d7cb5eaea036d9055f112f6fcf566e2dff484d85"
     },
     {
       "file": "chatui/qq-provenance-ui.js",
       "source": "chatui/qq-provenance-ui.js",
-      "bytes": 7196,
-      "sha256": "ea5e7f5aee8de06bc68287f4e45fd62e3ffb79dd5690964fd3fe8f76151a6d87"
+      "bytes": 7268,
+      "sha256": "2fee97a33c7c516233743c5c71c4ce96557dd107511bfd23d8123ee4816f4278"
     },
     {
       "file": "chatui/qq-startup.js",
@@ -1437,8 +1461,8 @@
     {
       "file": "scripts/public-source-allowlist.json",
       "source": "scripts/public-source-allowlist.json",
-      "bytes": 37249,
-      "sha256": "a1ae7f20b07f120499ed28eef7def88d87cfc928897c867737683f01d7a61c38"
+      "bytes": 37665,
+      "sha256": "4ea5bcb6bc0443068e46844a463ef73321f2073d038b220143eda0bd5a53bc86"
     },
     {
       "file": "scripts/public-source-gitattributes.txt",
@@ -1467,8 +1491,8 @@
     {
       "file": "scripts/real-client-shell.cjs",
       "source": "scripts/real-client-shell.cjs",
-      "bytes": 27624,
-      "sha256": "df8fe0af9680cf864c2712fcc40c6bcb11e99069bec90357c3c84159f0bfb4c6"
+      "bytes": 27632,
+      "sha256": "c2f0e3925061981cf03c3fc362bda2117f0951550657887629538cf0de5966fb"
     },
     {
       "file": "scripts/real-client-update-controller.cjs",
@@ -1545,8 +1569,8 @@
     {
       "file": "scripts/stage-real-client.py",
       "source": "scripts/stage-real-client.py",
-      "bytes": 17055,
-      "sha256": "f77082f2496542c2f47e8478a51a7df66941fb7a83ad74bf2b70dc530ba3f5cc"
+      "bytes": 17128,
+      "sha256": "f420ea48b59290f8ee43eb9c6e50474beeadec6795d2561d2a79737944f0755a"
     },
     {
       "file": "scripts/stage-real-runtime.py",
@@ -1887,8 +1911,8 @@
     {
       "file": "tests/qq-import-ui.test.cjs",
       "source": "tests/qq-import-ui.test.cjs",
-      "bytes": 10712,
-      "sha256": "c6d3c6b4b49367cad4b15ae7af97a64c07f89e43a07da2f69c9e8ef2e78278f0"
+      "bytes": 13772,
+      "sha256": "310774af5422174fb6ceee2a50fb7fb4e7b8753cc399e2d1f77e0fef9bd35ea2"
     },
     {
       "file": "tests/qq-message-presentation.test.cjs",
@@ -1989,8 +2013,8 @@
     {
       "file": "docs/public/USER-GUIDE.md",
       "source": "docs/public/USER-GUIDE.md",
-      "bytes": 8250,
-      "sha256": "cb0364ad005087c8c1f910769ade983309a7a7ac1ebc580a936f6a276835f9a7"
+      "bytes": 8489,
+      "sha256": "e09ca8c5c2b45538098180b3462efa290004b5c4e9e3da8cd775cebd1be897d7"
     },
     {
       "file": "docs/public/USER-GUIDE.html",

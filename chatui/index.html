@@ -567,14 +567,40 @@
             </div>
           </details>
           <section id="qqImportPanel" class="qq-import-panel" hidden aria-labelledby="qqImportTitle">
-            <div class="account-manager-head"><span id="qqImportTitle">导入 QQ 单聊文件</span></div>
-            <p class="qq-import-help">支持 QQChatExporter 单 JSON 或分块 manifest.json。文件在本机处理，导入仅补充本地历史。</p>
+            <div class="account-manager-head"><span id="qqImportTitle">导入聊天 JSON</span></div>
+            <p class="qq-import-help">支持 QCE、消息数组、嵌套消息列表和 JSONL。大文件分批读取，先核对内容与 QQ 身份，再写入本地历史。</p>
             <label class="qq-import-label" for="qqImportPath">导出文件</label>
             <div class="qq-import-file">
               <input id="qqImportPath" type="text" placeholder="选择文件，或粘贴本地完整路径" autocomplete="off" spellcheck="false">
               <button type="button" class="settings-action-btn" id="btnChooseQQExport">选择文件</button>
               <button type="button" class="settings-action-btn" id="btnPreviewQQExport">预览</button>
             </div>
+            <details id="qqImportMapping" class="qq-import-preview">
+              <summary>识别不准确？指定字段与会话</summary>
+              <p class="qq-import-help">留空自动识别。字段可写 sender.uin、content.text；消息列表位置可写 /data/messages，顶层数组填 /。缺少字段时不会编造。</p>
+              <datalist id="qqImportFields"></datalist><datalist id="qqImportArrays"></datalist>
+              <label class="qq-import-label" for="qqImportRecordPath">消息列表位置</label>
+              <input id="qqImportRecordPath" type="text" list="qqImportArrays" placeholder="自动识别" autocomplete="off">
+              <label class="qq-import-label" for="qqImportTextField">正文对应哪个字段</label>
+              <input id="qqImportTextField" type="text" list="qqImportFields" placeholder="如 content.text" autocomplete="off">
+              <label class="qq-import-label" for="qqImportSenderField">发送者对应哪个字段</label>
+              <input id="qqImportSenderField" type="text" list="qqImportFields" placeholder="如 sender.uin" autocomplete="off">
+              <label class="qq-import-label" for="qqImportTimeField">时间对应哪个字段</label>
+              <input id="qqImportTimeField" type="text" list="qqImportFields" placeholder="如 timestamp" autocomplete="off">
+              <label class="qq-import-label" for="qqImportIdField">消息 ID 字段（可留空）</label>
+              <input id="qqImportIdField" type="text" list="qqImportFields" placeholder="自动识别；没有时按文件与行号区分" autocomplete="off">
+              <label class="qq-import-label" for="qqImportTimeUnit">数字时间的单位</label>
+              <select id="qqImportTimeUnit"><option value="auto">自动识别秒或毫秒</option><option value="seconds">秒</option><option value="milliseconds">毫秒</option></select>
+              <label class="qq-import-label" for="qqImportTimeZone">无时区日期的时区</label>
+              <select id="qqImportTimeZone"><option value="">未指定（有时区的日期无需设置）</option><option value="+08:00">北京时间 UTC+08:00</option><option value="UTC">UTC</option><option value="-07:00">UTC-07:00</option><option value="-08:00">UTC-08:00</option></select>
+              <label class="qq-import-label" for="qqImportKind">会话类型</label>
+              <select id="qqImportKind"><option value="auto">按文件识别</option><option value="friend">QQ 单聊</option><option value="group">QQ 群聊</option></select>
+              <label class="qq-import-label" for="qqImportTarget">会话身份（文件未提供时填写）</label>
+              <input id="qqImportTarget" type="text" placeholder="单聊填对方 UID（u_ 开头）；群聊填群号" autocomplete="off">
+              <div id="qqImportSenderMappings"></div>
+              <p class="qq-import-help">只有昵称时，需要填写对应 QQ 号才能归属到人物；修改后再次点「预览」。一次选择一个会话的消息列表。</p>
+            </details>
+            <div id="qqImportSchema" class="qq-import-preview" hidden></div>
             <div id="qqImportStatus" class="model-source-status" role="status" aria-live="polite"></div>
             <div id="qqImportIdentity" hidden>
               <label class="qq-import-label" for="qqImportOwner">哪一个 QQ 号是本人？</label>

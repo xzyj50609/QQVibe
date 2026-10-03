@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 
 KINDS = {"forward", "history", "reconcile", "file-import"}
-FORMATS = {"qce-api", "qce-single-json", "qce-chunked-jsonl"}
+FORMATS = {"qce-api", "qce-single-json", "qce-chunked-jsonl", "generic-json", "generic-jsonl"}
 STATES = {"complete", "complete-empty", "partial", "error"}
 DISPOSITIONS = {"inserted", "unchanged", "recalled", "revised", "conflicts"}
 SOURCE_BITS = {"forward": 1, "history": 2, "reconcile": 4, "file-import": 8}
@@ -69,6 +69,31 @@ DDL = (
 )
 
 
+LEGACY_DDL = DDL
+DDL = (DDL[0].replace("'qce-chunked-jsonl'))", "'qce-chunked-jsonl','generic-json','generic-jsonl'))"), *DDL[1:])
+
+
+def needs_format_upgrade(connection):
+    row = connection.execute("SELECT sql FROM sqlite_master WHERE name='qq_ingest_runs_v1'").fetchone()
+    return row is not None and "'generic-json'" not in row[0]
+
+
+def upgrade_formats(cursor):
+    """Called only inside a backed-up transaction; preserve IDs and FK children."""
+    tables = ('qq_ingest_runs_v1', 'qq_ingest_observations_v1', 'qq_ingest_message_sources_v1')
+    for table in tables:
+        cursor.execute(f'CREATE TEMP TABLE upgrade_{table} AS SELECT * FROM {table}')
+    for table in reversed(tables):
+        cursor.execute(f'DROP TABLE {table}')
+    for statement in DDL:
+        cursor.execute(statement)
+    for table in tables:
+        cursor.execute(f'INSERT INTO {table} SELECT * FROM upgrade_{table}')
+        cursor.execute(f'DROP TABLE upgrade_{table}')
+    if cursor.execute('PRAGMA foreign_key_check').fetchone():
+        raise ValueError('invalid-ingest-audit-migration')
+
+
 def integer(value, minimum=0):
     if type(value) is not int or not minimum <= value <= MAX_INTEGER:
         raise ValueError("invalid-ingest-audit-integer")
@@ -121,7 +146,10 @@ def validate_table(connection):
     actual = {row[0]: normalized(row[1]) for row in connection.execute("SELECT name,sql FROM sqlite_master")}
     for statement in DDL:
         name = re.match(r"CREATE (?:TABLE|INDEX) (\w+)", statement)[1]
-        if actual.get(name) != normalized(statement):
+        accepted = {normalized(statement)}
+        if name == 'qq_ingest_runs_v1':
+            accepted.add(normalized(LEGACY_DDL[0]))
+        if actual.get(name) not in accepted:
             raise ValueError("invalid-ingest-audit-schema")
 
 

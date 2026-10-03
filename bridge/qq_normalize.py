@@ -436,7 +436,7 @@ def normalize_export_row(row, owner, peer_uid, *, expected_kind='friend', self_u
     return record, flags
 
 
-def normalize_export(document, *, self_uin=None, chunks=None, max_rows=200000, expected_kind='friend'):
+def normalize_export(document, *, self_uin=None, chunks=None, max_rows=200000, expected_kind='friend', adapted=False):
     """Normalize a QCE V6 single JSON or manifest + supplied JSONL chunks.
 
     Explicit selfUin metadata or a caller-confirmed owner is mandatory. Participants
@@ -448,7 +448,7 @@ def normalize_export(document, *, self_uin=None, chunks=None, max_rows=200000, e
     if not isinstance(metadata, dict) or not isinstance(info, dict):
         raise ExportFormatError("invalid-export-metadata")
     version = metadata.get("version")
-    if not isinstance(version, str) or not re.fullmatch(r"6\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?", version):
+    if not adapted and (not isinstance(version, str) or not re.fullmatch(r"6\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?", version)):
         raise ExportFormatError("unsupported-export-version")
     if expected_kind not in ('friend','group'):
         raise ExportFormatError('invalid-conversation-kind')

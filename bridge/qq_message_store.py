@@ -573,10 +573,14 @@ class QQMessageStore:
             return dict(row) if row is not None else None
 
     def ensure_ingest_audit(self):
-        from qq_ingest_audit import exists, validate_table, DDL
+        from qq_ingest_audit import exists, validate_table, DDL, needs_format_upgrade, upgrade_formats
         with self.lock:
             if exists(self.connection):
                 validate_table(self.connection)
+                if needs_format_upgrade(self.connection):
+                    self.backup_to(self.path.with_name(self.path.name + '.json-import-backup-' + uuid.uuid4().hex))
+                    with self.transaction() as cursor:
+                        upgrade_formats(cursor)
                 return
             self.backup_to(self.path.with_name(self.path.name + ".ingest-audit-backup-" + uuid.uuid4().hex))
             with self.transaction() as cursor:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import io
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -13,14 +14,15 @@ TOKEN_LIMIT = 2 * 1024 * 1024
 
 
 class CheckedText:
-    def __init__(self, stream, size, cancel):
+    def __init__(self, stream, size, cancel, byte_encoding='utf-8'):
         self.stream, self.size, self.cancel = stream, size, cancel
+        self.byte_encoding = byte_encoding
         self.used = 0
 
     def _read(self, method, amount):
         self.cancel()
         value = method(amount)
-        self.used += len(value.encode("utf-8"))
+        self.used += len(value.encode(self.byte_encoding))
         if self.used > self.size:
             raise ExportFormatError("export-changed-during-read")
         return value
@@ -50,9 +52,17 @@ class Budget:
             raise ExportFormatError("byte-budget-exceeded")
         self.remaining -= before.st_size
         stamp = (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
-        with path.open("r", encoding="utf-8-sig", newline="") as stream:
-            yield CheckedText(stream, before.st_size, self.cancel)
-            after = os.fstat(stream.fileno())
+        with path.open('rb') as raw:
+            prefix = raw.read(4)
+            raw.seek(0)
+            encoding, byte_encoding = 'utf-8-sig', 'utf-8'
+            if prefix.startswith((b'\xff\xfe\x00\x00', b'\x00\x00\xfe\xff')):
+                encoding, byte_encoding = 'utf-32', 'utf-32-le' if prefix[0] == 255 else 'utf-32-be'
+            elif prefix.startswith((b'\xff\xfe', b'\xfe\xff')):
+                encoding, byte_encoding = 'utf-16', 'utf-16-le' if prefix[0] == 255 else 'utf-16-be'
+            with io.TextIOWrapper(raw, encoding=encoding, newline='') as stream:
+                yield CheckedText(stream, before.st_size, self.cancel, byte_encoding)
+                after = os.fstat(stream.fileno())
         latest = path.stat()
         if any((item.st_dev, item.st_ino, item.st_size, item.st_mtime_ns) != stamp
                for item in (after, latest)):

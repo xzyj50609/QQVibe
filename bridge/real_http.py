@@ -443,14 +443,14 @@ def make_handler(backend, accounts=None, control_token=None):
                         return self.send(404, {"error": "import-unavailable"})
                     imports = accounts.imports
                     action = endpoint.rsplit("/", 1)[1]
-                    fields = {"preview": ({"path"}, {"path", "ownerUin"}),
+                    fields = {"preview": ({"path"}, {"path", "ownerUin"}, {"path", "mapping"}, {"path", "ownerUin", "mapping"}),
                               "identity": ({"jobId", "ownerUin"}, {"jobId", "ownerUin", "peerUid"}),
                               "commit": ({"jobId", "previewToken", "acceptPartial"},),
                               "cancel": ({"jobId"},)}
                     if set(request) not in fields[action]:
                         raise ValueError("invalid-import-request")
                     if action == "preview":
-                        result = imports.start(request["path"], request.get("ownerUin"))
+                        result = imports.start(request["path"], request.get("ownerUin"), request.get("mapping"))
                     elif action == "identity":
                         result = imports.map_owner(request["jobId"], request["ownerUin"], request.get("peerUid"))
                     elif action == "commit":

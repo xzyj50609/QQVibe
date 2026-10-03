@@ -48,7 +48,7 @@ class AtomicReceiptTests(Library):
         with closing(sqlite3.connect(backups[0])) as backup:
             self.assertFalse(audit.exists(backup)); self.assertEqual(backup.execute("SELECT COUNT(*) FROM messages").fetchone()[0], 1)
         self.assertEqual(self.summary()["recordedMessages"], 1)
-        self.assertEqual(self.db.connection.execute("PRAGMA user_version").fetchone()[0], 3)
+        self.assertEqual(self.db.connection.execute("PRAGMA user_version").fetchone()[0], store.SCHEMA_VERSION)
 
     def test_same_message_multiple_actual_sources_does_not_duplicate_or_revise_analysis(self):
         self.db.ingest(self.account, CONV, [record("1")], receipt=receipt("file-import"), now_ms=100)
