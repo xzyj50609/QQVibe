@@ -12,10 +12,14 @@ from urllib.request import Request, urlopen
 from model_source import ModelSourceStore
 from real_backend import Backend, ResultStore
 from real_http import make_handler
+from portrait_contracts import api_portrait_scope
+from api_portrait_statistics import valid_statistics
 
 
 class FakeProvider(BaseHTTPRequestHandler):
     prompts = []
+    portrait_phases = []
+    on_classification = None
 
     def log_message(self, *_args):
         pass
@@ -49,15 +53,28 @@ class FakeProvider(BaseHTTPRequestHandler):
             answer = json.dumps({"items": [{
                 "id": target_id, "status": "ok", "emotion": "期待", "intent": "邀约",
             } for target_id in payload["targetIds"]]}, ensure_ascii=False)
+        elif prompt.startswith("INPUT_JSON:\n"):
+            payload = json.loads(prompt.removeprefix("INPUT_JSON:\n"))
+            system = next(message["content"] for message in body["messages"]
+                          if message["role"] == "system")
+            if "messages" not in payload or "LOCAL_QUESTION_CONTRACT:\n" not in system:
+                self.send_error(400, "expected local-question batch classification")
+                return
+            self.portrait_phases.append(("classify", payload))
+            if type(self).on_classification is not None:
+                type(self).on_classification()
+            contract = json.loads(system.split("LOCAL_QUESTION_CONTRACT:\n", 1)[1])
+            answers = {}
+            for name, (_instruction, labels) in contract["questions"].items():
+                selected = labels.index("warm") if name == "relationship" else 0
+                answers[name] = [int(index == selected) for index in range(len(labels))]
+            # The local router keeps only selected branch mass (.7 here), and
+            # ordinary chat legitimately produces no enduring MBTI preference.
+            answers["emotion"] = [.4, .3, .3] + [0] * (len(answers["emotion"]) - 3)
+            answer = json.dumps({"answers": answers}, ensure_ascii=False)
         else:
-            answer = json.dumps({"summary": "常讨论周末见面", "communication": "表达简洁",
-                                     "emotionExpression": "", "interactionPreferences": "",
-                                     "topics": ["周末"], "patterns": [], "boundaries": [],
-                                     "uncertain": [], "affinity": None,
-                                     "mbtiAxes": {key: None for key in ("EI", "SN", "TF", "JP")},
-                                     "traits": {key: None for key in ("socialEnergy", "humor", "composure",
-                                                                         "initiative", "care", "affection")}},
-                                    ensure_ascii=False)
+            self.send_error(400, "unexpected synthetic prompt")
+            return
         self.reply({"id": "synthetic-response", "object": "chat.completion", "created": 0,
                     "model": "synthetic-model", "choices": [{"index": 0,
                     "message": {"role": "assistant", "content": answer}, "finish_reason": "stop"}]})
@@ -104,6 +121,8 @@ class ApiInsightHttpTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             FakeProvider.prompts = []
+            FakeProvider.portrait_phases = []
+            FakeProvider.on_classification = None
             provider = ThreadingHTTPServer(("127.0.0.1", 0), FakeProvider)
             provider_thread = threading.Thread(target=provider.serve_forever, daemon=True)
             provider_thread.start()
@@ -129,13 +148,19 @@ class ApiInsightHttpTests(unittest.TestCase):
             try:
                 config = {"protocol": "chat_completions", "baseUrl": provider_base,
                           "apiKey": "synthetic-key", "model": "synthetic-model",
-                          "contextTokens": 8192}
+                          "contextTokens": 32768}
                 self.assertEqual(call("/api/model-source/list", {key: config[key]
                                  for key in ("protocol", "baseUrl", "apiKey")})[1]["models"][0]["id"],
                                  "synthetic-model")
                 self.assertTrue(call("/api/model-source/test", config)[1]["ok"])
-                self.assertEqual(call("/api/model-source/activate", {"mode": "api", **config})[1]["mode"],
-                                 "api")
+                selected = call("/api/model-source/activate", {"mode": "api", **config})[1]
+                self.assertEqual(selected["mode"], "api")
+                checkpoints = []
+                result_store = ResultStore(root / "synthetic-account.sqlite3")
+                def capture_pending_checkpoint():
+                    checkpoints.append(result_store.api_portrait_get("synthetic-account", "friend",
+                        api_portrait_scope(selected["sourceId"]), "friend"))
+                FakeProvider.on_classification = capture_pending_checkpoint
                 self.assertNotIn("synthetic-key", (root / "model-source.json").read_text())
                 status, started = call("/api/model-insights", {"account": "synthetic-account",
                                                                "user": "friend", "limit": 1,
@@ -164,9 +189,56 @@ class ApiInsightHttpTests(unittest.TestCase):
                     time.sleep(.05)
                 self.assertEqual(portrait["job"]["status"], "done", portrait)
                 self.assertTrue(portrait["progress"]["complete"])
-                self.assertEqual(portrait["portrait"]["summary"], "常讨论周末见面")
+                profile = portrait["nativeProfile"]
+                self.assertTrue(profile["summary"].startswith("已分析1条该联系人消息"))
                 self.assertEqual(portrait["available"]["textCount"], 3)
                 self.assertEqual(portrait["progress"]["processed"], 3)
+                self.assertEqual(portrait["progress"]["processedTargetTexts"], 1)
+                self.assertFalse(portrait["needsRebuild"])
+                self.assertEqual(profile["affinity"], 78)
+                self.assertIsNone(profile["mbti"])
+                self.assertEqual(profile["portraitCount"], 1)
+                self.assertEqual(profile["mbtiInference"]["eligibleMessages"], 1)
+                self.assertEqual(profile["mbtiInference"]["supportedMessages"], 0)
+                self.assertTrue(all(axis["leftShare"] is None and axis["insufficientCount"] == 1
+                                    for axis in profile["mbtiInference"]["axes"].values()))
+                self.assertEqual(len(profile["traits"]), 6)
+                self.assertTrue(all(item["sampleCount"] == 1 for item in profile["traits"]))
+                self.assertEqual([phase for phase, _payload in FakeProvider.portrait_phases],
+                                 ["classify"])
+                classify_input = FakeProvider.portrait_phases[0][1]
+                self.assertEqual(set(classify_input), {"subjectKind", "messages"})
+                self.assertEqual([item["text"] for item in classify_input["messages"] if item["target"]],
+                                 ["可以呀，我来找你。"])
+                self.assertEqual(len(checkpoints), 1)
+                self.assertFalse(checkpoints[0]["complete"], "a pending model request cannot count as analyzed")
+                self.assertEqual((checkpoints[0]["processed"], checkpoints[0]["batchIndex"]), (0, 0))
+                self.assertEqual(checkpoints[0]["resume"]["portraitStatistics"]["state"]["targetCount"], 0)
+                saved = result_store.api_portrait_get("synthetic-account", "friend",
+                    api_portrait_scope(selected["sourceId"]), "friend")
+                self.assertTrue(saved["complete"])
+                self.assertEqual((saved["processed"], saved["batchIndex"], saved["highwater"]), (3, 1, (3, "shard", 3)))
+                self.assertEqual(saved["available"]["processedTargetTextCount"], 1)
+                statistics = saved["resume"]["portraitStatistics"]
+                self.assertTrue(valid_statistics(statistics))
+                self.assertEqual((statistics["state"]["targetCount"], statistics["state"]["batchCount"]), (1, 1))
+                self.assertAlmostEqual(sum(statistics["state"]["emotion"].values()), .7)
+                self.assertEqual(statistics["state"]["supported"], 0)
+                self.assertEqual(saved["resume"]["batchIndex"], saved["batchIndex"])
+                self.assertIn("tailHash", saved["resume"])
+                request_count = len(FakeProvider.prompts)
+                call("/api/model-portrait", {"account": "synthetic-account", "user": "friend"})
+                deadline = time.monotonic() + 15
+                while time.monotonic() < deadline:
+                    _status, repeated = call("/api/model-portrait?user=friend")
+                    if repeated["job"]["status"] in ("done", "error"):
+                        break
+                    time.sleep(.05)
+                self.assertEqual(repeated["job"]["status"], "done")
+                self.assertEqual(len(FakeProvider.prompts), request_count)
+                self.assertEqual(repeated["nativeProfile"]["mbtiInference"], profile["mbtiInference"])
+                self.assertEqual(result_store.api_portrait_get("synthetic-account", "friend",
+                    api_portrait_scope(selected["sourceId"]), "friend"), saved)
                 _status, cache = call("/api/analysis-cache")
                 api_source = next(item for item in cache["sources"] if item["kind"] == "api")
                 self.assertEqual((api_source["messageCount"], api_source["portraitCount"]), (1, 1))
@@ -178,6 +250,7 @@ class ApiInsightHttpTests(unittest.TestCase):
                 self.assertEqual((api_source["messageCount"], api_source["portraitCount"]), (0, 0))
                 self.assertFalse(api_source["suspended"])
             finally:
+                FakeProvider.on_classification = None
                 app.shutdown()
                 app.server_close()
                 backend.shutdown()

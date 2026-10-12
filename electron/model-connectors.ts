@@ -59,7 +59,7 @@ export interface GenerationResult {
 export type ConnectorErrorCode =
   | "invalid-url" | "invalid-request" | "cancelled" | "timeout"
   | "response-too-large" | "context-too-long" | "auth" | "rate-limit" | "unsupported"
-  | "provider-error" | "invalid-output" | "network" | "empty-response";
+  | "provider-error" | "invalid-output" | "network" | "empty-response" | "output-truncated";
 
 export class ModelConnectorError extends Error {
   constructor(
@@ -276,6 +276,12 @@ function errorStatus(error: unknown): number | undefined {
   return typeof status === "number" && Number.isInteger(status) ? status : undefined;
 }
 
+// A provider that stops at the output cap returns syntactically broken JSON. Report
+// that cut explicitly instead of letting callers misread it as a format error.
+function outputTruncated(): never {
+  throw new ModelConnectorError("output-truncated", "模型输出达到长度上限被截断");
+}
+
 function streamFormatError(error: unknown): boolean {
   let current: unknown = error;
   for (let depth = 0; depth < 5 && current && typeof current === "object"; depth++) {
@@ -433,11 +439,11 @@ export async function generateStructured(
   if (!request || typeof request.system !== "string" || typeof request.prompt !== "string" ||
       !request.prompt.trim() ||
       (outputLimit !== undefined && (!Number.isInteger(outputLimit) ||
-        outputLimit < 1 || outputLimit > 8192)) ||
+        outputLimit < 1 || outputLimit > 32768)) ||
       (request.jsonMode !== undefined && typeof request.jsonMode !== "boolean") ||
       (request.stream !== undefined && typeof request.stream !== "boolean") ||
       (request.timeoutMs !== undefined && (!Number.isInteger(request.timeoutMs) ||
-        request.timeoutMs < 1000 || request.timeoutMs > 120_000)) ||
+        request.timeoutMs < 1000 || request.timeoutMs > 240_000)) ||
       Buffer.byteLength(request.system, "utf8") + Buffer.byteLength(request.prompt, "utf8") > MAX_PROMPT_BYTES) {
     invalid("生成请求超出允许范围");
   }
@@ -524,6 +530,8 @@ export async function generateStructured(
             ...(officialDeepSeekJson ? { reasoning: { effort: "none" as const } } : {}) },
           { signal });
         }
+        if ((response as any).status === "incomplete" &&
+            (response as any).incomplete_details?.reason === "max_output_tokens") outputTruncated();
         if (response.output_text) markFirstBody();
         result = { text: response.output_text || "",
           responseId: typeof response.id === "string" ? response.id : undefined,
@@ -576,6 +584,7 @@ export async function generateStructured(
               !streamFormat && !streamRejected && !jsonRejected) throw error;
           response = await client.chat.completions.create(params, { signal });
         }
+        if ((response.choices[0] as any)?.finish_reason === "length") outputTruncated();
         if (response.choices[0]?.message.content) markFirstBody();
         result = { text: response.choices[0]?.message.content ?? "",
           usage: usage(response.usage?.prompt_tokens, response.usage?.completion_tokens) };
@@ -593,12 +602,13 @@ export async function generateStructured(
           max_tokens: request.maxOutputTokens ?? 8192,
           messages: [{ role: "user" as const, content: request.prompt }] };
         if (!request.stream) {
-          const response = await client.messages.create(params, { signal });
+          const response = await client.messages.create(params, { signal, timeout: timeoutMs ?? 600_000 });
+          if (response.stop_reason === "max_tokens") outputTruncated();
           result = { text: response.content.filter((item) => item.type === "text")
             .map((item) => item.text).join("\n"),
             usage: usage(response.usage.input_tokens, response.usage.output_tokens) };
         } else {
-          const stream = await client.messages.create({ ...params, stream: true }, { signal });
+          const stream = await client.messages.create({ ...params, stream: true }, { signal, timeout: timeoutMs ?? 600_000 });
           let text = "", input: number | undefined, output: number | undefined;
           let completed = false;
           for await (const event of stream) {
@@ -610,6 +620,7 @@ export async function generateStructured(
             } else if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
               text += event.delta.text; emit(event.delta.text);
             } else if (event.type === "message_delta") {
+              if (event.delta.stop_reason === "max_tokens") outputTruncated();
               input = event.usage.input_tokens ?? input;
               output = event.usage.output_tokens ?? output;
             } else if (event.type === "message_stop") completed = true;
@@ -632,6 +643,7 @@ export async function generateStructured(
             abortSignal: signal } };
         if (!request.stream) {
           const response = await client.models.generateContent(params);
+          if (response.candidates?.[0]?.finishReason === "MAX_TOKENS") outputTruncated();
           result = { text: response.text ?? "",
             usage: usage(response.usageMetadata?.promptTokenCount,
               response.usageMetadata?.candidatesTokenCount) };
@@ -640,6 +652,7 @@ export async function generateStructured(
           let text = "", metadata: any;
           let completed = false;
           for await (const chunk of stream) {
+            if (chunk.candidates?.[0]?.finishReason === "MAX_TOKENS") outputTruncated();
             const delta = chunk.text ?? "";
             text += delta; emit(delta);
             metadata = chunk.usageMetadata ?? metadata;
@@ -663,6 +676,7 @@ export async function generateStructured(
             { num_predict: request.maxOutputTokens } : {}) } };
         if (!request.stream) {
           const response = await client.chat({ ...params, stream: false });
+          if (response.done_reason === "length") outputTruncated();
           result = { text: response.message?.content ?? "",
             usage: usage(response.prompt_eval_count, response.eval_count) };
         } else {
@@ -673,6 +687,7 @@ export async function generateStructured(
             const delta = chunk.message?.content ?? "";
             text += delta; emit(delta);
             if (chunk.done) {
+              if (chunk.done_reason === "length") outputTruncated();
               completed = true; input = chunk.prompt_eval_count; output = chunk.eval_count;
             }
           }
@@ -697,13 +712,20 @@ export async function testConnection(config: ModelConfig): Promise<{
   ok: true; latencyMs: number; model: string;
 }> {
   const start = performance.now();
-  await generateStructured(config, {
-    system: "This is a connection test. Return only a JSON object.",
-    prompt: 'Reply with JSON {"ok":true}.',
-    maxOutputTokens: 128,
-    jsonMode: true,
-    // Keep the probe finite so the settings buttons never stay busy for long.
-    timeoutMs: 15_000,
-  });
+  try {
+    await generateStructured(config, {
+      system: "This is a connection test. Return only a JSON object.",
+      prompt: 'Reply with JSON {"ok":true}.',
+      jsonMode: true,
+      // Anthropic requires max_tokens. 128 is enough for this probe's JSON.
+      // Other protocols send no cap: a small cap is spent by reasoning before
+      // any JSON appears. The timeout keeps the settings buttons from staying busy.
+      ...(config.protocol === "anthropic" ? { maxOutputTokens: 128 } : {}),
+      timeoutMs: 15_000,
+    });
+  } catch (error) {
+    // A gateway can still cut the reply at its own default cap. The endpoint answered.
+    if (!(error instanceof ModelConnectorError && error.code === "output-truncated")) throw error;
+  }
   return { ok: true, latencyMs: Math.round(performance.now() - start), model: config.model.trim() };
 }

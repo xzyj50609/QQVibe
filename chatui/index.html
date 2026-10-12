@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="chatbean-tokens.css">
   <link rel="stylesheet" href="chatbean.css">
+<link rel="stylesheet" href="analysis-tools.css">
 </head>
 <body class="theme-light">
 
@@ -100,6 +101,8 @@
 
       </div>
       <div class="chat-history-actions">
+        <button type="button" class="chat-history-action" id="btnChooseAnalysis">选句分析</button>
+        <button type="button" class="chat-history-action" id="btnAnalysisScope">分析管理</button>
         <button type="button" class="chat-history-action" id="btnReturnLatest" hidden>返回最新</button>
         <button type="button" class="chat-history-action" id="btnChatHistory" aria-expanded="false" aria-controls="historySearchPanel">聊天记录</button>
       </div>
@@ -447,6 +450,19 @@
             </div>
           </section>
           <section class="model-source-panel api-model-settings" id="apiModelSettings" hidden>
+            <div class="model-source-field">
+              <label for="selectApiProfile">已保存的模型档案</label>
+              <select id="selectApiProfile"><option value="">新建档案</option></select>
+            </div>
+            <div class="model-source-field">
+              <label for="inputApiProfileName">档案名称</label>
+              <input id="inputApiProfileName" type="text" maxlength="80" placeholder="例如：日常分析" autocomplete="off">
+            </div>
+            <div class="model-source-actions">
+              <button type="button" class="settings-action-btn" id="btnUseApiProfile">启用档案</button>
+              <button type="button" class="settings-action-btn" id="btnSaveApiProfile">保存档案</button>
+              <button type="button" class="settings-danger-btn" id="btnDeleteApiProfile">删除档案</button>
+            </div>
             <div class="settings-row">
               <label for="selectApiProtocol">接口协议</label>
               <select id="selectApiProtocol">
@@ -505,6 +521,23 @@
             </div>
             <div class="conversation-manager-list" id="conversationManagerList"></div>
             <div id="conversationManagerStatus" class="model-source-status" role="status"></div>
+          </section>
+          <section class="model-source-panel" id="analysisWorkerSettings">
+            <div class="settings-row">
+              <label for="selectLocalWorkers">本地同时分析的会话数</label>
+              <select id="selectLocalWorkers"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+            </div>
+            <div class="settings-row">
+              <label for="checkboxElasticWorkers">按机器负载调整</label>
+              <input id="checkboxElasticWorkers" type="checkbox">
+            </div>
+            <div class="settings-row">
+              <label for="selectApiWorkers">API 同时请求数</label>
+              <select id="selectApiWorkers"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+            </div>
+            <div class="model-source-actions"><button type="button" class="settings-action-btn" id="btnSaveAnalysisWorkers">保存并发设置</button></div>
+            <p class="qq-startup-hint">本地模型会增加内存占用。同一会话顺序处理；API 上限包含标签、画像和连接测试。</p>
+            <div id="analysisWorkersStatus" class="model-source-status" role="status"></div>
           </section>
           <div class="settings-row">
             <span>管理账号</span>
@@ -765,5 +798,6 @@
 <script src="qq-provenance-ui.js"></script>
 <script src="qq-support-ui.js"></script>
 <script src="app.js"></script>
+<script src="analysis-tools.js"></script>
 </body>
 </html>

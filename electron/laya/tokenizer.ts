@@ -1,7 +1,11 @@
 // Vendored from laya-mlx (Apache-2.0).
 // Source: https://github.com/mizchi/laya-mlx @ dc3aa6b150cb861d0788fbd421cfd1303de4ed57
 // Path: web/packages/laya-web/src/tokenizer.ts
-// Logic unchanged; depends on @huggingface/tokenizers pinned to 0.2.0.
+// Local performance changes adapted from nizitao's WechatVibe PR #26:
+// https://github.com/tswawa/WechatVibe/pull/26 @ bca5c5ab4258e16340b5a4ecea94d070011853a9
+// Bounded encode memoization, equivalent Unicode whitespace membership and indexed appends.
+// Cached ids are immutable; raw-text length and explicit clearing bound text retention.
+// Depends on @huggingface/tokenizers pinned to 0.2.0.
 
 import { Tokenizer } from "@huggingface/tokenizers";
 
@@ -33,7 +37,31 @@ export interface TokenizerConfig {
 }
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const isWhitespace = (ch: string) => /\p{White_Space}/u.test(ch);
+
+/** Unicode White_Space membership for the single characters used by lstrip/rstrip. */
+export function isUnicodeWhitespace(ch: string): boolean {
+  const cp = ch.codePointAt(0);
+  if (cp === undefined) return false;
+  if (cp === 0x20) return true;
+  if (cp < 0x80) return cp >= 0x09 && cp <= 0x0d;
+  return (
+    cp === 0x85 ||
+    cp === 0xa0 ||
+    cp === 0x1680 ||
+    (cp >= 0x2000 && cp <= 0x200a) ||
+    cp === 0x2028 ||
+    cp === 0x2029 ||
+    cp === 0x202f ||
+    cp === 0x205f ||
+    cp === 0x3000
+  );
+}
+
+const isWhitespace = isUnicodeWhitespace;
+const ENCODE_CACHE_LIMIT = 256;
+const ENCODE_CACHE_MAX_IDS = 4096;
+// Bound raw keys independently: whitespace can collapse into very few token ids.
+const ENCODE_CACHE_MAX_TEXT_LENGTH = 16384;
 
 interface AddedTokenInfo {
   id: number;
@@ -87,6 +115,7 @@ export class LayaTokenizer {
   private readonly addedTokenInfo: Map<string, AddedTokenInfo>;
   private readonly replacement: string;
   private readonly pieceSplitter: RegExp;
+  private readonly encodeCache = new Map<string, readonly number[]>();
 
   constructor(tokenizerJson: TokenizerJson, tokenizerConfig: TokenizerConfig) {
     const pre = tokenizerJson.pre_tokenizer;
@@ -146,16 +175,38 @@ export class LayaTokenizer {
     [this.maskToken, this.maskTokenId] = special("mask_token");
   }
 
-  /** Token ids without special tokens, equal to Python `tok(text, add_special_tokens=False)`. */
-  encode(text: string): number[] {
+  /**
+   * Token ids without special tokens, equal to Python `tok(text, add_special_tokens=False)`.
+   * Results are frozen and may be shared by later calls; copy before mutating them.
+   */
+  encode(text: string): readonly number[] {
+    const cached = this.encodeCache.get(text);
+    if (cached !== undefined) return cached;
+    const ids = Object.freeze(this.encodeUncached(text));
+    if (ids.length <= ENCODE_CACHE_MAX_IDS && text.length <= ENCODE_CACHE_MAX_TEXT_LENGTH) {
+      if (this.encodeCache.size >= ENCODE_CACHE_LIMIT) {
+        const oldest = this.encodeCache.keys().next();
+        if (!oldest.done) this.encodeCache.delete(oldest.value);
+      }
+      this.encodeCache.set(text, ids);
+    }
+    return ids;
+  }
+
+  /** Release retained input text and token ids without unloading the tokenizer/model. */
+  clearEncodeCache(): void {
+    this.encodeCache.clear();
+  }
+
+  private encodeUncached(text: string): number[] {
     const ids: number[] = [];
     let last = 0;
     for (const match of this.matchAddedTokens(text)) {
-      ids.push(...this.encodeSegment(text.slice(last, match.start)));
+      appendAll(ids, this.encodeSegment(text.slice(last, match.start)));
       ids.push(match.id);
       last = match.end;
     }
-    ids.push(...this.encodeSegment(text.slice(last)));
+    appendAll(ids, this.encodeSegment(text.slice(last)));
     return ids;
   }
 
@@ -200,8 +251,12 @@ export class LayaTokenizer {
     const pieces = normalized.match(this.pieceSplitter) ?? [];
     const ids: number[] = [];
     for (const piece of pieces) {
-      ids.push(...this.inner.encode(piece, { add_special_tokens: false }).ids);
+      appendAll(ids, this.inner.encode(piece, { add_special_tokens: false }).ids);
     }
     return ids;
   }
+}
+
+function appendAll(target: number[], source: readonly number[]): void {
+  for (let i = 0; i < source.length; i++) target.push(source[i]!);
 }

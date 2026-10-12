@@ -23,6 +23,8 @@ class ApiTaskCoordinator:
         self.inflight = 0
         self.insight_jobs = {}
         self.portrait_jobs = {}
+        # key = (account, user, source_id, subject)
+        self.guidance_jobs = {}
         # key = (account, workdir, user, subject, highwater)
         self.inventory_jobs = {}
         # One short-lived, bounded handoff; never persists raw messages.
@@ -51,10 +53,11 @@ class ApiTaskCoordinator:
         return registry.get(key)
 
     def invalidate_models(self):
-        """Stop insight and portrait jobs only; inventory may be reused across providers."""
+        """Stop insight, portrait and guidance jobs only; inventory may be reused."""
         with self.condition:
             self.insight_jobs.clear()
             self.portrait_jobs.clear()
+            self.guidance_jobs.clear()
             self.condition.notify_all()
 
     def invalidate_source(self, account, source_id):
@@ -66,6 +69,9 @@ class ApiTaskCoordinator:
             for key in list(self.portrait_jobs):
                 if key[0] == account and key[2] == source_id:
                     del self.portrait_jobs[key]
+            for key in list(self.guidance_jobs):
+                if key[0] == account and key[2] == source_id:
+                    del self.guidance_jobs[key]
             self.condition.notify_all()
 
     def drop_portrait_error(self, source_id):

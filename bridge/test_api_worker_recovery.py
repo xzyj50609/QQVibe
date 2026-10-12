@@ -81,11 +81,8 @@ class ApiWorkerRecoveryTests(unittest.TestCase):
         args = ("chat_completions", f"http://127.0.0.1:{server.server_port}/v1", "synthetic-key", "synthetic",
                 [{"id": "synthetic-target", "sender": "OTHER", "text": "周末一起去吗"}], ["synthetic-target"])
         try:
-            first = worker.model_insights(*args)
-            # A noisy provider response is filtered into an empty label pair; it
-            # does not force a second paid request or poison API readiness.
-            self.assertEqual(first["insights"][0], {
-                "id": "synthetic-target", "status": "ok", "intents": []})
+            with self.assertRaisesRegex(RuntimeError,"invalid-output"):
+                worker.model_insights(*args)
             self.assertEqual(worker.model["state"], "ready")
             start = time.monotonic()
             result = worker.model_insights(*args)

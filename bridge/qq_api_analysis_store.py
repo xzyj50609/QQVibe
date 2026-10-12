@@ -10,6 +10,7 @@ from contextlib import closing, contextmanager
 from pathlib import Path
 
 from account_store import _check_root, _regular
+from api_portrait_ledger import ApiPortraitLedger
 from backend_contracts import api_insight_scope, api_portrait_scope
 from qq_analysis_store import AnalysisScope, StaleAnalysisError
 from result_store import ResultStore
@@ -35,7 +36,8 @@ class QQApiStage(ResultStore):
         self.control_epoch=owner.base.analysis_epoch(owner.account,user)
         self.context_hash = None
         self.portrait_context = ""
-        super().__init__(path, transaction_guard=self.guard)
+        super().__init__(path, cipher=owner.base.cipher, transaction_guard=self.guard)
+        ApiPortraitLedger(self)
         self.scope = AnalysisScope(self)
 
     @property
@@ -99,6 +101,7 @@ class QQApiAnalysisStore:
         self.source, self.base, self.account = source, base, account
         self.workdir = Path(workdir)
         self.directory = self.workdir / "api-analysis-staging"
+        ApiPortraitLedger(base)
 
     def revision(self, user):
         with self.source.read_library(self.account) as (_account, library):
@@ -144,7 +147,19 @@ class QQApiAnalysisStore:
             path = directory / (identifier + ".sqlite3")
             _regular(path)
             directory.mkdir(parents=True, exist_ok=True)
-            if not path.exists() and published == revision:
+            can_resume=published==revision
+            if not can_resume and component=='portrait' and published is not None:
+                saved=self.base.api_portrait_get(self.account,user,api_portrait_scope(source_id),subject)
+                statistics=(saved.get('resume') or {}).get('portraitStatistics') if saved else None
+                if saved and saved['complete'] and isinstance(statistics,dict):
+                    metadata=ApiPortraitLedger(self.base).metadata(ApiPortraitLedger.scope(
+                        self.account,user,api_portrait_scope(source_id),subject,statistics['classifierVersion']))
+                    # Tail append leaves every classified input unchanged. Edits,
+                    # recalls and backfill use a fresh generation instead.
+                    if (metadata['ready'] and metadata['prefixSignature'] and
+                            callable(getattr(self.source,'history_prefix_signature',None))):
+                        can_resume=self.source.history_prefix_signature(user,metadata['highwater'])==metadata['prefixSignature']
+            if not path.exists() and can_resume:
                 # The stage is disposable; recover a missing one from committed data.
                 with self.base.connect() as source, closing(sqlite3.connect(path)) as target:
                     source.backup(target)
@@ -157,8 +172,10 @@ class QQApiAnalysisStore:
             return [(table, "account=? AND session=? AND source_id=?", (*prefix, api_insight_scope(stage.source_id)))
                     for table in ("api_insights_v1", "qq_api_insight_basis_v1")]
         if stage.component == "portrait":
-            return [("api_portrait_v1", "account=? AND session=? AND source_id=? AND subject=?",
-                     (*prefix, api_portrait_scope(stage.source_id), stage.subject))]
+            return [(table, "account=? AND session=? AND source_id=? AND subject=?",
+                     (*prefix, api_portrait_scope(stage.source_id), stage.subject))
+                    for table in ("api_portrait_v1", "api_portrait_ledger_rows_v1",
+                                  "api_portrait_ledger_fragments_v1", "api_portrait_ledger_meta_v1")]
         return [("api_history_inventory_v1", "account=? AND session=? AND subject=?", (*prefix, stage.subject))]
 
     def publish(self, stage):

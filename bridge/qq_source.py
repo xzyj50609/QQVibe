@@ -11,6 +11,7 @@ derived, never read from a WeChat table, and callers reach the profile cache thr
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import re
 import threading
@@ -382,6 +383,42 @@ class QQSource:
     @guarded_read
     def history_highwater(self, user):
         return self._library().highwater(self._account, user)
+
+    @guarded_read
+    def history_revision(self,user):
+        """Cheap per-conversation token for persisted evidence reconciliation."""
+        with self._library().lock:
+            revision=self._library().revision(self._account,user)
+            if revision is None:
+                raise ValueError('unknown QQ conversation')
+            return str(revision[0])
+
+    @guarded_read
+    def history_prefix_signature(self,user,ceiling):
+        """Hash the projected inference facts up to a frozen QQ cursor.
+
+        No display names, fetch timestamps or revision-bearing UI cursors enter
+        the hash. The conversation/account lock keeps a consistent local read.
+        """
+        digest=hashlib.sha256()
+        with self._library().lock:
+            store=self._library();revision=self._revision(user);after=None
+            if ceiling is None:
+                return digest.hexdigest()
+            while True:
+                rows,cursor=store.page(self._account,user,after,256,highwater=ceiling)
+                for row in rows:
+                    item=self._row(row,revision)
+                    if item is not None:
+                        facts=[item.get(key) for key in ('id','_sort','kind','side','text','senderId','quote','mentions')]
+                        digest.update(json.dumps(facts,ensure_ascii=False,separators=(',',':')).encode('utf-8'))
+                        digest.update(b'\n')
+                if cursor is None:
+                    break
+                if after is not None and tuple(cursor)<=tuple(after):
+                    raise RuntimeError('QQ prefix cursor did not advance')
+                after=cursor
+        return digest.hexdigest()
 
     @guarded_read
     def history_page(self, user, highwater, after=None, page_size=256):

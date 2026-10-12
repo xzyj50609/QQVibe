@@ -12,6 +12,8 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
+from contextlib import nullcontext
+from types import SimpleNamespace
 
 import backend_contracts
 import backend_service
@@ -316,7 +318,7 @@ class RepositoryBoundaryTests(unittest.TestCase):
         repository = Mock()
         repository.legacy_known.return_value = {"legacy-id"}
         repository.outcomes.return_value = {"batch-id": {"state": "done"}}
-        engine = BatchEngine(object())
+        engine = BatchEngine(SimpleNamespace(_scope_commit=lambda _:nullcontext()))
         # No connect(), path, SQL cursor, or even concrete ResultStore is exposed.
         fake_store = object()
         engine.store = Mock(return_value=repository)
@@ -326,10 +328,10 @@ class RepositoryBoundaryTests(unittest.TestCase):
         repository.legacy_known.assert_called_once_with(*self.scope, self.subject,
                                                         ["legacy-id", "batch-id"])
         position = (2, "message__message_0.db", 2)
-        engine.move(*self.scope, fake_store, self.subject, position, [])
+        engine.move(*self.scope, fake_store, self.subject, position, [],scope=None)
         repository.move_cursor.assert_called_once_with(*self.scope, self.subject, position, [])
         engine.store.reset_mock()
-        engine.move(*self.scope, fake_store, self.subject, None, [])
+        engine.move(*self.scope, fake_store, self.subject, None, [],scope=None)
         engine.store.assert_not_called()
 
     def test_reopened_store_keeps_progress_and_api_cache_isolation(self):

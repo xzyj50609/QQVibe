@@ -213,6 +213,19 @@ def make_handler(backend, accounts=None, control_token=None):
                     return self.send(200,backend.analysis_control_status(user_value(query.get('account')),user_value(query.get('user'))))
                 if parsed.path == "/api/analysis-cache":
                     return self.send(200, backend.analysis_cache_status())
+                if parsed.path == "/api/analysis-workers":
+                    return self.send(200, backend.worker_status())
+                if parsed.path == "/api/api-workers":
+                    return self.send(200, backend.api_worker_status())
+                if parsed.path == "/api/analysis-overview":
+                    return self.send(200, backend.analysis_overview())
+                if parsed.path == "/api/analysis-performance":
+                    return self.send(200, backend.analysis_performance())
+                if parsed.path == "/api/analysis-job":
+                    return self.send(200, backend.analysis_job(query.get("id")))
+                if parsed.path == "/api/analysis-labels":
+                    return self.send(200, backend.analysis_labels(user_value(query.get("account")),
+                        user_value(query.get("user")), json.loads(query.get("ids", "null"))))
                 if parsed.path == "/api/sessions":
                     data = backend.source.sessions()
                     if hasattr(accounts,'set_conversation_reading'):
@@ -340,6 +353,8 @@ def make_handler(backend, accounts=None, control_token=None):
             if not self.trusted_request():
                 return self.reject_post()
             endpoint = urlsplit(self.path).path
+            endpoint={"/api/model-source/profiles":"/api/model-source/profile/save",
+                      "/api/model-source/profiles/delete":"/api/model-source/profile/delete"}.get(endpoint,endpoint)
             if endpoint == "/api/control/shutdown":
                 supplied = self.headers.get(CONTROL_TOKEN_HEADER, "")
                 if (self.client_address[0] != "127.0.0.1" or
@@ -353,11 +368,14 @@ def make_handler(backend, accounts=None, control_token=None):
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
                 return
             model_endpoints = ("/api/model-source/list", "/api/model-source/test",
-                               "/api/model-source/activate", "/api/model-source/clear-key")
+                               "/api/model-source/activate", "/api/model-source/clear-key",
+                               "/api/model-source/profile/save", "/api/model-source/profile/delete")
             if endpoint not in ("/api/analyze", "/api/predict-reply", "/api/messages/batch",
                                  "/api/runtime", "/api/local-model", "/api/model-insights",
                                  "/api/model-portrait", "/api/analysis-cache/clear",
                                  "/api/analysis-cache/resume", "/api/conversation-selection",
+                                 "/api/conversation-request", "/api/analysis-workers", "/api/api-workers",
+                                 "/api/analysis-scope/clear",
                                  "/api/accounts/activate",
                                  "/api/qq/import/preview", "/api/qq/import/identity",
                                  "/api/qq/import/commit", "/api/qq/import/cancel",
@@ -383,6 +401,26 @@ def make_handler(backend, accounts=None, control_token=None):
                 request = json.loads(self.rfile.read(length).decode("utf-8"))
                 if not isinstance(request, dict) or "texts" in request:
                     raise ValueError("invalid request")
+                if endpoint == "/api/analysis-workers":
+                    if not request or set(request) - {"workers", "elastic"}:
+                        raise ValueError("invalid worker settings")
+                    workers, elastic = request.get("workers"), request.get("elastic")
+                    if ("workers" in request and (type(workers) is not int or not 1 <= workers <= 4) or
+                            "elastic" in request and type(elastic) is not bool):
+                        raise ValueError("invalid worker settings")
+                    return self.send(200, backend.set_worker_settings(workers, elastic))
+                if endpoint == "/api/api-workers":
+                    if set(request) != {"workers"} or type(request["workers"]) is not int or not 1 <= request["workers"] <= 4:
+                        raise ValueError("invalid API worker settings")
+                    return self.send(200, backend.set_api_worker_settings(request["workers"]))
+                if endpoint == "/api/analysis-scope/clear":
+                    if (set(request) not in ({"account", "user", "sourceId", "kind"},
+                                            {"account", "user", "sourceId", "kind", "member"}) or
+                            request.get("kind") not in ("conversation", "portrait")):
+                        raise ValueError("invalid analysis reset")
+                    return self.send(200, backend.analysis_scope_clear(user_value(request["account"]),
+                        user_value(request["user"]), user_value(request["sourceId"]), request["kind"],
+                        user_value(request["member"]) if request.get("member") is not None else None))
                 if endpoint=='/api/qq/analysis/budget':
                     if set(request)!={'account','user','requests'}:raise ValueError('invalid-request-budget')
                     try:
@@ -499,6 +537,10 @@ def make_handler(backend, accounts=None, control_token=None):
                             return self.send(200, backend.model_source_test(request))
                         if endpoint == "/api/model-source/activate":
                             return self.send(200, backend.model_source_activate(request))
+                        if endpoint == "/api/model-source/profile/save":
+                            return self.send(200, backend.model_source_profile_save(request))
+                        if endpoint == "/api/model-source/profile/delete":
+                            return self.send(200, backend.model_source_profile_delete(request))
                         return self.send(200, backend.model_source_clear_key(request))
                     except ValueError:
                         return self.send(400, {"error": "invalid model source request"})
@@ -512,6 +554,11 @@ def make_handler(backend, accounts=None, control_token=None):
                     return self.send(200, backend.set_conversation_selected(
                         user_value(request["expectedAccount"]), user_value(request["session"]),
                         request["selected"]))
+                if endpoint == "/api/conversation-request":
+                    if set(request) != {"expectedAccount", "session", "requested"} or type(request["requested"]) is not bool:
+                        raise ValueError("invalid conversation request")
+                    return self.send(200, backend.set_conversation_requested(
+                        user_value(request["expectedAccount"]), user_value(request["session"]), request["requested"]))
                 if endpoint == "/api/runtime":
                     if set(request) != {"provider"} or request["provider"] not in ("cpu", "gpu"):
                         raise ValueError("invalid provider")
@@ -530,8 +577,11 @@ def make_handler(backend, accounts=None, control_token=None):
                     # batches.
                     limit = integer(request.get("limit"), 500, 500)
                     around = request.get("around")
+                    force=request.get("force",False)
+                    if type(force) is not bool:
+                        raise ValueError('invalid insight refresh')
                     return self.send(202, backend.start_model_insights(
-                        account, user, limit, request.get("targetIds"), around))
+                        account, user, limit, request.get("targetIds"), around,force=force))
                 if endpoint == "/api/model-portrait":
                     if set(request) not in ({"account", "user"},
                                             {"account", "user", "member"},
@@ -583,14 +633,16 @@ def make_handler(backend, accounts=None, control_token=None):
                 user = user_value(request.get("user"))
                 expected_account = user_value(request.get("account"))
                 mode = request.get("mode")
-                if mode not in ("recent", "history", "incremental"):
+                if mode not in ("recent", "history", "incremental", "message"):
                     raise ValueError("invalid mode")
                 limit = (None if mode == "incremental" else
                          "all" if mode == "history" and request.get("limit") == "all" else
-                         integer(request.get("limit"), 80 if mode == "recent" else 500,
-                                 80 if mode == "recent" else 5000))
+                         integer(request.get("limit"), 80 if mode in ("recent", "message") else 500,
+                                 (500 if request.get("targetIds") is not None or mode=="message" else 80)
+                                 if mode in ("recent", "message") else 5000))
                 return self.send(202, {"job": backend.start(user, mode, limit,
-                                                             expected_account=expected_account)})
+                    expected_account=expected_account, target_ids=request.get("targetIds"),
+                    message_id=request.get("messageId"))})
             except AnalysisInterrupted as exc:
                 return self.send(409,{"error":"analysis-"+exc.state,"analysisControl":exc.state})
             except ForecastRequestError as exc:
@@ -655,6 +707,16 @@ def build_account_api(backend, profile=PRODUCT, root=ROOT, *, live_connector_val
 
 
 def main(classifier):
+    from installation_gate import InstallationGate
+    gate=InstallationGate(ROOT)
+    gate.register(role='bridge')
+    try:
+        return _main_registered(classifier)
+    finally:
+        gate.close()
+
+
+def _main_registered(classifier):
     control_token = os.environ.pop(PRODUCT.control_token_env, None)
     backend = Backend(build_source(classifier))
     port = integer(os.environ.get("CHATUI_PORT"), default_port(ROOT), 65535)

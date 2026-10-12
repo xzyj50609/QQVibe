@@ -12,6 +12,8 @@ from unittest.mock import patch
 
 from model_source import LOCAL_SOURCE_ID, ModelSourceStore
 from model_source import ModelSourceUnavailable
+from portrait_contracts import empty_portrait_evidence
+from api_portrait_statistics import append_batch, empty_statistics, valid_statistics
 from real_backend import (Backend, ResultStore, WeChatSource, api_portrait_scope, api_portrait_wire_chars,
                           api_portrait_resume_anchor, api_portrait_tail_hashes,
                           empty_api_portrait, empty_profile_state, valid_api_portrait)
@@ -88,6 +90,12 @@ class Analyzer:
         self.calls = []
         self.insight_payloads = []
         self.portrait_calls = []
+        self.portrait_evidence_calls = []
+        self.portrait_evidence = None
+        self.synthesis_calls = []
+        self.synthesis_basis = None
+        self.axes_basis = None
+        self.fail_synthesis_once = False
         self.axes_calls = 0
         self.fail_portrait_once = False
         self.fail_portrait_at = None
@@ -113,8 +121,23 @@ class Analyzer:
             {"id": target_id, "status": "ok", "emotion": "期待", "intent": "邀约"}
             for target_id in target_ids]}
 
-    def model_portrait(self, protocol, base_url, api_key, model, previous, messages):
-        self.portrait_calls.append((model, previous, messages))
+    @staticmethod
+    def portrait_version():
+        return "api-local-rules-v1"
+
+    @staticmethod
+    def portrait_signal():
+        return {"emotion": [{"label": "期待", "rawLabel": "happy", "probability": 1}],
+                "intent": [{"label": "邀约", "probability": 1}],
+                "intentBroad": [{"label": "交流", "probability": 1}], "score": .55,
+                "styleEvidence": {key: .6 for key in ("socialEnergy", "humor", "composure",
+                                                       "initiative", "care", "affection")},
+                "personalityEvidence": {axis: {axis[0]: .8, axis[1]: .1, "insufficient": .1}
+                                        for axis in ("EI", "SN", "TF", "JP")}}
+
+    def classify_portrait_batch(self, protocol, base_url, api_key, model, messages,
+                               subject_kind, context_tokens):
+        self.portrait_calls.append((model, None, messages))
         if self.fail_portrait_invalid_once:
             self.fail_portrait_invalid_once = False
             raise RuntimeError("invalid-output")
@@ -122,19 +145,13 @@ class Analyzer:
             self.fail_portrait_once = False
             self.fail_portrait_at = None
             raise RuntimeError("synthetic failure")
-        return {"summary": "已观察历史消息", "communication": "交流简洁",
-                "emotionExpression": "", "interactionPreferences": "",
-                "topics": ["见面"], "patterns": [], "boundaries": [], "uncertain": [],
-                "affinity": None, "mbtiAxes": {key: None for key in ("EI", "SN", "TF", "JP")},
-                "traits": {key: None for key in ("socialEnergy", "humor", "composure",
-                                                     "initiative", "care", "affection")}}
+        return {"batchVersion": self.portrait_version(), "result": self.portrait_signal()}
 
-    def refresh_portrait_axes(self, protocol, base_url, api_key, model, previous):
-        self.axes_calls += 1
-        return {"mbtiAxes": {"EI": 62, "SN": 41, "TF": 55, "JP": 68},
-                "traits": {key: 50 for key in ("socialEnergy", "humor", "composure",
-                                               "initiative", "care", "affection")},
-                "affinity": 60}
+    def synthesize_portrait(self, *args, **kwargs):
+        raise AssertionError("withdrawn portrait synthesis must not run")
+
+    def refresh_portrait_axes(self, *args, **kwargs):
+        raise AssertionError("withdrawn direct axis generation must not run")
 
 
 class ApiInsightTests(unittest.TestCase):
@@ -202,7 +219,7 @@ class ApiInsightTests(unittest.TestCase):
         )
         self.addCleanup(self.backend.shutdown)
 
-    def activate(self, model="test-model", key="test-key", context_tokens=8192):
+    def activate(self, model="test-model", key="test-key", context_tokens=32768):
         return self.backend.model_source_activate({
             "mode": "api", "protocol": "responses", "baseUrl": "https://example.test/v1",
             "model": model, "apiKey": key, "contextTokens": context_tokens,
@@ -244,13 +261,13 @@ class ApiInsightTests(unittest.TestCase):
         self.fail("API insight job did not finish")
 
     def wait_portrait(self):
-        # Keep the same deadline without repeatedly opening the result DB while
-        # its background writer is trying to commit. The real coordinator owns
-        # inventory, queued work and retries, so idle includes their completion.
-        self.assertTrue(self.backend.api_tasks.wait_for_idle(3), "API portrait job did not finish")
-        result = self.backend.model_portrait("friend")
-        self.assertIn(result["job"]["status"], ("done", "error"))
-        return result
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline:
+            result = self.backend.model_portrait("friend")
+            if result["job"]["status"] in ("done", "error"):
+                return result
+            time.sleep(.01)
+        self.fail("API portrait job did not finish")
 
     def wait_portrait_inventory(self, user="friend"):
         deadline = time.monotonic() + 3
@@ -492,13 +509,13 @@ class ApiInsightTests(unittest.TestCase):
         updated = self.wait_portrait()
         self.assertEqual(updated["progress"]["processed"], 38)
         self.assertEqual(updated["progress"]["processedTargetTexts"], target_count + 1)
-        self.assertEqual(self.analyzer.portrait_calls[-1][2][0]["id"], "new:0")
+        self.assertEqual([row["id"] for row in self.analyzer.portrait_calls[-1][2] if row["target"]], ["new:0"])
         self.assertEqual(self.source.history_pages, pages_before_update + 2,
                          "new-message portrait should take one full history traversal")
         self.backend.start_model_insights("account-a", "friend", 1)
         self.wait_done()
         self.assertEqual(self.analyzer.insight_payloads[-1][-1]["portraitContext"],
-                         "已观察历史消息")
+                         updated["nativeProfile"]["summary"])
         second = self.activate(model="other-model")
         self.assertNotEqual(second["sourceId"], first["sourceId"])
         self.backend.start_model_insights("account-a", "friend", 1)
@@ -523,13 +540,14 @@ class ApiInsightTests(unittest.TestCase):
                          processedTargetTextCount=8664)
         source_scope = api_portrait_scope(selected["sourceId"])
         store.api_portrait_begin(account, "friend", source_scope, "friend", highwater,
-                                 None, fingerprint, available, [8664, 10000])
+                                 None, fingerprint, available, [8664, 10000], local_rules=True)
         store.api_portrait_checkpoint(
             account, "friend", source_scope, "friend", 1, empty_api_portrait(), 8664,
             sum(len(piece["text"]) for piece in pieces[:8664]), False,
             processed_target=8664,
-            resume=api_portrait_resume_anchor(
-                pieces[8663], 8664, 1, api_portrait_tail_hashes(rows)))
+            resume={**api_portrait_resume_anchor(pieces[8663], 8664, 1, api_portrait_tail_hashes(rows)),
+                    "portraitStatistics": append_batch(empty_statistics(), self.analyzer.portrait_signal(),
+                                                       pieces[:8664], subject="friend")})
 
         page_rows = []
         original_page = self.source.history_page
@@ -542,7 +560,7 @@ class ApiInsightTests(unittest.TestCase):
         def stop_before_model(*_args):
             entered.set()
             raise RuntimeError("synthetic stop before paid model call")
-        self.analyzer.model_portrait = stop_before_model
+        self.analyzer.classify_portrait_batch = stop_before_model
         started_at = time.monotonic()
         started = self.backend.start_model_portrait(account, "friend")
         self.assertLess(time.monotonic() - started_at, .5)
@@ -571,32 +589,33 @@ class ApiInsightTests(unittest.TestCase):
             {"id": "after", "side": "other", "kind": "text", "text": "回复",
              "senderId": "friend", "_sort": [3, "shard", 3]},
         ]
-        selected = self.activate(context_tokens=4096)
+        selected = self.activate(context_tokens=12288)
         account, workdir, store = self.backend._scoped_identity()
         highwater = self.source.history_highwater("friend")
         pieces, available, fingerprint, full, full_fingerprint, rows = (
             self.backend._api_portrait_history("friend", "friend", highwater,
                                                (account, workdir)))
         self.assertEqual([piece["id"] for piece in pieces],
-                         ["before:0", "long:0", "long:1", "long:2", "after:0"])
+                         ["before:0", "long:0", "long:1", "long:2", "long:3", "after:0"])
         available.update(baseTextCount=0, baseTargetTextCount=0,
                          fullAvailable=full, fullFingerprint=full_fingerprint,
                          processedTargetTextCount=0)
         source_scope = api_portrait_scope(selected["sourceId"])
         store.api_portrait_begin(account, "friend", source_scope, "friend", highwater,
-                                 None, fingerprint, available, [2, 5])
+                                 None, fingerprint, available, [2, 6], local_rules=True)
         store.api_portrait_checkpoint(
             account, "friend", source_scope, "friend", 1, empty_api_portrait(), 1,
             len(pieces[0]["text"]) + len(pieces[1]["text"]), False,
             processed_target=0,
-            resume=api_portrait_resume_anchor(pieces[1], 2, 1,
-                                              api_portrait_tail_hashes(rows)))
+            resume={**api_portrait_resume_anchor(pieces[1], 2, 1, api_portrait_tail_hashes(rows)),
+                    "portraitStatistics": append_batch(empty_statistics(), self.analyzer.portrait_signal(),
+                                                       pieces[:2], subject="friend")})
         self.backend.start_model_portrait(account, "friend")
         done = self.wait_portrait()
         self.assertEqual(done["job"]["status"], "done")
         sent = [piece["id"] for _model, _prior, batch in self.analyzer.portrait_calls
                 for piece in batch]
-        self.assertEqual(sent, ["long:1", "long:2", "after:0"])
+        self.assertEqual(sent, ["long:1", "long:2", "long:3", "after:0"])
         self.assertEqual((done["progress"]["processed"],
                           done["progress"]["processedTargetTexts"]), (3, 2),
                          "a split target message must count once only at its final piece")
@@ -616,6 +635,9 @@ class ApiInsightTests(unittest.TestCase):
         old_portrait["summary"] = "旧摘要"
         store.api_portrait_checkpoint(account, "friend", source_scope, "friend", 1,
                                       old_portrait, 1, len(pieces[0]["text"]), False)
+        with store.connect() as conn:
+            conn.execute("UPDATE api_portrait_v1 SET resume_json=NULL WHERE account=? AND session=? "
+                         "AND source_id=? AND subject=?", (account, "friend", source_scope, "friend"))
         self.analyzer.fail_portrait_once = True
         pages_before = self.source.history_pages
         self.backend.start_model_portrait(account, "friend")
@@ -625,10 +647,10 @@ class ApiInsightTests(unittest.TestCase):
                            "legacy row requires one full validation scan")
         migrated = store.api_portrait_get(account, "friend", source_scope, "friend")
         self.assertEqual((migrated["batchIndex"], migrated["processed"],
-                          migrated["portrait"]["summary"]), (1, 1, "旧摘要"))
+                          migrated["portrait"]["summary"]), (0, 0, "旧摘要"))
         self.assertIsNotNone(migrated["resume"])
         self.assertEqual(migrated["available"]["fullAvailable"]["textCount"], 3)
-        self.assertEqual(migrated["available"]["processedTargetTextCount"], 0)
+        self.assertEqual(migrated["available"].get("processedTargetTextCount", 0), 0)
 
         page_rows = []
         original_page = self.source.history_page
@@ -640,8 +662,8 @@ class ApiInsightTests(unittest.TestCase):
         self.backend.start_model_portrait(account, "friend")
         done = self.wait_portrait()
         self.assertEqual(done["job"]["status"], "done")
-        self.assertEqual(sum(page_rows), 2,
-                         "a migrated old checkpoint must seek past its committed prefix")
+        self.assertEqual(sum(page_rows), 3,
+                         "legacy narrative cursors cannot skip messages without verified observations")
         self.assertEqual(done["progress"]["processed"], 3)
 
     def test_new_message_uses_delta_scan_and_saved_full_denominator(self):
@@ -669,6 +691,211 @@ class ApiInsightTests(unittest.TestCase):
         self.assertEqual(done["available"]["textCount"], 4)
         self.assertEqual(done["available"]["targetTextCount"], 3)
 
+    def test_incremental_classifier_failure_keeps_display_and_retries_only_new_range(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        previous = self.wait_portrait()["nativeProfile"]
+        self.source.rows.append({"id": "next", "side": "other", "kind": "text", "text": "新观察",
+                                 "senderId": "friend", "_sort": [4, "shard", 4]})
+        self.analyzer.fail_portrait_once = True
+        self.backend.start_model_portrait("account-a", "friend")
+        failed = self.wait_portrait()
+        self.assertEqual(failed["job"]["status"], "error")
+        self.assertFalse(failed["progress"]["complete"])
+        self.assertEqual(failed["nativeProfile"]["mbtiInference"], previous["mbtiInference"])
+        self.assertEqual(failed["nativeProfile"]["portraitCount"], 2)
+        self.backend.api_portrait_jobs.clear()
+        self.backend.start_model_portrait("account-a", "friend")
+        done = self.wait_portrait()
+        self.assertEqual(done["job"]["status"], "done")
+        self.assertEqual(done["nativeProfile"]["portraitCount"], 3)
+        attempted = [row["messageId"] for row in self.analyzer.portrait_calls[-2][2] if row["target"]]
+        retried = [row["messageId"] for row in self.analyzer.portrait_calls[-1][2] if row["target"]]
+        self.assertEqual(attempted, ["next"])
+        self.assertEqual(retried, attempted)
+
+    def test_background_increment_preserves_statistics_without_calling_classifier(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        initial = self.wait_portrait()
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        scope = api_portrait_scope(selected["sourceId"])
+        first = store.api_portrait_get("account-a", "friend", scope, "friend")
+        calls = len(self.analyzer.portrait_calls)
+        for index, (side, kind, text) in enumerate(
+                (("other", "image", None), ("self", "text", "收到")), start=4):
+            self.source.rows.append({"id": f"next-{index}", "side": side, "kind": kind, "text": text,
+                                     "senderId": "friend" if side == "other" else "me",
+                                     "_sort": [index, "shard", index]})
+            self.backend.start_model_portrait("account-a", "friend")
+            done = self.wait_portrait()
+            self.assertEqual(done["job"]["status"], "done")
+            self.assertTrue(done["progress"]["complete"])
+            self.assertEqual(done["nativeProfile"]["mbtiInference"], initial["nativeProfile"]["mbtiInference"])
+            self.assertEqual(len(self.analyzer.portrait_calls), calls)
+            saved = store.api_portrait_get("account-a", "friend", scope, "friend")
+            self.assertEqual(saved["highwater"], (index, "shard", index))
+            self.assertEqual(saved["resume"]["portraitStatistics"], first["resume"]["portraitStatistics"])
+            self.assertEqual(saved["available"]["fullAvailable"]["messageCount"], index)
+        self.source.rows.append({"id": "next-6", "side": "other", "kind": "text", "text": "新的回复",
+                                 "senderId": "friend", "_sort": [6, "shard", 6]})
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertEqual(self.wait_portrait()["nativeProfile"]["portraitCount"], 3)
+        self.assertEqual(len(self.analyzer.portrait_calls), calls+1)
+
+    def test_crossing_local_mbti_threshold_uses_accumulated_classifications(self):
+        self.source.rows = [{"id": f"m{index}", "side": "other", "kind": "text", "text": "合成消息",
+                             "senderId": "friend", "_sort": [index, "shard", index]} for index in range(1,100)]
+        self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertIsNone(self.wait_portrait()["nativeProfile"]["mbti"])
+        calls = len(self.analyzer.portrait_calls)
+        for index in (100, 101):
+            self.source.rows.append({"id": f"m{index}", "side": "other", "kind": "text", "text": "合成消息",
+                                     "senderId": "friend", "_sort": [index, "shard", index]})
+            self.backend.start_model_portrait("account-a", "friend")
+            done = self.wait_portrait()
+            self.assertEqual(done["nativeProfile"]["mbti"], "ESTJ")
+            self.assertEqual(done["nativeProfile"]["mbtiInference"]["eligibleMessages"], index)
+            self.assertEqual(len(self.analyzer.portrait_calls), calls+index-99)
+        self.assertEqual(self.analyzer.synthesis_calls, [])
+
+    def test_final_statistics_checkpoint_resumes_without_history_or_provider_call(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        previous = self.wait_portrait()
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        scope = api_portrait_scope(selected["sourceId"])
+        with store.connect() as conn:
+            conn.execute("UPDATE api_portrait_v1 SET complete=0")
+        pages, calls = self.source.history_pages, len(self.analyzer.portrait_calls)
+        self.backend.api_portrait_jobs.clear()
+        self.backend.start_model_portrait("account-a", "friend")
+        done = self.wait_portrait()
+        self.assertEqual(done["job"]["status"], "done")
+        self.assertTrue(done["progress"]["complete"])
+        self.assertEqual((self.source.history_pages,len(self.analyzer.portrait_calls)), (pages,calls))
+        self.assertEqual(done["nativeProfile"]["mbtiInference"], previous["nativeProfile"]["mbtiInference"])
+
+    def test_legacy_complete_same_highwater_rebuilds_only_on_analysis_and_preserves_display(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        previous = self.wait_portrait()["portrait"]
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        with store.connect() as conn:
+            conn.execute("UPDATE api_portrait_v1 SET resume_json=? WHERE account=? AND session=? "
+                         "AND source_id=? AND subject=?",
+                         (json.dumps({"portraitEvidence": {"version": 1, "items": [], "legacyPortrait": previous}}),
+                          "account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend"))
+        calls = len(self.analyzer.portrait_calls)
+        pages = self.source.history_pages
+        legacy_view = self.backend.model_portrait("friend")
+        self.assertEqual(legacy_view["portrait"], previous)
+        self.assertTrue(legacy_view["needsRebuild"])
+        self.assertEqual(self.source.history_pages, pages)
+        self.assertEqual(len(self.analyzer.portrait_calls), calls)
+        self.analyzer.fail_portrait_once = True
+        self.backend.start_model_portrait("account-a", "friend")
+        failed = self.wait_portrait()
+        self.assertEqual(failed["portrait"], previous)
+        self.assertEqual(failed["progress"]["processed"], 0)
+        self.backend.start_model_portrait("account-a", "friend")
+        rebuilt = self.wait_portrait()
+        self.assertTrue(rebuilt["progress"]["complete"])
+        self.assertFalse(rebuilt["needsRebuild"])
+        self.assertEqual([item["messageId"] for item in self.analyzer.portrait_calls[-1][2]],
+                         [item["id"] for item in self.source.rows])
+
+    def test_v2_complete_portrait_stays_visible_until_explicit_v3_rebuild(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        previous = self.wait_portrait()["portrait"]
+        previous["mbtiAxes"] = {key: 65 for key in ("EI", "SN", "TF", "JP")}
+        legacy_evidence = {**empty_portrait_evidence(), "version": 2, "targetCount": 2,
+                           "batchCount": 1, "items": [{
+                               "id": "old-general-observation", "dimension": "communication",
+                               "text": "旧版普通交流观察不得用于新版人格判断",
+                               "sources": [{"messageId": "o1", "quote": "合成旧来源",
+                                            "time": 1, "speaker": "friend"}]}]}
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        identity = ("account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend")
+        with store.connect() as conn:
+            conn.execute("UPDATE api_portrait_v1 SET portrait_json=?,resume_json=? "
+                         "WHERE account=? AND session=? AND source_id=? AND subject=?",
+                         (json.dumps(previous), json.dumps({"portraitEvidence": legacy_evidence}), *identity))
+        self.backend.api_portrait_jobs.clear()
+        calls, pages = len(self.analyzer.portrait_calls), self.source.history_pages
+        for _ in range(2):
+            view = self.backend.model_portrait("friend")
+            self.assertTrue(view["needsRebuild"])
+            self.assertTrue(view["progress"]["complete"])
+            self.assertEqual(view["portrait"], previous)
+        self.assertEqual((len(self.analyzer.portrait_calls), self.source.history_pages), (calls, pages),
+                         "reading an old completed portrait must not charge for an automatic rebuild")
+        with store.connect() as conn:
+            raw_resume = conn.execute("SELECT resume_json FROM api_portrait_v1 WHERE "
+                                      "account=? AND session=? AND source_id=? AND subject=?", identity).fetchone()[0]
+        self.assertEqual(json.loads(raw_resume)["portraitEvidence"]["version"], 2,
+                         "GET must preserve the old checkpoint on disk")
+        self.backend.start_model_portrait("account-a", "friend")
+        rebuilt = self.wait_portrait()
+        self.assertEqual(rebuilt["job"]["status"], "done")
+        self.assertFalse(rebuilt["needsRebuild"])
+        self.assertTrue(rebuilt["progress"]["complete"])
+        self.assertGreater(len(self.analyzer.portrait_calls), calls,
+                           "same highwater must not bypass a requested v2-to-v3 rebuild")
+        self.assertEqual([item["messageId"] for item in self.analyzer.portrait_calls[-1][2]],
+                         [item["id"] for item in self.source.rows])
+        saved = store.api_portrait_get(*identity)
+        self.assertNotIn("portraitEvidence", saved["resume"])
+        self.assertEqual(saved["resume"]["portraitStatistics"]["version"], 1)
+        self.assertEqual(rebuilt["portrait"]["mbtiAxes"], previous["mbtiAxes"], "old snapshot remains display-only")
+        inference = rebuilt["nativeProfile"]["mbtiInference"]
+        self.assertIsNone(inference["type"])
+        for axis in inference["axes"].values():
+            self.assertGreater(axis["evidenceCount"], 0)
+            self.assertAlmostEqual(axis["leftShare"], 8 / 9,
+                                   msg="show freshly inferred evidence, not the old snapshot's score")
+            self.assertIsNone(axis["preference"], "a few observations cannot assign personality letters")
+
+    def test_internal_type_error_does_not_repeat_as_a_legacy_signature_call(self):
+        self.activate()
+        calls = []
+        def broken(*args):
+            calls.append(args)
+            raise TypeError("invalid argument after provider work")
+        self.analyzer.classify_portrait_batch = broken
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertEqual(self.wait_portrait()["job"]["status"], "error")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(self.analyzer.synthesis_calls, [])
+
+    def test_source_switch_during_classification_discards_uncommitted_statistics(self):
+        selected = self.activate()
+        entered, release = threading.Event(), threading.Event()
+        self.addCleanup(release.set)
+        original = self.analyzer.classify_portrait_batch
+        def delayed(*args):
+            entered.set()
+            release.wait(timeout=3)
+            return original(*args)
+        self.analyzer.classify_portrait_batch = delayed
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertTrue(entered.wait(timeout=2))
+        active = self.backend.model_portrait("friend")
+        self.assertEqual(active["job"]["phase"], "classifying")
+        self.assertFalse(active["progress"]["complete"])
+        self.backend.model_source_activate({"mode": "local"})
+        release.set()
+        deadline = time.monotonic() + 3
+        while self.backend.api_inflight and time.monotonic() < deadline:
+            time.sleep(.01)
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        saved = store.api_portrait_get("account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend")
+        self.assertFalse(saved["complete"])
+        self.assertEqual(saved["portrait"], empty_api_portrait())
+        self.assertEqual(saved["resume"]["portraitStatistics"]["state"]["targetCount"], 0)
+
     def test_zero_batch_resume_rejects_changed_frozen_text_without_model_call(self):
         selected = self.activate()
         account, workdir, store = self.backend._scoped_identity()
@@ -680,7 +907,7 @@ class ApiInsightTests(unittest.TestCase):
                          fullAvailable=full, fullFingerprint=full_fingerprint)
         source_scope = api_portrait_scope(selected["sourceId"])
         store.api_portrait_begin(account, "friend", source_scope, "friend", highwater,
-                                 None, fingerprint, available, [len(pieces)])
+                                 None, fingerprint, available, [len(pieces)], local_rules=True)
         self.source.rows[0] = {**self.source.rows[0], "text": "同一水位但内容已改"}
         self.backend.start_model_portrait(account, "friend")
         failed = self.wait_portrait()
@@ -864,7 +1091,7 @@ class ApiInsightTests(unittest.TestCase):
             self.backend.start_model_portrait("account-a", "friend")
             done = self.wait_portrait()
         self.assertEqual(done["job"]["status"], "done")
-        self.assertEqual(done["portrait"]["summary"], "已观察历史消息")
+        self.assertEqual(done["nativeProfile"]["summary"], "已分析2条该联系人消息，常见交流意图为交流，情绪信号以期待为主。")
         self.assertEqual(self.backend.jobs, {})
         member = self.backend.model_portrait("room@chatroom", "friend")
         self.assertEqual(member["identity"]["username"], "friend")
@@ -920,7 +1147,7 @@ class ApiInsightTests(unittest.TestCase):
              "_sort": [index, "shard", index]}
             for index in range(1, 71)
         ]
-        self.activate(context_tokens=4096)
+        self.activate(context_tokens=12288)
         first_read = self.backend.model_portrait("friend")
         self.assertIsNone(first_read["available"])
         self.assertFalse(first_read["inventoryReady"])
@@ -947,9 +1174,9 @@ class ApiInsightTests(unittest.TestCase):
         self.assertEqual(self.analyzer.portrait_calls[2][2], second_batch,
                          "retry must replay only the uncommitted batch")
         successful = [self.analyzer.portrait_calls[0], *self.analyzer.portrait_calls[2:]]
-        self.assertEqual([row["id"] for _, _, batch in successful for row in batch],
+        self.assertEqual([row["id"] for _, _, batch in successful for row in batch if not row["id"].startswith("background:")],
                          [f"m{index}:0" for index in range(1, 71)])
-        budget = api_portrait_wire_chars(4096)
+        budget = api_portrait_wire_chars(12288, reserved_tokens=10240)
         self.assertTrue(all(sum(len(json.dumps(
             {key: row[key] for key in ("id", "sender", "target", "text")},
             ensure_ascii=False, separators=(",", ":"))) + 1 for row in batch) <= budget
@@ -963,7 +1190,7 @@ class ApiInsightTests(unittest.TestCase):
              "_sort": [index, "shard", index]}
             for index in range(1, 71)
         ]
-        self.activate(model="small-context", context_tokens=4096)
+        self.activate(model="small-context", context_tokens=12288)
         self.backend.start_model_portrait("account-a", "friend")
         small = self.wait_portrait()
         self.activate(model="large-context", context_tokens=16384)
@@ -981,7 +1208,7 @@ class ApiInsightTests(unittest.TestCase):
              "_sort": [index, "shard", index]}
             for index in range(1, 71)
         ]
-        first = self.activate(context_tokens=4096)
+        first = self.activate(context_tokens=12288)
         self.analyzer.fail_portrait_at = 2
         self.backend.start_model_portrait("account-a", "friend")
         failed = self.wait_portrait()
@@ -998,7 +1225,8 @@ class ApiInsightTests(unittest.TestCase):
         self.assertTrue(done["progress"]["complete"])
         self.assertEqual(done["progress"]["processed"], 70)
         self.assertLess(done["progress"]["batchTotal"], len(old_plan))
-        self.assertEqual(self.analyzer.portrait_calls[2][2][0]["id"],
+        self.assertEqual(next(row["id"] for row in self.analyzer.portrait_calls[2][2]
+                              if not row["id"].startswith("background:")),
                          f"m{old_plan[0] + 1}:0")
 
     def test_context_change_stops_running_old_budget_before_checkpoint(self):
@@ -1008,15 +1236,15 @@ class ApiInsightTests(unittest.TestCase):
              "_sort": [index, "shard", index]}
             for index in range(1, 41)
         ]
-        first = self.activate(context_tokens=4096)
+        first = self.activate(context_tokens=12288)
         entered, release = threading.Event(), threading.Event()
         self.addCleanup(release.set)
-        original = self.analyzer.model_portrait
+        original = self.analyzer.classify_portrait_batch
         def delayed(*args):
             entered.set()
             release.wait(timeout=3)
             return original(*args)
-        self.analyzer.model_portrait = delayed
+        self.analyzer.classify_portrait_batch = delayed
         self.backend.start_model_portrait("account-a", "friend")
         self.assertTrue(entered.wait(timeout=1))
         second = self.activate(context_tokens=16384)
@@ -1029,7 +1257,7 @@ class ApiInsightTests(unittest.TestCase):
         view = self.backend.model_portrait("friend")
         self.assertEqual(view["job"]["status"], "idle")
         self.assertEqual(view["progress"]["processed"], 0)
-        self.analyzer.model_portrait = original
+        self.analyzer.classify_portrait_batch = original
         self.backend.start_model_portrait("account-a", "friend")
         self.assertTrue(self.wait_portrait()["progress"]["complete"])
 
@@ -1065,7 +1293,7 @@ class ApiInsightTests(unittest.TestCase):
                                  "text": "合成新增消息", "senderId": "friend",
                                  "_sort": [4, "shard", 4]})
         result = self.backend.model_portrait("friend")
-        self.assertEqual(result["portrait"]["summary"], "已观察历史消息")
+        self.assertEqual(result["nativeProfile"]["summary"], "已分析2条该联系人消息，常见交流意图为交流，情绪信号以期待为主。")
         self.assertEqual(result["inventoryStatus"], "ready")
         self.assertIsNotNone(result["available"], "saved inventory renders immediately")
         self.assertEqual(self.source.history_pages, counted_pages,
@@ -1073,29 +1301,149 @@ class ApiInsightTests(unittest.TestCase):
         self.assertFalse(result["progress"]["complete"],
                          "a newer message still marks the saved portrait out of date")
 
-    def test_portrait_axes_refresh_reuses_saved_portrait_without_history_scan(self):
+    def test_statistics_are_checkpointed_and_reused_without_feeding_old_conclusions(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertEqual(self.wait_portrait()["job"]["status"], "done")
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        scope = api_portrait_scope(selected["sourceId"])
+        saved = store.api_portrait_get("account-a", "friend", scope, "friend")
+        self.assertTrue(valid_statistics(saved["resume"]["portraitStatistics"]))
+        self.assertEqual(saved["resume"]["portraitStatistics"]["state"]["targetCount"], 2)
+        self.source.rows.append({"id": "later", "side": "other", "kind": "text", "text": "再确认时间",
+                                 "senderId": "friend", "_sort": [4, "shard", 4]})
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertEqual(self.wait_portrait()["nativeProfile"]["portraitCount"], 3)
+        reread = store.api_portrait_get("account-a", "friend", scope, "friend")
+        self.assertEqual(reread["resume"]["portraitStatistics"]["state"]["targetCount"], 3)
+        self.assertEqual(saved["resume"]["portraitStatistics"]["state"]["targetCount"], 2)
+        wire = self.analyzer.portrait_calls[-1][2]
+        self.assertEqual([item["messageId"] for item in wire if item["target"]], ["later"])
+        self.assertTrue(all("portraitContext" not in item and "evidence" not in item for item in wire))
+
+    def test_invalid_saved_statistics_require_rebuild_without_losing_legacy_snapshot(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertEqual(self.wait_portrait()["job"]["status"], "done")
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        scope = api_portrait_scope(selected["sourceId"])
+        legacy = empty_api_portrait()
+        legacy["summary"] = "上次可见画像"
+        with store.connect() as conn:
+            conn.execute("UPDATE api_portrait_v1 SET portrait_json=?,resume_json=?",
+                         (json.dumps(legacy),json.dumps({"batchIndex":1,"portraitStatistics":{"invalid":True}})))
+        view = self.backend.model_portrait("friend")
+        self.assertEqual(view["portrait"], legacy)
+        self.assertTrue(view["needsRebuild"])
+        self.assertNotIn("nativeProfile", view)
+        self.backend.start_model_portrait("account-a", "friend")
+        rebuilt = self.wait_portrait()
+        self.assertFalse(rebuilt["needsRebuild"])
+        self.assertEqual(rebuilt["nativeProfile"]["portraitCount"], 2)
+
+    def test_native_statistics_survive_cold_read_and_compatibility_refresh_preserves_cursor(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        before = self.wait_portrait()
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        scope = api_portrait_scope(selected["sourceId"])
+        saved = store.api_portrait_get("account-a", "friend", scope, "friend")
+        self.assertTrue(valid_statistics(saved["resume"]["portraitStatistics"]))
+        self.backend.api_portrait_jobs.clear()
+        cold = self.backend.model_portrait("friend")
+        self.assertEqual(cold["nativeProfile"]["mbtiInference"], before["nativeProfile"]["mbtiInference"])
+        calls,pages = len(self.analyzer.portrait_calls),self.source.history_pages
+        self.backend.start_model_portrait("account-a", "friend", refresh_axes=True)
+        done = self.wait_portrait()
+        self.assertEqual(done["job"]["status"], "done")
+        self.assertEqual(store.api_portrait_get("account-a", "friend", scope, "friend"), saved)
+        self.assertEqual((len(self.analyzer.portrait_calls),self.source.history_pages),(calls,pages))
+
+    def test_classification_phase_clears_after_incremental_success_or_failure(self):
         self.activate()
         self.backend.start_model_portrait("account-a", "friend")
-        done = self.wait_portrait()
-        self.assertTrue(done["progress"]["complete"])
-        before = self.backend.model_portrait("friend")
-        self.assertIsNone(before["portrait"]["mbtiAxes"]["EI"],
-                          "the saved portrait starts with unknown axes")
-        counted_pages = self.source.history_pages
-        batch_calls = len(self.analyzer.portrait_calls)
-        started = self.backend.start_model_portrait("account-a", "friend", refresh_axes=True)
-        self.assertIn(started["job"]["status"], ("queued", "running"))
-        view = self.wait_portrait()
-        self.assertEqual(view["job"]["status"], "done")
-        self.assertEqual(view["portrait"]["mbtiAxes"]["EI"], 62)
-        self.assertEqual(view["progress"]["processed"], before["progress"]["processed"],
-                         "axes refresh must preserve progress")
-        self.assertEqual(view["progress"]["batchIndex"], before["progress"]["batchIndex"])
-        self.assertEqual(self.source.history_pages, counted_pages,
-                         "axes refresh must not rescan history")
-        self.assertEqual(len(self.analyzer.portrait_calls), batch_calls,
-                         "axes refresh must not replay full portrait batches")
-        self.assertEqual(self.analyzer.axes_calls, 1)
+        self.assertEqual(self.wait_portrait()["job"]["status"], "done")
+        original = self.analyzer.classify_portrait_batch
+        for index,fail in enumerate((False,True),start=4):
+            self.source.rows.append({"id":f"next-{index}","side":"other","kind":"text","text":"新增消息",
+                                     "senderId":"friend","_sort":[index,"shard",index]})
+            entered,release = threading.Event(),threading.Event()
+            self.addCleanup(release.set)
+            def delayed(*args):
+                entered.set()
+                release.wait(timeout=3)
+                if fail:
+                    raise RuntimeError("synthetic terminal failure")
+                return original(*args)
+            self.analyzer.classify_portrait_batch = delayed
+            self.backend.start_model_portrait("account-a", "friend", refresh_axes=True)
+            self.assertTrue(entered.wait(timeout=1))
+            self.assertEqual(self.backend.model_portrait("friend")["job"]["phase"], "classifying")
+            release.set()
+            done = self.wait_portrait()
+            self.assertEqual(done["job"]["status"], "error" if fail else "done")
+            self.assertNotIn("phase",done["job"])
+
+    def test_incremental_begin_preserves_statistics_and_context_but_not_old_cursor(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertEqual(self.wait_portrait()["job"]["status"], "done")
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        scope = api_portrait_scope(selected["sourceId"])
+        saved = store.api_portrait_get("account-a", "friend", scope, "friend")
+        begun = store.api_portrait_begin("account-a","friend",scope,"friend",(4,"shard",4),
+            saved["highwater"],"synthetic-next",{"textCount":1,"targetTextCount":1},[1],local_rules=True)
+        self.assertEqual(begun["resume"]["portraitStatistics"],saved["resume"]["portraitStatistics"])
+        self.assertEqual(begun["resume"]["portraitContext"],saved["resume"]["portraitContext"])
+        self.assertNotIn("pieceOffset",begun["resume"])
+        self.assertNotIn("batchIndex",begun["resume"])
+        self.assertEqual(begun["processed"],0)
+        resume={"batchIndex":1,"rowId":"new-cursor","portraitStatistics":begun["resume"]["portraitStatistics"]}
+        store.api_portrait_checkpoint("account-a","friend",scope,"friend",1,saved["portrait"],1,8,False,resume=resume)
+        reread=store.api_portrait_get("account-a","friend",scope,"friend")
+        self.assertEqual(reread["resume"]["portraitStatistics"],saved["resume"]["portraitStatistics"])
+        self.assertEqual(reread["resume"]["rowId"],"new-cursor")
+
+    def test_invalid_saved_mbti_basis_is_hidden_without_hiding_portrait_or_cursor(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        self.assertEqual(self.wait_portrait()["job"]["status"], "done")
+        store = self.backend.store_factory("account-a", self.source.workdir)
+        scope = api_portrait_scope(selected["sourceId"])
+        saved = store.api_portrait_get("account-a", "friend", scope, "friend")
+        with store.connect() as conn:
+            conn.execute("UPDATE api_portrait_v1 SET resume_json=? WHERE account=? AND session=? "
+                         "AND source_id=? AND subject=?",
+                         (json.dumps({**saved["resume"], "mbtiBasis": {"invalid": True}}),
+                          "account-a", "friend", scope, "friend"))
+        reread = store.api_portrait_get("account-a", "friend", scope, "friend")
+        self.assertEqual(reread, saved)
+        view = self.backend.model_portrait("friend")
+        self.assertNotIn("mbtiBasis", view)
+        self.assertEqual(view["portrait"], saved["portrait"])
+
+    def test_compatibility_refresh_without_new_text_does_not_recalculate_any_axis(self):
+        self.activate()
+        self.backend.start_model_portrait("account-a","friend")
+        before=self.wait_portrait()
+        pages,calls=self.source.history_pages,len(self.analyzer.portrait_calls)
+        self.backend.start_model_portrait("account-a","friend",refresh_axes=True)
+        done=self.wait_portrait()
+        self.assertEqual(done["job"]["status"],"done")
+        for field in ("affinity","traits","mbtiInference","summary"):
+            self.assertEqual(done["nativeProfile"][field],before["nativeProfile"][field])
+        self.assertEqual((self.source.history_pages,len(self.analyzer.portrait_calls)),(pages,calls))
+        self.assertEqual(done["progress"],before["progress"])
+
+    def test_api_portrait_requires_classification_signal_instead_of_free_axis_numbers(self):
+        self.activate()
+        self.analyzer.classify_portrait_batch=lambda *args: {"mbtiAxes":{"EI":90,"SN":90,"TF":90,"JP":90}}
+        with (patch("backend_service.API_MODEL_RETRY_MAX", 0),
+              patch("backend_service.API_PORTRAIT_FORMAT_RETRY_MAX", 0)):
+            self.backend.start_model_portrait("account-a","friend")
+            done=self.wait_portrait()
+        self.assertEqual(done["job"]["status"],"error")
+        self.assertEqual(done["progress"]["processed"],0)
 
     def test_axes_refresh_skips_call_after_account_switch_before_worker_starts(self):
         selected = self.activate()
@@ -1129,7 +1477,7 @@ class ApiInsightTests(unittest.TestCase):
         self.assertEqual(after["portrait"], before["portrait"])
         self.assertEqual(after["batchIndex"], before["batchIndex"])
 
-    def test_axes_refresh_discards_result_after_account_switch_during_call(self):
+    def test_compatibility_refresh_discards_result_after_account_switch_during_call(self):
         selected = self.activate()
         self.backend.start_model_portrait("account-a", "friend")
         self.assertEqual(self.wait_portrait()["job"]["status"], "done")
@@ -1138,14 +1486,16 @@ class ApiInsightTests(unittest.TestCase):
             "account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend")
         entered, release = threading.Event(), threading.Event()
         self.addCleanup(release.set)
-        original = self.analyzer.refresh_portrait_axes
+        self.source.rows.append({"id":"next","side":"other","kind":"text","text":"新增消息",
+                                 "senderId":"friend","_sort":[4,"shard",4]})
+        original = self.analyzer.classify_portrait_batch
 
         def delayed(*args):
             entered.set()
             release.wait(timeout=3)
             return original(*args)
 
-        self.analyzer.refresh_portrait_axes = delayed
+        self.analyzer.classify_portrait_batch = delayed
         self.backend.start_model_portrait("account-a", "friend", refresh_axes=True)
         self.assertTrue(entered.wait(timeout=1))
         self.source.account = "account-b"
@@ -1158,7 +1508,8 @@ class ApiInsightTests(unittest.TestCase):
             "account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend")
         self.assertEqual(after["portrait"], before["portrait"],
                          "the axes result must not overwrite an old account after identity changes")
-        self.assertEqual(after["batchIndex"], before["batchIndex"])
+        self.assertEqual((after["batchIndex"], after["processed"]), (0, 0))
+        self.assertEqual(after["resume"]["portraitStatistics"], before["resume"]["portraitStatistics"])
 
     def test_portrait_discards_model_result_after_same_account_source_root_switch(self):
         self.source.rows = [
@@ -1167,18 +1518,18 @@ class ApiInsightTests(unittest.TestCase):
              "_sort": [index, "shard", index]}
             for index in range(1, 71)
         ]
-        selected = self.activate(context_tokens=4096)
+        selected = self.activate(context_tokens=12288)
         current = self.pin_synthetic_source_root()
         entered, release = threading.Event(), threading.Event()
         self.addCleanup(release.set)
-        original = self.analyzer.model_portrait
+        original = self.analyzer.classify_portrait_batch
 
         def delayed(*args):
             entered.set()
             release.wait(timeout=3)
             return original(*args)
 
-        self.analyzer.model_portrait = delayed
+        self.analyzer.classify_portrait_batch = delayed
         self.backend.start_model_portrait("account-a", "friend")
         self.assertTrue(entered.wait(timeout=1))
         current["root"] = "source-root-b"
@@ -1194,7 +1545,7 @@ class ApiInsightTests(unittest.TestCase):
         self.assertEqual((saved["batchIndex"], saved["processed"], saved["complete"]),
                          (0, 0, False), "a changed root must not checkpoint the model result")
 
-    def test_axes_refresh_discards_result_after_same_account_source_root_switch(self):
+    def test_compatibility_refresh_discards_result_after_same_account_source_root_switch(self):
         selected = self.activate()
         current = self.pin_synthetic_source_root()
         self.backend.start_model_portrait("account-a", "friend")
@@ -1204,14 +1555,16 @@ class ApiInsightTests(unittest.TestCase):
             "account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend")
         entered, release = threading.Event(), threading.Event()
         self.addCleanup(release.set)
-        original = self.analyzer.refresh_portrait_axes
+        self.source.rows.append({"id":"next","side":"other","kind":"text","text":"新增消息",
+                                 "senderId":"friend","_sort":[4,"shard",4]})
+        original = self.analyzer.classify_portrait_batch
 
         def delayed(*args):
             entered.set()
             release.wait(timeout=3)
             return original(*args)
 
-        self.analyzer.refresh_portrait_axes = delayed
+        self.analyzer.classify_portrait_batch = delayed
         self.backend.start_model_portrait("account-a", "friend", refresh_axes=True)
         self.assertTrue(entered.wait(timeout=1))
         current["root"] = "source-root-b"
@@ -1224,7 +1577,67 @@ class ApiInsightTests(unittest.TestCase):
             "account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend")
         self.assertEqual(after["portrait"], before["portrait"],
                          "the axes result must not overwrite an unchanged account/workdir after root switch")
-        self.assertEqual(after["batchIndex"], before["batchIndex"])
+        self.assertEqual((after["batchIndex"], after["processed"]), (0, 0))
+        self.assertEqual(after["resume"]["portraitStatistics"], before["resume"]["portraitStatistics"])
+
+    def test_classifier_rule_change_keeps_snapshot_until_rebuild_without_double_counting(self):
+        selected = self.activate()
+        self.backend.start_model_portrait("account-a", "friend")
+        before = self.wait_portrait()
+        self.assertFalse(before["needsRebuild"])
+        self.assertEqual(before["nativeProfile"]["portraitCount"], 2)
+        calls, pages = len(self.analyzer.portrait_calls), self.source.history_pages
+        self.analyzer.portrait_version = lambda: "api-local-rules-v2"
+        old = self.backend.model_portrait("friend")
+        self.assertTrue(old["needsRebuild"])
+        self.assertEqual(old["nativeProfile"]["mbtiInference"], before["nativeProfile"]["mbtiInference"])
+        self.assertEqual((len(self.analyzer.portrait_calls), self.source.history_pages), (calls, pages))
+        self.backend.start_model_portrait("account-a", "friend")
+        rebuilt = self.wait_portrait()
+        self.assertEqual(rebuilt["job"]["status"], "done")
+        self.assertFalse(rebuilt["needsRebuild"])
+        self.assertEqual(rebuilt["nativeProfile"]["mbtiInference"]["version"], "api-local-rules-v2")
+        self.assertEqual(rebuilt["nativeProfile"]["portraitCount"], 2)
+        self.assertGreater(self.source.history_pages, pages)
+        self.assertEqual(len(self.analyzer.portrait_calls), calls+1)
+        self.assertEqual([row["messageId"] for row in self.analyzer.portrait_calls[-1][2]],
+                         [row["id"] for row in self.source.rows])
+        saved = self.backend.store_factory("account-a", self.source.workdir).api_portrait_get(
+            "account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend")
+        self.assertTrue(valid_statistics(saved["resume"]["portraitStatistics"], "api-local-rules-v2"))
+        self.assertEqual(saved["resume"]["portraitStatistics"]["state"]["targetCount"], 2)
+        self.assertEqual((saved["processed"], saved["batchIndex"], saved["complete"]), (3, 1, True))
+
+    def test_deterministic_statistics_failure_never_retries_paid_classification(self):
+        selected = self.activate()
+        with (patch("backend_service.append_batch", side_effect=ValueError("noncontiguous")),
+              patch("backend_service.API_MODEL_RETRY_SECONDS", .001)):
+            self.backend.start_model_portrait("account-a", "friend")
+            failed = self.wait_portrait()
+        self.assertEqual(failed["job"]["status"], "error")
+        self.assertEqual(failed["job"]["error"], "portrait-state-invalid")
+        self.assertNotIn("retry", failed["job"])
+        self.assertEqual(len(self.analyzer.portrait_calls), 1)
+        self.assertEqual((failed["progress"]["processed"], failed["progress"]["batchIndex"]), (0, 0))
+        saved = self.backend.store_factory("account-a", self.source.workdir).api_portrait_get(
+            "account-a", "friend", api_portrait_scope(selected["sourceId"]), "friend")
+        self.assertFalse(saved["complete"])
+        self.assertEqual(saved["resume"]["portraitStatistics"]["state"]["targetCount"], 0)
+
+    def test_mismatched_response_rule_version_stops_without_retry_or_checkpoint(self):
+        self.activate()
+        original = self.analyzer.classify_portrait_batch
+        def mismatched(*args):
+            return {**original(*args), "batchVersion": "obsolete-classifier"}
+        self.analyzer.classify_portrait_batch = mismatched
+        with patch("backend_service.API_MODEL_RETRY_SECONDS", .001):
+            self.backend.start_model_portrait("account-a", "friend")
+            failed = self.wait_portrait()
+        self.assertEqual(failed["job"]["status"], "error")
+        self.assertEqual(failed["job"]["error"], "portrait-state-invalid")
+        self.assertNotIn("retry", failed["job"])
+        self.assertEqual(len(self.analyzer.portrait_calls), 1)
+        self.assertEqual((failed["progress"]["processed"], failed["progress"]["batchIndex"]), (0, 0))
 
     def test_portrait_retries_one_invalid_output_without_resetting_progress(self):
         self.activate()
@@ -1263,20 +1676,66 @@ class ApiInsightTests(unittest.TestCase):
         self.assertEqual((saved["batchIndex"], saved["processed"], saved["complete"]),
                          (0, 0, False), "retry cancellation must leave the cursor unadvanced")
 
-    def test_portrait_stops_after_ten_spaced_retries_without_advancing_checkpoint(self):
+    def test_portrait_stops_format_failure_after_two_retries_without_advancing_checkpoint(self):
         self.activate()
         calls = []
         def invalid(*args):
             calls.append(1)
             raise RuntimeError("invalid-output")
-        self.analyzer.model_portrait = invalid
+        self.analyzer.classify_portrait_batch = invalid
         with patch("backend_service.API_MODEL_RETRY_SECONDS", .001):
             self.backend.start_model_portrait("account-a", "friend")
             failed = self.wait_portrait()
         self.assertEqual(failed["job"]["status"], "error")
         self.assertEqual(failed["job"]["error"], "invalid-output")
-        self.assertEqual(len(calls), 11, "initial call plus ten retries")
+        self.assertEqual(len(calls), 3, "initial call plus two format retries")
         self.assertEqual(failed["progress"]["processed"], 0)
+
+    def test_portrait_reports_truncated_output_by_name_and_retries_it(self):
+        self.activate()
+        calls = []
+        def truncated(*args):
+            calls.append(1)
+            raise RuntimeError("output-truncated")
+        self.analyzer.classify_portrait_batch = truncated
+        with patch("backend_service.API_MODEL_RETRY_SECONDS", .001):
+            self.backend.start_model_portrait("account-a", "friend")
+            failed = self.wait_portrait()
+        self.assertEqual(failed["job"]["status"], "error")
+        self.assertEqual(failed["job"]["error"], "output-truncated",
+                         "a cut-off answer is shown as truncated, not renamed")
+        self.assertEqual(len(calls), 3, "a truncated portrait is retried twice")
+        self.assertEqual(failed["progress"]["processed"], 0)
+
+    def test_portrait_invalid_portrait_stops_after_two_retries(self):
+        self.activate()
+        calls = []
+        def invalid(*args):
+            calls.append(1)
+            raise RuntimeError("invalid-portrait")
+        self.analyzer.classify_portrait_batch = invalid
+        with patch("backend_service.API_MODEL_RETRY_SECONDS", .001):
+            self.backend.start_model_portrait("account-a", "friend")
+            failed = self.wait_portrait()
+        self.assertEqual(failed["job"]["status"], "error")
+        self.assertEqual(failed["job"]["error"], "invalid-portrait")
+        self.assertEqual(len(calls), 3, "invalid-portrait uses the format retry cap")
+        self.assertEqual(failed["progress"]["processed"], 0)
+
+    def test_portrait_transport_failure_keeps_ten_retries(self):
+        self.activate()
+        calls = []
+        def failed(*args):
+            calls.append(1)
+            raise RuntimeError("timeout")
+        self.analyzer.classify_portrait_batch = failed
+        with patch("backend_service.API_MODEL_RETRY_SECONDS", .001):
+            self.backend.start_model_portrait("account-a", "friend")
+            failed_job = self.wait_portrait()
+        self.assertEqual(failed_job["job"]["status"], "error")
+        self.assertEqual(failed_job["job"]["error"], "timeout")
+        self.assertEqual(len(calls), 11, "transport failures keep the longer retry budget")
+        self.assertEqual(failed_job["progress"]["processed"], 0)
 
     def test_clear_one_api_source_deletes_only_it_and_leaves_it_usable(self):
         first = self.activate()
@@ -1355,10 +1814,9 @@ class ApiInsightTests(unittest.TestCase):
         started = time.monotonic()
         cleared = self.backend.analysis_cache_clear("account-a", other)
         self.assertEqual(cleared["cleared"], True)
-        self.assertEqual(self.backend.source.profile_invalidations, 0,
-                         "an API source cache clear must not invalidate local profile metadata")
         self.assertLess(time.monotonic() - started, 5,
                         "clearing one source must not wait on another source's in-flight work")
+        self.assertEqual(self.backend.source.profile_invalidations, 0)
         self.assertEqual(self.backend.api_inflight, 1,
                          "the unrelated writer is still running")
         self.assertNotIn(("account-a", other), self.backend.cache_clear_in_progress)
@@ -1392,8 +1850,6 @@ class ApiInsightTests(unittest.TestCase):
                          ("account-b", "friend", "other-account-id", 1, "shard", 1,
                           "friend", "other", "{}", 0.1, "synthetic"))
         self.assertEqual(self.backend.analysis_cache_clear(account, LOCAL_SOURCE_ID)["cleared"], True)
-        # N2: clearing the local analysis must actually invalidate the source's profile
-        # metadata through the public entry, not a private attribute it may not have.
         self.assertEqual(self.backend.source.profile_invalidations, 1)
         with store.connect() as conn:
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM results_v2 WHERE account=?",

@@ -46,3 +46,7 @@ tools/sync-source.ps1
 
 # Isolated local synthetic capture/build work, never public source
 /.zwork/
+
+# Private maintenance archives and local published packages
+/archives/
+/releases/

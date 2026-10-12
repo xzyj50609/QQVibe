@@ -19,7 +19,7 @@ it('group API preserves three distinct authors, quotes, mentions, and self targe
  assert.deepEqual(out.insights.map(row=>row.id),['b','s']);
 });
 it('QQ self single-chat labels reach real API adapter without changing legacy caller guard',async()=>{
- const response=await analyzeApiInsights(config,{messages:[{id:'s',sender:'SELF',text:'我先列计划',conversationKind:'friend'}],targetIds:['s']},async()=>({text:'情感：平静\n意图：计划'}));
+ const response=await analyzeApiInsights(config,{messages:[{id:'s',sender:'SELF',text:'我先列计划',conversationKind:'friend'}],targetIds:['s']},async()=>({text:JSON.stringify({items:[{id:'s',emotion:'平静',intent:'计划'}]})}));
  assert.equal(response.insights[0]?.id,'s');
 });
 it('group API refuses unknown or missing result IDs instead of assigning by output order',async()=>{

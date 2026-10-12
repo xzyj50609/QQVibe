@@ -4,24 +4,12 @@
   "scope": "runtime code, build inputs, synthetic tests, public docs and applicable licenses only",
   "files": [
     {
+      "source": "scripts/public-source-gitattributes.txt",
+      "target": ".gitattributes"
+    },
+    {
       "source": ".gitignore",
       "target": ".gitignore"
-    },
-    {
-      "source": "LICENSE",
-      "target": "LICENSE"
-    },
-    {
-      "source": "NOTICE",
-      "target": "NOTICE"
-    },
-    {
-      "source": "README.md",
-      "target": "README.md"
-    },
-    {
-      "source": "THIRD_PARTY_NOTICES.md",
-      "target": "THIRD_PARTY_NOTICES.md"
     },
     {
       "source": "bridge/account_api.py",
@@ -46,6 +34,18 @@
     {
       "source": "bridge/analysis_targets.py",
       "target": "bridge/analysis_targets.py"
+    },
+    {
+      "source": "bridge/api_pool.py",
+      "target": "bridge/api_pool.py"
+    },
+    {
+      "source": "bridge/api_portrait_ledger.py",
+      "target": "bridge/api_portrait_ledger.py"
+    },
+    {
+      "source": "bridge/api_portrait_statistics.py",
+      "target": "bridge/api_portrait_statistics.py"
     },
     {
       "source": "bridge/api_tasks.py",
@@ -88,8 +88,16 @@
       "target": "bridge/fixtures/qq/qce6-golden.json"
     },
     {
+      "source": "bridge/guidance_contracts.py",
+      "target": "bridge/guidance_contracts.py"
+    },
+    {
       "source": "bridge/history_browser.py",
       "target": "bridge/history_browser.py"
+    },
+    {
+      "source": "bridge/installation_gate.py",
+      "target": "bridge/installation_gate.py"
     },
     {
       "source": "bridge/instance_identity.py",
@@ -132,8 +140,20 @@
       "target": "bridge/node_analysis.py"
     },
     {
+      "source": "bridge/payload_crypto.py",
+      "target": "bridge/payload_crypto.py"
+    },
+    {
+      "source": "bridge/payload_recovery.py",
+      "target": "bridge/payload_recovery.py"
+    },
+    {
       "source": "bridge/portrait_contracts.py",
       "target": "bridge/portrait_contracts.py"
+    },
+    {
+      "source": "bridge/process_lock.py",
+      "target": "bridge/process_lock.py"
     },
     {
       "source": "bridge/product_profile.py",
@@ -204,24 +224,16 @@
       "target": "bridge/qq_import_reader.py"
     },
     {
-      "source": "bridge/qq_json_reader.py",
-      "target": "bridge/qq_json_reader.py"
+      "source": "bridge/qq_ingest_audit.py",
+      "target": "bridge/qq_ingest_audit.py"
     },
     {
       "source": "bridge/qq_json_adapter.py",
       "target": "bridge/qq_json_adapter.py"
     },
     {
-      "source": "bridge/test_qq_json_import.py",
-      "target": "bridge/test_qq_json_import.py"
-    },
-    {
-      "source": "docs/public/JSON-IMPORT.md",
-      "target": "docs/public/JSON-IMPORT.md"
-    },
-    {
-      "source": "bridge/qq_ingest_audit.py",
-      "target": "bridge/qq_ingest_audit.py"
+      "source": "bridge/qq_json_reader.py",
+      "target": "bridge/qq_json_reader.py"
     },
     {
       "source": "bridge/qq_message_display.py",
@@ -238,6 +250,10 @@
     {
       "source": "bridge/qq_roles.py",
       "target": "bridge/qq_roles.py"
+    },
+    {
+      "source": "bridge/qq_single_analysis.py",
+      "target": "bridge/qq_single_analysis.py"
     },
     {
       "source": "bridge/qq_source.py",
@@ -292,12 +308,36 @@
       "target": "bridge/test_analysis_scheduler.py"
     },
     {
+      "source": "bridge/test_analysis_scope_reset.py",
+      "target": "bridge/test_analysis_scope_reset.py"
+    },
+    {
+      "source": "bridge/test_analysis_workers.py",
+      "target": "bridge/test_analysis_workers.py"
+    },
+    {
       "source": "bridge/test_api_insights.py",
       "target": "bridge/test_api_insights.py"
     },
     {
       "source": "bridge/test_api_insights_http.py",
       "target": "bridge/test_api_insights_http.py"
+    },
+    {
+      "source": "bridge/test_api_pool_lifecycle.py",
+      "target": "bridge/test_api_pool_lifecycle.py"
+    },
+    {
+      "source": "bridge/test_api_portrait_ledger.py",
+      "target": "bridge/test_api_portrait_ledger.py"
+    },
+    {
+      "source": "bridge/test_api_portrait_reconciliation.py",
+      "target": "bridge/test_api_portrait_reconciliation.py"
+    },
+    {
+      "source": "bridge/test_api_portrait_statistics.py",
+      "target": "bridge/test_api_portrait_statistics.py"
     },
     {
       "source": "bridge/test_api_tasks.py",
@@ -308,8 +348,16 @@
       "target": "bridge/test_api_worker_recovery.py"
     },
     {
+      "source": "bridge/test_api_workers.py",
+      "target": "bridge/test_api_workers.py"
+    },
+    {
       "source": "bridge/test_backend_layers.py",
       "target": "bridge/test_backend_layers.py"
+    },
+    {
+      "source": "bridge/test_batch_payload_crypto.py",
+      "target": "bridge/test_batch_payload_crypto.py"
     },
     {
       "source": "bridge/test_chat_classifier.py",
@@ -322,6 +370,10 @@
     {
       "source": "bridge/test_conversation_selection_http.py",
       "target": "bridge/test_conversation_selection_http.py"
+    },
+    {
+      "source": "bridge/test_group_batch_context.py",
+      "target": "bridge/test_group_batch_context.py"
     },
     {
       "source": "bridge/test_live_source.py",
@@ -344,12 +396,20 @@
       "target": "bridge/test_model_source.py"
     },
     {
+      "source": "bridge/test_payload_crypto.py",
+      "target": "bridge/test_payload_crypto.py"
+    },
+    {
       "source": "bridge/test_portrait_read_performance.py",
       "target": "bridge/test_portrait_read_performance.py"
     },
     {
       "source": "bridge/test_product_profile.py",
       "target": "bridge/test_product_profile.py"
+    },
+    {
+      "source": "bridge/test_qce63_import.py",
+      "target": "bridge/test_qce63_import.py"
     },
     {
       "source": "bridge/test_qq_accounts.py",
@@ -416,6 +476,14 @@
       "target": "bridge/test_qq_ingest_audit.py"
     },
     {
+      "source": "bridge/test_qq_input_boundaries.py",
+      "target": "bridge/test_qq_input_boundaries.py"
+    },
+    {
+      "source": "bridge/test_qq_json_import.py",
+      "target": "bridge/test_qq_json_import.py"
+    },
+    {
       "source": "bridge/test_qq_local_integrity.py",
       "target": "bridge/test_qq_local_integrity.py"
     },
@@ -442,6 +510,10 @@
     {
       "source": "bridge/test_qq_portrait_thresholds.py",
       "target": "bridge/test_qq_portrait_thresholds.py"
+    },
+    {
+      "source": "bridge/test_qq_precise_analysis.py",
+      "target": "bridge/test_qq_precise_analysis.py"
     },
     {
       "source": "bridge/test_qq_read_control.py",
@@ -480,12 +552,20 @@
       "target": "bridge/test_real_http_denial.py"
     },
     {
+      "source": "bridge/test_resume_targets.py",
+      "target": "bridge/test_resume_targets.py"
+    },
+    {
       "source": "bridge/test_snapshot_cache.py",
       "target": "bridge/test_snapshot_cache.py"
     },
     {
       "source": "bridge/test_staged_readiness.py",
       "target": "bridge/test_staged_readiness.py"
+    },
+    {
+      "source": "bridge/test_update_readiness.py",
+      "target": "bridge/test_update_readiness.py"
     },
     {
       "source": "bridge/wechat_bridge.py",
@@ -498,6 +578,18 @@
     {
       "source": "bridge/windows_file_owners.py",
       "target": "bridge/windows_file_owners.py"
+    },
+    {
+      "source": "CHANGELOG.md",
+      "target": "CHANGELOG.md"
+    },
+    {
+      "source": "chatui/analysis-tools.css",
+      "target": "chatui/analysis-tools.css"
+    },
+    {
+      "source": "chatui/analysis-tools.js",
+      "target": "chatui/analysis-tools.js"
     },
     {
       "source": "chatui/app.js",
@@ -522,6 +614,22 @@
     {
       "source": "chatui/assets/wechatvibe-icon.png",
       "target": "chatui/assets/wechatvibe-icon.png"
+    },
+    {
+      "source": "chatui/chatbean-splitter.js",
+      "target": "chatui/chatbean-splitter.js"
+    },
+    {
+      "source": "chatui/chatbean-tokens.css",
+      "target": "chatui/chatbean-tokens.css"
+    },
+    {
+      "source": "chatui/chatbean-ui.js",
+      "target": "chatui/chatbean-ui.js"
+    },
+    {
+      "source": "chatui/chatbean.css",
+      "target": "chatui/chatbean.css"
     },
     {
       "source": "chatui/data/analysis-catalog.json",
@@ -572,6 +680,10 @@
       "target": "chatui/view-state.js"
     },
     {
+      "source": "design.md",
+      "target": "design.md"
+    },
+    {
       "source": "docs/contracts/data-schema.md",
       "target": "docs/contracts/data-schema.md"
     },
@@ -584,8 +696,20 @@
       "target": "docs/contracts/source-contract.md"
     },
     {
+      "source": "docs/design/brand/chatbean-icon.svg",
+      "target": "docs/design/brand/chatbean-icon.svg"
+    },
+    {
+      "source": "docs/design/brand/chatbean-user-design.png",
+      "target": "docs/design/brand/chatbean-user-design.png"
+    },
+    {
       "source": "docs/migration/upstream/WechatVibe-1.2.2-THIRD_PARTY_NOTICES.md",
       "target": "docs/migration/upstream/WechatVibe-1.2.2-THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "source": "docs/public/AUTO-UPDATE.md",
+      "target": "docs/public/AUTO-UPDATE.md"
     },
     {
       "source": "docs/public/BACKUP-UPGRADE.md",
@@ -604,12 +728,56 @@
       "target": "docs/public/FEEDBACK.md"
     },
     {
+      "source": "docs/public/images/chatbean-overview.png",
+      "target": "docs/public/images/chatbean-overview.png"
+    },
+    {
+      "source": "docs/public/images/chatbean-portrait.png",
+      "target": "docs/public/images/chatbean-portrait.png"
+    },
+    {
+      "source": "docs/public/images/first-run.png",
+      "target": "docs/public/images/first-run.png"
+    },
+    {
+      "source": "docs/public/images/group-chat.png",
+      "target": "docs/public/images/group-chat.png"
+    },
+    {
+      "source": "docs/public/images/group-labels.png",
+      "target": "docs/public/images/group-labels.png"
+    },
+    {
+      "source": "docs/public/images/overview.png",
+      "target": "docs/public/images/overview.png"
+    },
+    {
+      "source": "docs/public/images/settings-connection.png",
+      "target": "docs/public/images/settings-connection.png"
+    },
+    {
+      "source": "docs/public/images/settings.png",
+      "target": "docs/public/images/settings.png"
+    },
+    {
+      "source": "docs/public/images/single-chat.png",
+      "target": "docs/public/images/single-chat.png"
+    },
+    {
+      "source": "docs/public/JSON-IMPORT.md",
+      "target": "docs/public/JSON-IMPORT.md"
+    },
+    {
       "source": "docs/public/KNOWN-ISSUES.md",
       "target": "docs/public/KNOWN-ISSUES.md"
     },
     {
       "source": "docs/public/MODEL-LICENSE.md",
       "target": "docs/public/MODEL-LICENSE.md"
+    },
+    {
+      "source": "docs/public/QCE-DOCTOR.md",
+      "target": "docs/public/QCE-DOCTOR.md"
     },
     {
       "source": "docs/public/R9-TRIAL.md",
@@ -624,6 +792,14 @@
       "target": "docs/public/SETUP.md"
     },
     {
+      "source": "docs/public/USER-GUIDE.html",
+      "target": "docs/public/USER-GUIDE.html"
+    },
+    {
+      "source": "docs/public/USER-GUIDE.md",
+      "target": "docs/public/USER-GUIDE.md"
+    },
+    {
       "source": "electron-builder.real-client.json",
       "target": "electron-builder.real-client.json"
     },
@@ -636,6 +812,10 @@
       "target": "electron/api-analysis-json.ts"
     },
     {
+      "source": "electron/api-insight-stream.ts",
+      "target": "electron/api-insight-stream.ts"
+    },
+    {
       "source": "electron/api-insights.ts",
       "target": "electron/api-insights.ts"
     },
@@ -644,16 +824,16 @@
       "target": "electron/api-message-insights.ts"
     },
     {
+      "source": "electron/api-portrait-classifier.ts",
+      "target": "electron/api-portrait-classifier.ts"
+    },
+    {
+      "source": "electron/api-portrait-evidence.ts",
+      "target": "electron/api-portrait-evidence.ts"
+    },
+    {
       "source": "electron/api-portrait.ts",
       "target": "electron/api-portrait.ts"
-    },
-    {
-      "source": "electron/laya/LICENSE",
-      "target": "electron/laya/LICENSE"
-    },
-    {
-      "source": "electron/laya/NOTICE",
-      "target": "electron/laya/NOTICE"
     },
     {
       "source": "electron/laya/agent.ts",
@@ -692,8 +872,16 @@
       "target": "electron/laya/index.ts"
     },
     {
+      "source": "electron/laya/LICENSE",
+      "target": "electron/laya/LICENSE"
+    },
+    {
       "source": "electron/laya/message-batch.ts",
       "target": "electron/laya/message-batch.ts"
+    },
+    {
+      "source": "electron/laya/NOTICE",
+      "target": "electron/laya/NOTICE"
     },
     {
       "source": "electron/laya/options.ts",
@@ -756,6 +944,10 @@
       "target": "examples/model-service.example.json"
     },
     {
+      "source": "LICENSE",
+      "target": "LICENSE"
+    },
+    {
       "source": "licenses/jieba-0.42.1-LICENSE.txt",
       "target": "licenses/jieba-0.42.1-LICENSE.txt"
     },
@@ -792,12 +984,12 @@
       "target": "licenses/supplemental-sources.json"
     },
     {
-      "source": "native-reader/THIRD_PARTY_NOTICES.md",
-      "target": "native-reader/THIRD_PARTY_NOTICES.md"
-    },
-    {
       "source": "native-reader/test_discovery.py",
       "target": "native-reader/test_discovery.py"
+    },
+    {
+      "source": "native-reader/THIRD_PARTY_NOTICES.md",
+      "target": "native-reader/THIRD_PARTY_NOTICES.md"
     },
     {
       "source": "native-reader/wr/__init__.py",
@@ -860,6 +1052,10 @@
       "target": "native-reader/wr/window_uia.py"
     },
     {
+      "source": "NOTICE",
+      "target": "NOTICE"
+    },
+    {
       "source": "package-lock.json",
       "target": "package-lock.json"
     },
@@ -896,6 +1092,10 @@
       "target": "python-requirements.lock.txt"
     },
     {
+      "source": "README.md",
+      "target": "README.md"
+    },
+    {
       "source": "scripts/analysis-catalog-source.json",
       "target": "scripts/analysis-catalog-source.json"
     },
@@ -920,12 +1120,24 @@
       "target": "scripts/build-prerequisites.py"
     },
     {
+      "source": "scripts/build-qce-doctor.py",
+      "target": "scripts/build-qce-doctor.py"
+    },
+    {
       "source": "scripts/build-update-manifest.cjs",
       "target": "scripts/build-update-manifest.cjs"
     },
     {
+      "source": "scripts/build-user-guide.py",
+      "target": "scripts/build-user-guide.py"
+    },
+    {
       "source": "scripts/build-windows-release.py",
       "target": "scripts/build-windows-release.py"
+    },
+    {
+      "source": "scripts/capture-public-demo.cjs",
+      "target": "scripts/capture-public-demo.cjs"
     },
     {
       "source": "scripts/check-public-source.py",
@@ -942,6 +1154,10 @@
     {
       "source": "scripts/export-public-source.py",
       "target": "scripts/export-public-source.py"
+    },
+    {
+      "source": "scripts/init-qq-update-signing.cjs",
+      "target": "scripts/init-qq-update-signing.cjs"
     },
     {
       "source": "scripts/intent-display-source.json",
@@ -980,6 +1196,22 @@
       "target": "scripts/public-source-gitattributes.txt"
     },
     {
+      "source": "scripts/qce-doctor-core.ps1",
+      "target": "scripts/qce-doctor-core.ps1"
+    },
+    {
+      "source": "scripts/qce-doctor.cmd",
+      "target": "scripts/qce-doctor.cmd"
+    },
+    {
+      "source": "scripts/qce-doctor.ps1",
+      "target": "scripts/qce-doctor.ps1"
+    },
+    {
+      "source": "scripts/qq-update-signing.pub",
+      "target": "scripts/qq-update-signing.pub"
+    },
+    {
       "source": "scripts/real-client-model.cjs",
       "target": "scripts/real-client-model.cjs"
     },
@@ -994,6 +1226,10 @@
     {
       "source": "scripts/real-client-shell.cjs",
       "target": "scripts/real-client-shell.cjs"
+    },
+    {
+      "source": "scripts/real-client-update-config.cjs",
+      "target": "scripts/real-client-update-config.cjs"
     },
     {
       "source": "scripts/real-client-update-controller.cjs",
@@ -1014,6 +1250,10 @@
     {
       "source": "scripts/real-client-update.cjs",
       "target": "scripts/real-client-update.cjs"
+    },
+    {
+      "source": "scripts/render-product-icon.cjs",
+      "target": "scripts/render-product-icon.cjs"
     },
     {
       "source": "scripts/restore-qq-data.py",
@@ -1060,6 +1300,10 @@
       "target": "scripts/start-real-client.py"
     },
     {
+      "source": "scripts/test-analysis-format-update.cjs",
+      "target": "scripts/test-analysis-format-update.cjs"
+    },
+    {
       "source": "scripts/test-audit-delivery.py",
       "target": "scripts/test-audit-delivery.py"
     },
@@ -1098,6 +1342,18 @@
     {
       "source": "scripts/test-project-python.py",
       "target": "scripts/test-project-python.py"
+    },
+    {
+      "source": "scripts/test-qce-doctor-http.py",
+      "target": "scripts/test-qce-doctor-http.py"
+    },
+    {
+      "source": "scripts/test-qce-doctor.ps1",
+      "target": "scripts/test-qce-doctor.ps1"
+    },
+    {
+      "source": "scripts/test-qq-auto-update.cjs",
+      "target": "scripts/test-qq-auto-update.cjs"
     },
     {
       "source": "scripts/test-real-client-exit.cjs",
@@ -1152,6 +1408,14 @@
       "target": "scripts/update-signing.pub"
     },
     {
+      "source": "scripts/verify-r8-first-run.cjs",
+      "target": "scripts/verify-r8-first-run.cjs"
+    },
+    {
+      "source": "scripts/verify-r8-native-picker.cjs",
+      "target": "scripts/verify-r8-native-picker.cjs"
+    },
+    {
       "source": "shared/contracts.ts",
       "target": "shared/contracts.ts"
     },
@@ -1176,6 +1440,10 @@
       "target": "tests/api-generation-concurrency.test.cjs"
     },
     {
+      "source": "tests/api-insight-identity.test.ts",
+      "target": "tests/api-insight-identity.test.ts"
+    },
+    {
       "source": "tests/api-insights.test.ts",
       "target": "tests/api-insights.test.ts"
     },
@@ -1196,6 +1464,14 @@
       "target": "tests/api-throughput-tail.test.cjs"
     },
     {
+      "source": "tests/chatbean-navigation.test.cjs",
+      "target": "tests/chatbean-navigation.test.cjs"
+    },
+    {
+      "source": "tests/chatbean-splitter.test.cjs",
+      "target": "tests/chatbean-splitter.test.cjs"
+    },
+    {
       "source": "tests/generic-labels.test.ts",
       "target": "tests/generic-labels.test.ts"
     },
@@ -1214,6 +1490,10 @@
     {
       "source": "tests/laya-performance.test.ts",
       "target": "tests/laya-performance.test.ts"
+    },
+    {
+      "source": "tests/laya-tokenizer.test.ts",
+      "target": "tests/laya-tokenizer.test.ts"
     },
     {
       "source": "tests/local-message-insights.test.ts",
@@ -1252,6 +1532,14 @@
       "target": "tests/model-source-settings.test.cjs"
     },
     {
+      "source": "tests/qce-doctor-host.test.cjs",
+      "target": "tests/qce-doctor-host.test.cjs"
+    },
+    {
+      "source": "tests/qce-doctor-ui.test.cjs",
+      "target": "tests/qce-doctor-ui.test.cjs"
+    },
+    {
       "source": "tests/qq-analysis-control-ui.test.cjs",
       "target": "tests/qq-analysis-control-ui.test.cjs"
     },
@@ -1280,6 +1568,10 @@
       "target": "tests/qq-message-presentation.test.cjs"
     },
     {
+      "source": "tests/qq-message-text-safety.test.cjs",
+      "target": "tests/qq-message-text-safety.test.cjs"
+    },
+    {
       "source": "tests/qq-online-analysis-ui.test.cjs",
       "target": "tests/qq-online-analysis-ui.test.cjs"
     },
@@ -1304,6 +1596,10 @@
       "target": "tests/qq-sync-ui.test.cjs"
     },
     {
+      "source": "tests/qq-theme-default.test.cjs",
+      "target": "tests/qq-theme-default.test.cjs"
+    },
+    {
       "source": "tests/setup-models.test.ts",
       "target": "tests/setup-models.test.ts"
     },
@@ -1316,188 +1612,12 @@
       "target": "tests/view-state.test.cjs"
     },
     {
+      "source": "THIRD_PARTY_NOTICES.md",
+      "target": "THIRD_PARTY_NOTICES.md"
+    },
+    {
       "source": "tsconfig.electron.json",
       "target": "tsconfig.electron.json"
-    },
-    {
-      "source": "scripts/public-source-gitattributes.txt",
-      "target": ".gitattributes"
-    },
-    {
-      "source": "scripts/verify-r8-first-run.cjs",
-      "target": "scripts/verify-r8-first-run.cjs"
-    },
-    {
-      "source": "scripts/verify-r8-native-picker.cjs",
-      "target": "scripts/verify-r8-native-picker.cjs"
-    },
-    {
-      "source": "scripts/build-user-guide.py",
-      "target": "scripts/build-user-guide.py"
-    },
-    {
-      "source": "scripts/capture-public-demo.cjs",
-      "target": "scripts/capture-public-demo.cjs"
-    },
-    {
-      "source": "docs/public/USER-GUIDE.md",
-      "target": "docs/public/USER-GUIDE.md"
-    },
-    {
-      "source": "docs/public/USER-GUIDE.html",
-      "target": "docs/public/USER-GUIDE.html"
-    },
-    {
-      "source": "tests/qq-theme-default.test.cjs",
-      "target": "tests/qq-theme-default.test.cjs"
-    },
-    {
-      "source": "docs/public/images/overview.png",
-      "target": "docs/public/images/overview.png"
-    },
-    {
-      "source": "docs/public/images/single-chat.png",
-      "target": "docs/public/images/single-chat.png"
-    },
-    {
-      "source": "docs/public/images/group-chat.png",
-      "target": "docs/public/images/group-chat.png"
-    },
-    {
-      "source": "docs/public/images/settings.png",
-      "target": "docs/public/images/settings.png"
-    },
-    {
-      "source": "docs/public/images/first-run.png",
-      "target": "docs/public/images/first-run.png"
-    },
-    {
-      "source": "docs/public/images/settings-connection.png",
-      "target": "docs/public/images/settings-connection.png"
-    },
-    {
-      "source": "docs/public/images/group-labels.png",
-      "target": "docs/public/images/group-labels.png"
-    },
-    {
-      "source": "scripts/qce-doctor-core.ps1",
-      "target": "scripts/qce-doctor-core.ps1"
-    },
-    {
-      "source": "scripts/qce-doctor.ps1",
-      "target": "scripts/qce-doctor.ps1"
-    },
-    {
-      "source": "scripts/qce-doctor.cmd",
-      "target": "scripts/qce-doctor.cmd"
-    },
-    {
-      "source": "scripts/test-qce-doctor.ps1",
-      "target": "scripts/test-qce-doctor.ps1"
-    },
-    {
-      "source": "scripts/test-qce-doctor-http.py",
-      "target": "scripts/test-qce-doctor-http.py"
-    },
-    {
-      "source": "tests/qce-doctor-ui.test.cjs",
-      "target": "tests/qce-doctor-ui.test.cjs"
-    },
-    {
-      "source": "docs/public/QCE-DOCTOR.md",
-      "target": "docs/public/QCE-DOCTOR.md"
-    },
-    {
-      "source": "scripts/build-qce-doctor.py",
-      "target": "scripts/build-qce-doctor.py"
-    },
-    {
-      "source": "tests/qce-doctor-host.test.cjs",
-      "target": "tests/qce-doctor-host.test.cjs"
-    },
-    {
-      "source": "scripts/real-client-update-config.cjs",
-      "target": "scripts/real-client-update-config.cjs"
-    },
-    {
-      "source": "scripts/qq-update-signing.pub",
-      "target": "scripts/qq-update-signing.pub"
-    },
-    {
-      "source": "scripts/init-qq-update-signing.cjs",
-      "target": "scripts/init-qq-update-signing.cjs"
-    },
-    {
-      "source": "scripts/test-qq-auto-update.cjs",
-      "target": "scripts/test-qq-auto-update.cjs"
-    },
-    {
-      "source": "bridge/test_update_readiness.py",
-      "target": "bridge/test_update_readiness.py"
-    },
-    {
-      "source": "docs/public/AUTO-UPDATE.md",
-      "target": "docs/public/AUTO-UPDATE.md"
-    },
-    {
-      "source": "chatui/chatbean-tokens.css",
-      "target": "chatui/chatbean-tokens.css"
-    },
-    {
-      "source": "chatui/chatbean.css",
-      "target": "chatui/chatbean.css"
-    },
-    {
-      "source": "chatui/chatbean-ui.js",
-      "target": "chatui/chatbean-ui.js"
-    },
-    {
-      "source": "design.md",
-      "target": "design.md"
-    },
-    {
-      "source": "scripts/render-product-icon.cjs",
-      "target": "scripts/render-product-icon.cjs"
-    },
-    {
-      "source": "docs/design/brand/chatbean-icon.svg",
-      "target": "docs/design/brand/chatbean-icon.svg"
-    },
-    {
-      "source": "tests/chatbean-navigation.test.cjs",
-      "target": "tests/chatbean-navigation.test.cjs"
-    },
-    {
-      "source": "docs/design/brand/chatbean-user-design.png",
-      "target": "docs/design/brand/chatbean-user-design.png"
-    },
-    {
-      "source": "docs/public/images/chatbean-overview.png",
-      "target": "docs/public/images/chatbean-overview.png"
-    },
-    {
-      "source": "docs/public/images/chatbean-portrait.png",
-      "target": "docs/public/images/chatbean-portrait.png"
-    },
-    {
-      "source": "chatui/chatbean-splitter.js",
-      "target": "chatui/chatbean-splitter.js"
-    },
-    {
-      "source": "tests/chatbean-splitter.test.cjs",
-      "target": "tests/chatbean-splitter.test.cjs"
-    },
-    {
-      "source": "bridge/test_qce63_import.py",
-      "target": "bridge/test_qce63_import.py"
-    },
-    {
-      "source": "bridge/test_resume_targets.py",
-      "target": "bridge/test_resume_targets.py"
-    },
-    {
-      "source": "CHANGELOG.md",
-      "target": "CHANGELOG.md"
     }
   ]
 }

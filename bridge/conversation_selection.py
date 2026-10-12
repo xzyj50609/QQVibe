@@ -2,6 +2,13 @@
 
 Only session identifiers are stored here. Removing a selection never touches
 WeChat source files, imported messages, or analysis results.
+
+The same rows carry the per-conversation analysis request: `requested` marks the
+conversations the user asked to be analysed with the card button. Adding a
+conversation to the sidebar is not a request to analyse it, so `requested`
+defaults to 0 and `set_all_selected` never sets it. Because the flag lives on the
+selection row, removing a conversation from the sidebar also drops its request,
+which keeps `requested` a subset of `selected` by construction.
 """
 from __future__ import annotations
 
@@ -31,6 +38,30 @@ def _session_id(session):
     return session
 
 
+def _columns(conn, table):
+    """Column names of an existing table. An absent table reports no columns."""
+    return {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+
+
+def _empty(account):
+    return {"account": account, "initialized": False, "selectedSessions": [],
+            "requestedSessions": []}
+
+
+def _ensure_tables(conn):
+    """Create the selection tables and add the `requested` column to older databases."""
+    conn.execute("CREATE TABLE IF NOT EXISTS conversation_selection_meta_v1 ("
+                 "account TEXT PRIMARY KEY, version INTEGER NOT NULL CHECK(version=1))")
+    conn.execute("CREATE TABLE IF NOT EXISTS conversation_selection_v1 ("
+                 "account TEXT NOT NULL, session TEXT NOT NULL, "
+                 "PRIMARY KEY(account,session), "
+                 "FOREIGN KEY(account) REFERENCES conversation_selection_meta_v1(account))")
+    if "requested" not in _columns(conn, SELECTION_TABLE):
+        # Written after the CREATE above so a concurrent first open cannot lose the column.
+        conn.execute("ALTER TABLE conversation_selection_v1 "
+                     "ADD COLUMN requested INTEGER NOT NULL DEFAULT 0")
+
+
 class ConversationSelectionStore:
     def __init__(self, data_dir):
         self.data_dir = Path(os.path.abspath(data_dir))
@@ -50,7 +81,7 @@ class ConversationSelectionStore:
             "SELECT name FROM sqlite_master WHERE type='table' AND name IN (?,?)",
             (META_TABLE, SELECTION_TABLE))}
         if not tables:
-            return {"account": account, "initialized": False, "selectedSessions": []}
+            return _empty(account)
         if tables != {META_TABLE, SELECTION_TABLE}:
             raise SelectionCorrupt("conversation selection schema incomplete")
         markers = conn.execute(
@@ -58,29 +89,36 @@ class ConversationSelectionStore:
         if not markers:
             if conn.execute("SELECT 1 FROM conversation_selection_v1 LIMIT 1").fetchone():
                 raise SelectionCorrupt("conversation selection has no account marker")
-            return {"account": account, "initialized": False, "selectedSessions": []}
+            return _empty(account)
         if markers != [(account, 1)]:
             raise SelectionCorrupt("conversation selection account mismatch")
         selected = [row[0] for row in conn.execute(
             "SELECT session FROM conversation_selection_v1 WHERE account=? ORDER BY session",
             (account,))]
-        return {"account": account, "initialized": True, "selectedSessions": selected}
+        # A database written before the analysis request existed has no `requested` column
+        # and therefore no requests. Reading it through a read-only connection must not
+        # migrate, so treat the missing column as "nothing requested yet".
+        requested = []
+        if "requested" in _columns(conn, SELECTION_TABLE):
+            requested = [row[0] for row in conn.execute(
+                "SELECT session FROM conversation_selection_v1 "
+                "WHERE account=? AND requested=1 ORDER BY session", (account,))]
+        return {"account": account, "initialized": True, "selectedSessions": selected,
+                "requestedSessions": requested}
 
     def get(self, account):
         with self.lock:
             path = self._path(account)
             if not path.is_file():
-                return {"account": account, "initialized": False, "selectedSessions": []}
+                return _empty(account)
             try:
                 with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True, timeout=15)) as conn:
                     return self._state(conn, account)
             except sqlite3.DatabaseError as exc:
                 raise SelectionCorrupt("conversation selection unreadable") from exc
 
-    def set_selected(self, account, session, selected):
-        _session_id(session)
-        if type(selected) is not bool:
-            raise ValueError("invalid selected")
+    def _write(self, account, body):
+        """Run `body` inside one IMMEDIATE transaction against the account database."""
         with self.lock:
             path = self._path(account)
             self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -89,20 +127,82 @@ class ConversationSelectionStore:
                 with closing(sqlite3.connect(path, timeout=15)) as conn:
                     conn.execute("BEGIN IMMEDIATE")
                     self._state(conn, account)  # Never silently repair a partial or mismatched schema.
-                    conn.execute("CREATE TABLE IF NOT EXISTS conversation_selection_meta_v1 ("
-                                 "account TEXT PRIMARY KEY, version INTEGER NOT NULL CHECK(version=1))")
-                    conn.execute("CREATE TABLE IF NOT EXISTS conversation_selection_v1 ("
-                                 "account TEXT NOT NULL, session TEXT NOT NULL, "
-                                 "PRIMARY KEY(account,session), "
-                                 "FOREIGN KEY(account) REFERENCES conversation_selection_meta_v1(account))")
+                    _ensure_tables(conn)
                     conn.execute("INSERT OR IGNORE INTO conversation_selection_meta_v1 VALUES (?,1)",
                                  (account,))
-                    if selected:
-                        conn.execute("INSERT OR IGNORE INTO conversation_selection_v1 VALUES (?,?)",
-                                     (account, session))
-                    else:
-                        conn.execute("DELETE FROM conversation_selection_v1 WHERE account=? AND session=?",
-                                     (account, session))
+                    body(conn)
+                    state = self._state(conn, account)
+                    conn.commit()
+                    return state
+            except sqlite3.DatabaseError as exc:
+                raise SelectionCorrupt("conversation selection cannot be saved") from exc
+
+    def set_selected(self, account, session, selected):
+        _session_id(session)
+        if type(selected) is not bool:
+            raise ValueError("invalid selected")
+
+        def body(conn):
+            if selected:
+                # Explicit column list: the row also carries the `requested` flag, so a
+                # conversation that is re-added to the sidebar starts out unrequested.
+                conn.execute("INSERT OR IGNORE INTO conversation_selection_v1 (account,session) "
+                             "VALUES (?,?)", (account, session))
+            else:
+                conn.execute("DELETE FROM conversation_selection_v1 WHERE account=? AND session=?",
+                             (account, session))
+
+        return self._write(account, body)
+
+    def set_requested(self, account, session, requested):
+        """Ask for one conversation to be analysed, independent of the background switch.
+
+        Requesting implies the conversation is in the sidebar, since the button only exists
+        on a listed card. Removing it from the sidebar deletes the row and with it the
+        request, which keeps `requested` a subset of `selected` by construction.
+        """
+        _session_id(session)
+        if type(requested) is not bool:
+            raise ValueError("invalid requested")
+
+        def body(conn):
+            conn.execute("INSERT OR IGNORE INTO conversation_selection_v1 (account,session) "
+                         "VALUES (?,?)", (account, session))
+            conn.execute("UPDATE conversation_selection_v1 SET requested=? "
+                         "WHERE account=? AND session=?",
+                         (1 if requested else 0, account, session))
+
+        return self._write(account, body)
+
+    def set_all_selected(self, account, sessions):
+        """Add every known session of the account to the sidebar at once.
+
+        This never requests analysis: being added to the list is not a request to analyse it.
+        """
+        sessions = [_session_id(session) for session in sessions]
+
+        def body(conn):
+            conn.executemany("INSERT OR IGNORE INTO conversation_selection_v1 (account,session) "
+                             "VALUES (?,?)", [(account, session) for session in sessions])
+
+        return self._write(account, body)
+
+    def remove_selected(self, account, sessions):
+        if (not isinstance(sessions, list) or not 1 <= len(sessions) <= 1000 or
+                len(set(_session_id(session) for session in sessions)) != len(sessions)):
+            raise ValueError("invalid session selection")
+        with self.lock:
+            path = self._path(account)
+            if not path.is_file():
+                raise ValueError("session not selected")
+            try:
+                with closing(sqlite3.connect(path, timeout=15)) as conn:
+                    conn.execute("BEGIN IMMEDIATE")
+                    state = self._state(conn, account)
+                    if not set(sessions) <= set(state["selectedSessions"]):
+                        raise ValueError("session not selected")
+                    conn.executemany("DELETE FROM conversation_selection_v1 WHERE account=? AND session=?",
+                                     [(account, session) for session in sessions])
                     state = self._state(conn, account)
                     conn.commit()
                     return state

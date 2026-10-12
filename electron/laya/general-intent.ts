@@ -1,8 +1,9 @@
 import type { LabelScore } from "../../shared/contracts";
 import type { Answer, Question } from "./types";
+import { groundedIntentWithContext, isEmbeddedQuestionStatement, isUnattributableIntentTarget, normalizeIntentTarget } from "./grounded-intent";
 
 /** Stable wire marker. A saved legacy fine result can be refreshed one message at a time. */
-export const GENERAL_LABEL_SCHEMA = "generic-v9";
+export const GENERAL_LABEL_SCHEMA = "generic-v11";
 
 export const INTENTS = [
   { id: "small_talk", zh: "闲聊", en: "small talk" },
@@ -56,7 +57,7 @@ const byOption = new Map<string, (typeof INTENTS)[number]["id"]>(INTENTS.flatMap
 type IntentId = (typeof INTENTS)[number]["id"];
 const byId = new Map<IntentId, (typeof INTENTS)[number]>(INTENTS.map((intent) => [intent.id, intent]));
 const GENERAL_INSTRUCTIONS =
-  "判断 TARGET 发送者正在做的交流动作。倾诉是主动向对方说自己的困扰，安慰是回应对方难过，关心是询问或提醒对方近况；求安慰或陪伴须有明确请求。不要根据称呼、引语或隐含关系猜意图；没有贴切项选一般交流。";
+  "判断 TARGET 发送者正在做的交流动作。请求别人帮忙选求助，改变具体时间选计划，明确结束本轮聊天选告别；陈述中提到问题不等于提问。倾诉是说自己的困扰，安慰是回应对方难过，关心是询问或提醒对方近况；求安慰或陪伴须有明确请求。不要根据称呼、引语或隐含关系猜意图；没有贴切项选一般交流。";
 const ANCHORS: readonly IntentId[] = ["inform", "share_news", "small_talk"];
 const FILLERS: readonly IntentId[] = ["status_report", "explain", "share_feeling", "agree"];
 const MAX_OPTIONS = 10;
@@ -91,6 +92,7 @@ const CUES: ReadonlyArray<{ pattern: RegExp; ids: readonly IntentId[] }> = [
   { pattern: /想你|思念你|好久不见|惦记你/u, ids: ["miss_you", "show_affection"] },
   { pattern: /喜欢你|爱你|有你真好|对你心动/u, ids: ["show_affection", "miss_you"] },
   { pattern: /还好吗|累不累|吃饭了吗|早点休息|注意身体|照顾好自己|到家了吗/u, ids: ["show_care"] },
+  { pattern: /(?:慢(?:一)?点来|慢慢来)[，,]?\s*(?:不着急|别着急|不用急)|你(?:先|早点|好好)(?:去)?休息|别太累|注意安全/u, ids: ["show_care"] },
   { pattern: /别担心|不用怕|没关系|会好起来|我陪着你/u, ids: ["give_comfort", "show_care"] },
   { pattern: /加油|别灰心|相信你|你能行|坚持住/u, ids: ["encourage", "give_comfort"] },
   { pattern: /真厉害|做得好|太棒了|佩服你|真优秀|真好看|你.{0,8}(?:不错|漂亮|好看|太牛|厉害)|(?:真|太|特别)(?:棒|牛|厉害|漂亮)/u, ids: ["praise", "show_affection"] },
@@ -138,14 +140,26 @@ export function generalIntentQuestion(targetText: string, contextHint = ""): Gen
   const hint = Array.from(String(contextHint || "").replace(QUOTED, " ").trim())
     .slice(0, MAX_HINT_CODEPOINTS).join("");
   const inviteContext = INVITE_CONTEXT.test(hint);
-  const text = targetText.replace(QUOTED, " ").trim();
+  const text = isUnattributableIntentTarget(targetText) ? "" : normalizeIntentTarget(targetText);
   const options: IntentId[] = [...ANCHORS];
   const add = (id: IntentId): void => {
     if (options.length < MAX_OPTIONS - 1 && !options.includes(id)) options.push(id);
   };
   let matched = false;
+  const direct = groundedIntentWithContext(targetText, hint);
+  if (direct) { add(direct.label); matched = true; }
+  const statement = isEmbeddedQuestionStatement(text);
+  const ownCorrection = direct?.label === "correct";
+  const negatedReply = /^(?:不是|并非)[，,]\s*我[^。！？?]{2,100}/u.test(text);
+  const attributionCorrection = /^(?:这|那)是[^，,。！？?]{1,24}(?:想法|看法|观点|意思)[，,]\s*我(?:其实|的意思|自己|更)[^。！？?]{1,80}/u.test(text);
+  if (ownCorrection || negatedReply || attributionCorrection) {
+    add("correct");
+    add("clarify");
+    if (negatedReply) add("deny");
+    matched = true;
+  }
   if (!NONQUESTION_SHORT.test(text) && !RHETORICAL_CORRECTION.test(text) &&
-      QUESTION_CUE.test(text) && !CARE_CONTINUATION.test(text)) {
+      QUESTION_CUE.test(text) && !CARE_CONTINUATION.test(text) && !statement) {
     add("ask_question");
     matched = true;
   }
@@ -159,9 +173,14 @@ export function generalIntentQuestion(targetText: string, contextHint = ""): Gen
     add("plan");
     add("invite");
     matched = true;
-  } else if (inviteContext && DEFERRAL.test(text)) {
+  } else if (inviteContext && DEFERRAL.test(text) && (!direct || direct.label === "reject")) {
     // Invitation context + deferral: offer the decline candidate, do not decide it.
     add("reject");
+    matched = true;
+  }
+  if (/(?:上午|下午|晚上)[^。！？?]{1,30}(?:读书|散步|出门|整理|约朋友|上班|回家)/u.test(text)
+      && /(?:安排|计划|打算)/u.test(hint.split(/\n/u).at(-1) || "")) {
+    add("plan");
     matched = true;
   }
   // “木有/没有” is only a denial when the bounded context contains a proposition
@@ -174,6 +193,8 @@ export function generalIntentQuestion(targetText: string, contextHint = ""): Gen
     if (!cue.pattern.test(text)) continue;
     matched = true;
     for (const id of cue.ids) {
+      if (id === "ask_question" && statement) continue;
+      if (id === "reject" && direct && direct.label !== "reject") continue;
       if (id === "share_feeling" && DIRECTED_CONFIDING.test(text)) continue;
       add(id);
     }

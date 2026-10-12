@@ -79,6 +79,85 @@ class DataTests(unittest.TestCase):
         self.assertGreater(manifest['counts']['labelCacheRows'],0)
         self.assertEqual(original,self.hashes(self.root),'creating a backup must not modify originals')
 
+    def encrypted_fixture(self):
+        from payload_crypto import PayloadCipher
+        cipher=PayloadCipher(self.runtime/'analysis-key.bin')
+        ResultStore(self.results.path,cipher=cipher)
+        with closing(sqlite3.connect(self.results.path)) as conn:
+            row=conn.execute('SELECT rowid,result FROM fine_results_v1 LIMIT 1').fetchone()
+            self.assertIsNotNone(row)
+            ciphertext=cipher.protect(row[1])
+            conn.execute('UPDATE fine_results_v1 SET result=? WHERE rowid=?',(ciphertext,row[0]));conn.commit()
+        (self.runtime/'analysis-workers.json').write_text('{"limit":2}',encoding='utf-8')
+        return cipher,ciphertext
+
+    def test_encrypted_backup_restores_key_results_and_pre_encryption_recovery(self):
+        from payload_crypto import PayloadCipher
+        cipher,ciphertext=self.encrypted_fixture()
+        self.backup_data()
+        manifest=inspect_backup(self.backup)
+        self.assertTrue(manifest['encryptedAnalysis'])
+        with closing(sqlite3.connect(self.results.path)) as conn:
+            expected=sum(conn.execute('SELECT COUNT(*) FROM '+table).fetchone()[0]
+                         for table in ('results_v2','fine_results_v1','api_insights_v1'))
+        self.assertEqual(manifest['counts']['labelCacheRows'],expected,'recovery copies must not inflate active result counts')
+        paths={row['path'] for row in manifest['files']}
+        for name in ('analysis-key.bin','analysis-key.backup.bin','payload-format.json','analysis-workers.json'):
+            self.assertIn('real-client-runtime/'+name,paths)
+        self.assertTrue(any(path.endswith('.pre-wv1.sqlite3') for path in paths))
+        self.assertTrue(any(path.endswith('.pre-wv1.json') for path in paths))
+        target=self.fixture.root/'encrypted-restored/QQVibeData'
+        restored=restore_backup(target,self.backup,digest(self.backup))
+        self.assertEqual(restored['state'],'complete')
+        restored_cipher=PayloadCipher(target/'real-client-runtime/analysis-key.bin')
+        self.assertEqual(restored_cipher.unprotect(ciphertext),cipher.unprotect(ciphertext))
+        with closing(sqlite3.connect(target/'real-client-data'/self.results.path.name)) as conn:
+            self.assertEqual(conn.execute('SELECT result FROM fine_results_v1 LIMIT 1').fetchone()[0],ciphertext)
+
+    def test_encrypted_foreign_user_restore_fails_before_swapping_any_data(self):
+        self.encrypted_fixture();self.backup_data()
+        target=self.copies('foreign-encrypted-target');before=self.hashes(target)
+        with patch('qq_data_management.windows_user',return_value='different-windows-user'):
+            with self.assertRaisesRegex(ValueError,'original-windows-user'):
+                restore_backup(target,self.backup,digest(self.backup))
+        self.assertEqual(self.hashes(target),before)
+
+    def test_missing_key_backup_is_not_published_as_success(self):
+        from payload_crypto import PayloadUnreadable
+        self.encrypted_fixture()
+        (self.runtime/'analysis-key.bin').unlink()
+        with self.assertRaises(PayloadUnreadable):self.backup_data()
+        self.assertFalse(self.backup.exists())
+
+    def test_legacy_foreign_user_restore_clears_every_model_profile_credential(self):
+        profiles=[{'id':'a'*32,'encryptedKey':'SYNTHETIC-A'},{'id':'b'*32,'encryptedKey':'SYNTHETIC-B'}]
+        (self.runtime/'model-source.json').write_text(json.dumps({'version':2,'selectedMode':'api','profiles':profiles}),encoding='utf-8')
+        self.backup_data();target=self.fixture.root/'legacy-foreign/QQVibeData'
+        with patch('qq_data_management.windows_user',return_value='different-windows-user'):
+            restored=restore_backup(target,self.backup,digest(self.backup))
+        self.assertTrue(restored['credentialsRequireReentry'])
+        value=json.loads((target/'real-client-runtime/model-source.json').read_text(encoding='utf-8'))
+        self.assertEqual(value['selectedMode'],'local')
+        self.assertEqual([row['encryptedKey'] for row in value['profiles']],[None,None])
+
+    @unittest.skipUnless(os.name=='nt','Windows path length semantics')
+    def test_long_restore_staging_paths_keep_logical_registry_and_result_counts(self):
+        from qq_data_management import _validate_file
+        self.encrypted_fixture();self.backup_data()
+        padding=max(65,155-len(str(self.fixture.root))-len('/deep-/QQVibeData'))
+        target=self.fixture.root/('deep-'+('x'*padding))/'QQVibeData'
+        checked=[]
+        def validate(file,relative):
+            checked.append(str(file))
+            return _validate_file(file,relative)
+        with patch('qq_data_management._validate_file',side_effect=validate):
+            restored=restore_backup(target,self.backup,digest(self.backup))
+        self.assertEqual(restored['state'],'complete')
+        self.assertEqual(restored['counts'],inspect_backup(self.backup)['counts'])
+        self.assertTrue(any(len(path)>260 for path in checked),'the regression must exercise a long staging file')
+        registry=json.loads((target/'real-client-data/accounts.json').read_text(encoding='utf-8'))
+        self.assertFalse(registry['accounts'][0]['workdir'].startswith('\\\\?\\'))
+
     @unittest.skipUnless(os.name=='nt','Windows directory sharing semantics')
     def test_handoff_log_in_swapped_runtime_blocks_restore_but_external_log_does_not(self):
         self.backup_data();target=self.copies('native-log-target')

@@ -65,7 +65,7 @@ function getVisibleUnreadCount(session) {
   return 0;
 }
 const defaults = { theme: "light", zoom: "1.0", intent: true, labelDetails: window.ProductConfig?.key === "qq" };
-const CURRENT_LABEL_SCHEMA = "generic-v9";
+const CURRENT_LABEL_SCHEMA = "generic-v11";
 const GENERIC_INTENT_LABELS = Object.freeze({
   small_talk: "闲聊", share_news: "分享", ask_question: "提问", seek_help: "求助", deny: "否认",
   give_comfort: "安慰", agree: "同意", invite: "邀约", show_affection: "表达好感",
@@ -437,6 +437,7 @@ function resetAccountView(message = "当前账号未就绪", preserveOtherCaches
   chatState.currentAccount = null;
   chatState.selectionLoadedAccount = null;
   chatState.selectedConversations.clear();
+  chatState.requestedConversations?.clear();
   chatState.currentUser = null;
   chatState.currentHasMoreBefore = null;
   window.QQSupportController?.scopeChanged();
@@ -743,7 +744,9 @@ async function loadConversationSelection(account, request) {
       state.selectedSessions.some(id => typeof id !== "string"))
     throw new Error("Invalid conversation selection response");
   chatState.selectedConversations.clear();
+  chatState.requestedConversations?.clear();
   for (const id of state.selectedSessions) chatState.selectedConversations.add(id);
+  chatState.requestedConversations = new Set(state.requestedSessions || []);
   chatState.selectionLoadedAccount = account;
 }
 function clearUnselectedConversation() {
@@ -830,6 +833,7 @@ async function toggleConversationSelected(user) {
         !Array.isArray(state.selectedSessions) ||
         state.selectedSessions.includes(user) !== selected) throw new Error("选择结果不匹配");
     chatState.selectedConversations.clear();
+  chatState.requestedConversations?.clear();
     for (const id of state.selectedSessions) chatState.selectedConversations.add(id);
     renderSessions();
     if (selected && chatState.messageSourceReady && chatState.sessions.has(user)) {
@@ -1240,6 +1244,7 @@ function messageNode(message) {
       getScope: () => ({ account: chatState.currentAccount, user: chatState.currentUser, generation: chatState.generation }),
       cursor: message.historyCursor }));
   item.appendChild(wrap);
+  window.AnalysisTools?.decorateMessage(message, wrap);
   updateLabel(message, item);
   return item;
 }
@@ -1797,6 +1802,7 @@ async function startIncremental(user, token, signal, key, state) {
 function scheduleIncremental(user, token, signal, data, changed, signature) {
   if(typeof window!=='undefined' && window.ProductConfig?.key==='qq' && chatState.sessions.get(user)?.isGroup) return;
   if (!canAnalyzeLocal() || settingsState.suppressedLocalAccounts.has(chatState.currentAccount)) return;
+  if (typeof window!=='undefined' && window.ProductConfig?.key === 'qq' && !chatState.requestedConversations?.has(user)) return;
   const key = portraitState.activeAnalysisScope;
   if (!key) return;
   const state = incrementalState(key);
@@ -2169,7 +2175,7 @@ function profileSnapshot(profile) {
     affinity: Number.isFinite(profile.affinity) ? profile.affinity : null,
     traits: Array.isArray(profile.traits) ? profile.traits.slice(0, 6).map(item => ({
       key: String(item.key || ""), label: String(item.label || "").slice(0, 24),
-      val: Number(item.val), sampleCount: count(item.sampleCount) })) : [],
+      val: Number.isFinite(item.val) ? item.val : null, sampleCount: count(item.sampleCount) })) : [],
     keywords: Array.isArray(profile.keywords) ? profile.keywords.slice(0, 6).map(item => ({
       word: String(item.word || "").slice(0, 24), count: count(item.count) })) : [],
     summary: String(profile.summary || "").slice(0, 600),
@@ -2187,6 +2193,7 @@ function profileSnapshot(profile) {
     // API display state (only meaningful when apiSource). Bounded and derived from the
     // already-validated backend portrait; no key, raw chat, or raw provider response.
     apiSource,
+    apiNativeProfile: profile.apiNativeProfile === true,
     apiSourceId: apiSource && typeof profile.apiSourceId === "string" ? profile.apiSourceId.slice(0, 64) : "",
     apiTargetTexts: count(profile.apiTargetTexts),
     apiProgressProcessed: count(profile.apiProgressProcessed),
@@ -2437,7 +2444,7 @@ function renderMbti(profile) {
     return;
   }
 
-  if (profile.apiSource) {
+  if (profile.apiSource && !profile.apiNativeProfile) {
     // API portrait reuses the Laya card: same threshold, lock panel and evidence
     // section. Axis shares arrive as 0-100 favoring the left letter.
     const eligible = Number(profile.apiTargetTexts) || 0;
@@ -2458,7 +2465,7 @@ function renderMbti(profile) {
   const axes = inference?.axes || {};
   // Match the existing local backend's MIN_AXIS_EVIDENCE / MIN_AXIS_MARGIN.
   // API axes are provider estimates and retain their separate existing contract.
-  const validAxis = evidence => Number(evidence?.evidenceCount) >= (profile.apiSource ? 1 : 30) &&
+  const validAxis = evidence => Number(evidence?.evidenceCount) >= (profile.apiSource && !profile.apiNativeProfile ? 1 : 30) &&
     Number.isFinite(evidence?.leftShare) && Number.isFinite(evidence?.rightShare) &&
     evidence.leftShare >= 0 && evidence.leftShare <= 1 &&
     evidence.rightShare >= 0 && evidence.rightShare <= 1;
@@ -2813,6 +2820,22 @@ function apiProcessedTargets(available, progress, fallback = 0) {
   return Math.min(target, Math.floor(target * Math.max(0, Math.min(1, processed / total))));
 }
 function renderApiProfile(data) {
+  if (data.nativeProfile) {
+    const progress = data.progress || {};
+    const profile = { ...data.nativeProfile,
+      apiSource: true, apiNativeProfile: true, apiSourceId: data.sourceId,
+      apiPortrait: data.portrait, apiTargetTexts: Number(data.nativeProfile.stats?.analyzedCount) || 0,
+      apiProgressProcessed: Number(progress.processedTargetTexts) || 0,
+      apiProgressTotal: Number(progress.totalTargetTexts) || 0,
+      apiComplete: progress.complete === true, apiRunning: ["queued", "running"].includes(data.job?.status),
+      stale: data.stale === true, hasPublishedAnalysis: data.hasPublishedAnalysis === true,
+      analysisRevision: data.analysisRevision ?? null, apiRebuildError: data.job?.status === "error" };
+    portraitState.renderedProfileKey = null;
+    portraitState.renderedProfileSignature = null;
+    renderProfile(profile);
+    rememberProfile(profile, data.account, chatState.currentUser, portraitState.activeMember, data.sourceId);
+    return;
+  }
   const identity = data.identity;
   const available = data.available || {};
   const progress = (data.stale && data.hasPublishedAnalysis ? data.publishedProgress : data.progress) || data.progress || {};
@@ -2926,7 +2949,7 @@ function renderApiPortrait(data) {
   const displayData = portrait === data.portrait ? data : { ...data, portrait };
   const signature = JSON.stringify([scope, displayData.identity,
     displayData.available?.messageCount, displayData.available?.targetTextCount,
-    displayData.portrait, displayData.dataRevision, displayData.analysisRevision, displayData.stale]);
+    displayData.portrait, displayData.nativeProfile, displayData.dataRevision, displayData.analysisRevision, displayData.stale]);
   portraitState.apiPortraitSnapshot = displayData;
   if ((!cached || data.inventoryReady && data.available) &&
       (scope !== portraitState.renderedApiProfileScope || signature !== portraitState.renderedApiProfileSignature)) {
@@ -2943,9 +2966,9 @@ function renderApiPortrait(data) {
   const running = ["queued", "running"].includes(job.status);
   const upToDate = ready && progress.complete === true && Number(progress.processed) >= total;
   const contextReady = Number.isSafeInteger(settingsState.modelSourceSnapshot.api?.contextTokens) &&
-    settingsState.modelSourceSnapshot.api.contextTokens >= 4096;
+    settingsState.modelSourceSnapshot.api.contextTokens >= 12288;
   const portraitErrors = {
-    "context-too-long": "模型不支持当前上下文大小，请在设置中调低",
+    "context-too-long": contextReady ? "输入超过模型上下文容量，请核对模型支持的大小" : "完整人物画像需要至少 12288 tokens 上下文，请在设置中调整",
     "invalid-output": "模型返回格式不正确", "invalid-portrait": "模型画像结果不完整",
     "timeout": "模型响应超时", "rate-limit": "接口请求受限",
     "empty-response": "模型未返回内容", "response-too-large": "模型返回内容过长",
@@ -2958,7 +2981,7 @@ function renderApiPortrait(data) {
   else if (running && job.phase === "preparing") state = "正在准备待分析文本";
   else if (!ready) state = data.inventoryStatus === "error" ? "会话读取失败，正在重试" : "正在读取会话消息";
   else if (targetTexts < 3) state = "目标发言不足 3 条，等待更多消息";
-  else if (!contextReady) state = "请在设置中填写模型上下文大小";
+  else if (!contextReady) state = "完整人物画像需要至少 12288 tokens 上下文，请在设置中调整";
   else if (running) state = "API 分析中";
   else if (upToDate) state = "API 画像已更新";
   else state = "正在准备 API 画像";
@@ -3502,7 +3525,7 @@ function invalidateModelTest() {
   updateModelSourceControls();
 }
 function syncSavedApiKeyHint() {
-  const saved = settingsState.modelSourceSnapshot.api;
+  const saved = window.AnalysisTools?.draftProfile() || settingsState.modelSourceSnapshot.api;
   const reusable = !!saved?.hasKey && saved.protocol === byId("selectApiProtocol").value &&
     saved.baseUrl.replace(/\/+$/, "") === byId("inputApiBaseUrl").value.trim().replace(/\/+$/, "");
   byId("apiKeySaved").hidden = !reusable;
@@ -3522,6 +3545,7 @@ function showModelSource(data) {
   syncSavedApiKeyHint();
   invalidateModelDiscovery();
   showModelSourceMode();
+  window.AnalysisTools?.showSource(data);
 }
 async function loadModelSource(preserveDraft = false) {
   settingsState.modelSourceLoadController?.abort();
@@ -3588,6 +3612,8 @@ function apiModelDraft(requireModel, requireContext = false) {
     draft.model = model;
     if (contextTokens !== null) draft.contextTokens = contextTokens;
   }
+  const profileId=window.AnalysisTools?.selectedProfileId();
+  if(profileId) draft.profileId=profileId;
   return draft;
 }
 async function fetchApiModels() {
@@ -3680,6 +3706,7 @@ async function testApiModel() {
   }
 }
 async function activateModelSource(mode) {
+  if (mode === 'api' && window.AnalysisTools) return window.AnalysisTools.activateDraft();
   if (settingsState.modelSourceBusy || settingsState.modelTestBusy || !["local", "api"].includes(mode)) return;
   let payload = { mode };
   if (mode === "api") {
@@ -3713,13 +3740,15 @@ async function activateModelSource(mode) {
   }
 }
 async function clearStoredApiKey() {
-  if (settingsState.modelSourceBusy || !settingsState.modelSourceSnapshot.api?.hasKey) return;
+  const profile=window.AnalysisTools?.draftProfile() || settingsState.modelSourceSnapshot.api;
+  if (settingsState.modelSourceBusy || !profile?.hasKey) return;
   settingsState.modelSourceBusy = true;
   text("modelSourceStatus", "正在清除密钥…");
   updateModelSourceControls();
   let cleared = false;
   try {
-    await api("/api/model-source/clear-key", { method: "POST", body: "{}" });
+    await api("/api/model-source/clear-key", { method: "POST", body: JSON.stringify(
+      window.AnalysisTools?.selectedProfileId() ? {profileId:window.AnalysisTools.selectedProfileId()} : {}) });
     cleared = true;
     byId("inputApiKey").value = "";
     const data = await api("/api/model-source");
@@ -3793,45 +3822,25 @@ function validApiInsight(value, id) {
   }
   return true;
 }
-// Parse only completed emotion/intent pairs from the text received so far. A
-// label is committed after its line (or the next label marker) is complete;
-// half a streamed word never reaches the message row. The provider may add
-// JSON, Markdown, thoughts, or a trailing summary, so the parser deliberately
-// ignores everything except the two requested markers and uses target order.
+// Preview complete labels only when the worker explicitly identifies a requested message.
+// Preview never persists data; final full-batch validation remains the commit boundary.
 function parseApiPartialLabels(raw, ids) {
-  const targetIds = Array.isArray(ids) ? ids.map(id => String(id)) : [];
-  if (!targetIds.length || typeof raw !== "string" || !raw) return {};
-  const summary = raw.search(/(?:^|\n)\s*(?:整体|总体)?总结\s*[:：]?/u);
-  const body = (summary >= 0 ? `${raw.slice(0, summary)}\n` : raw).replace(/\r/g, "");
-  const marker = /(?:情感|情绪|emotion|意图|intent)\s*[:：]\s*/giu;
-  const matches = [...body.matchAll(marker)];
-  const emotions = [];
-  const intents = [];
-  for (let index = 0; index < matches.length; index++) {
-    const current = matches[index];
-    const start = (current.index ?? 0) + current[0].length;
-    const next = matches[index + 1];
-    const end = next?.index ?? body.length;
-    const value = body.slice(start, end);
-    const trimmed = value.trim();
-    // When there is no next marker, require a visible line/JSON/punctuation
-    // boundary so a currently streamed prefix such as “关” stays pending.
-    const complete = !!next || /\n/u.test(value) ||
-      /[}\]，,。！？!?；;:"'”」』]\s*$/u.test(trimmed);
-    if (!complete) continue;
-    const label = trimmed.match(/\p{Script=Han}{1,4}/u)?.[0];
-    if (!label) continue;
-    const kind = current[0].match(/^(?:情感|情绪|emotion)/iu) ? "emotion" : "intent";
-    (kind === "emotion" ? emotions : intents).push(label);
-  }
-  const count = Math.min(targetIds.length, emotions.length, intents.length);
-  const result = {};
-  for (let index = 0; index < count; index++) {
-    const id = targetIds[index];
-    const emotion = emotions[index];
-    const intent = intents[index];
-    if (!emotion || !intent) continue;
-    result[id] = { id, status: "ok", affect: { feeling: emotion }, intents: [intent] };
+  const allowed = new Set(Array.isArray(ids) ? ids.map(String) : []);
+  if (!allowed.size || typeof raw !== "string") return {};
+  const result = {}, conflicted = new Set();
+  const markers = [...raw.matchAll(/(?:^|\n)\s*(?:编号|id)\s*[:：]\s*([^\r\n]+)\r?\n/giu)];
+  for (let index = 0; index < markers.length; index++) {
+    const marker = markers[index], id = marker[1].trim();
+    if (!allowed.has(id) || conflicted.has(id)) continue;
+    const next = markers[index + 1]?.index;
+    const block = raw.slice(marker.index + marker[0].length, next === undefined ? undefined : next + 1);
+    const emotion = block.match(/(?:^|\n)\s*(?:情感|情绪|emotion)\s*[:：]\s*([^\r\n]*)\r?\n/iu)?.[1].trim();
+    const intent = block.match(/(?:^|\n)\s*(?:意图|intent)\s*[:：]\s*([^\r\n]*)\r?\n/iu)?.[1].trim();
+    if (!validApiInsightLabel(emotion) || !validApiInsightLabel(intent)) continue;
+    const value = { id, status: "ok", affect: { feeling: emotion }, intents: [intent] };
+    if (result[id] && JSON.stringify(result[id]) !== JSON.stringify(value)) {
+      delete result[id]; conflicted.add(id);
+    } else result[id] = value;
   }
   return result;
 }

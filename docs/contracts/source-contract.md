@@ -90,6 +90,10 @@ def message_windows(self, users: list[str], limit: int = 80,
 def texts_for_refs(self, user: str, refs: list[tuple], with_ids: bool = False) -> list
 def media(self, user: str, stable_id: str) -> tuple[bytes, str] | None
 def history_highwater(self, user: str) -> tuple[int, str, int] | None
+
+def history_revision(self, user: str) -> str
+
+def history_prefix_signature(self, user: str, ceiling) -> str
 def history_page(self, user: str, highwater, after=None,
                  page_size: int = 256) -> tuple[list[dict], tuple | None]
 def quoted_history_page(self, user: str, ceiling, after=None, page_size: int = 64,
@@ -101,12 +105,22 @@ def profile_overview(self, user: str, member: str | None = None, highwater=None)
 def invalidate_profile_metadata(self, user: str | None = None) -> None
 def request_scope(self) -> AbstractContextManager
 def binding_token(self) -> tuple
+
+def assert_binding(self, binding: tuple) -> None
+
+def binding_scope(self, binding: tuple) -> AbstractContextManager
+
+def target_text_totals(self, users: list[str]) -> dict
 def read_library(self, expected_account: str) -> AbstractContextManager
 def data_scope(self, account: str, user: str) -> dict
 def ingest_history(self, account: str, user: str, *, before=None, limit=20, message_cursor=None, kind=None) -> dict
 def forget_account(self, account: str) -> None
 def close(self) -> None
 ```
+
+2026-10-11 补充：`history_revision` 返回当前会话的版本令牌，`history_prefix_signature` 对固定游标之前实际送入分析的消息身份、位置、正文、作者、引用和提及做 SHA-256。显示名称与读取时间不进入签名；空前缀返回空字节串的摘要。版本改变且原前缀不变时可复用已完成证据，回补、编辑与撤回改变前缀时重新建账。
+
+`assert_binding` / `binding_scope` / `target_text_totals` 是后端按能力检测使用的可选来源接口。没有这些能力的来源使用 `verified_identity`、`read_library` 与现有数据版本检查；不能把可选接口的缺失解释为读取成功或省略 QQ 的发布保护。
 
 `lock` 不是方法而是属性：`lock: threading.RLock`（`backend_service.py:802,1423` 用
 `getattr(self.source, "lock", None)` 取）。

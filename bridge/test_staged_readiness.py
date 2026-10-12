@@ -142,7 +142,7 @@ class StagedReadinessTests(unittest.TestCase):
                 status, selection = self.http_get(server, "/api/conversation-selection")
                 self.assertEqual(status, 200, selection)
                 self.assertEqual(selection, {"account": self.account, "initialized": False,
-                                             "selectedSessions": []})
+                                             "selectedSessions": [], "requestedSessions": []})
                 for endpoint in ("/api/messages?user=peer", "/api/analysis?user=peer",
                                  "/api/profile?user=peer", "/api/history?account=synthetic_a&user=peer",
                                  "/api/history/search?account=synthetic_a&user=peer&q=hello"):

@@ -125,8 +125,8 @@ it("every grounded label has a generic Chinese display label", () => {
   assert.equal(Object.prototype.hasOwnProperty.call(GROUNDED_INTENT_LABELS, "喊老板"), false);
 });
 
-it("generic-v9 offers bounded, readable candidate menus instead of the same four defaults", () => {
-  assert.equal(GENERAL_LABEL_SCHEMA, "generic-v9");
+it("generic-v11 offers bounded, readable candidate menus instead of the same four defaults", () => {
+  assert.equal(GENERAL_LABEL_SCHEMA, "generic-v11");
   assert.ok(INTENTS.length >= 35 && INTENTS.length <= 50);
   const cases: Array<[string, string[]]> = [
     ["截图", ["展示内容"]],

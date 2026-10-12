@@ -69,13 +69,13 @@ function recordingRunner(): RecordingRunner {
   return { runner, rows, concurrency: () => peak };
 }
 
-it("collates the 14-question portrait set as 8+6 at the release batch size", async () => {
+it("collates the 13-question portrait set as 8+5 at the release batch size", async () => {
   const recorder = recordingRunner();
   const agent = new LayaAgent({ config, tokenizer, runner: recorder.runner,
     batchSize: BATCHED_QUESTIONS });
-  assert.equal(Object.keys(portraitQuestions).length, 14);
+  assert.equal(Object.keys(portraitQuestions).length, 13);
   const result = await agent.predict(state, portraitQuestions);
-  assert.deepEqual(recorder.rows, [8, 6]);
+  assert.deepEqual(recorder.rows, [8, 5]);
   assert.deepEqual(Object.keys(result.answers).sort(), Object.keys(portraitQuestions).sort());
   assert.equal(result.usage.input_tokens > 0, true);
 });
@@ -102,8 +102,8 @@ it("keeps runner calls serial and answer merging unchanged across batch sizes", 
     chunkedAgent.predict(state, portraitQuestions),
     singleAgent.predict(state, portraitQuestions),
   ]);
-  assert.deepEqual(chunked.rows, [8, 6]);
-  assert.deepEqual(single.rows, [14]);
+  assert.deepEqual(chunked.rows, [8, 5]);
+  assert.deepEqual(single.rows, [13]);
   assert.equal(chunked.concurrency(), 1);
   assert.equal(single.concurrency(), 1);
   assert.deepEqual(chunkedResult, singleResult);

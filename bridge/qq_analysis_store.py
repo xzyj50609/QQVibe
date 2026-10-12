@@ -23,7 +23,8 @@ LOCAL_TABLES = {
         "results_v2", "analysis_skips", "fine_results_v1", "fine_skips_v1",
         "progress_v1", "summary_v1", "profile_tokens_v1", "profile_tokens_ready_v1", "profile_state_v1")},
     **{name: "base_version" for name in (
-        "batch_progress_v1", "batch_runs_v1", "batch_coverage_v1", "batch_fragments_v1", "quoted_backfill_v1")},
+        "batch_progress_v1", "batch_runs_v1", "batch_coverage_v1", "batch_fragments_v1", "quoted_backfill_v1",
+        "batch_source_checks_v1")},
 }
 
 
@@ -49,7 +50,7 @@ class QQAnalysisStage(ResultStore):
         self.owner, self.user, self.version = owner, user, version
         self.revision, self.identifier, self.requires_rebuild = revision, identifier, rebuild
         self.control_epoch=owner.base.analysis_epoch(owner.account,user)
-        super().__init__(path, transaction_guard=self.guard)
+        super().__init__(path, cipher=owner.base.cipher, transaction_guard=self.guard)
         self.scope = AnalysisScope(self)
 
     @contextmanager
@@ -156,11 +157,15 @@ class QQAnalysisStore:
                 with self.base.connect() as source, closing(sqlite3.connect(path)) as target:
                     source.backup(target)
             stage = QQAnalysisStage(self, path, user, version, revision, identifier, rebuild)
+            with self.base.connect() as origin, stage.connect() as target:
+                target.executemany("INSERT OR IGNORE INTO portrait_resets_v1 VALUES (?,?,?)",
+                    origin.execute("SELECT * FROM portrait_resets_v1 WHERE account=? AND session=?",
+                                   (self.account,user)).fetchall())
             BatchStateStore(stage)
             self.stages[identifier] = stage
             return stage
 
-    def bind_labels(self,user,version,model_version):
+    def bind_labels(self,user,version,model_version,*,is_group=True):
         """Per-message group publication; portrait/whole-generation guards stay intact."""
         with self.source.read_library(self.account) as (_,library):
             revision=library.revision(self.account,user)
@@ -173,7 +178,8 @@ class QQAnalysisStore:
                     conn.execute('INSERT INTO qq_analysis_generations_v1 VALUES (?,?,?,?,?,?)',(*identity,None,revision[0],identifier))
             key='labels:'+identifier
             if key not in self.stages:
-                self.stages[key]=QQGroupLabelStage(self,user,version,model_version,revision[0],identifier)
+                stage_type=QQGroupLabelStage if is_group else QQSingleLabelStage
+                self.stages[key]=stage_type(self,user,version,model_version,revision[0],identifier)
             return self.stages[key]
 
     def publish(self, stage):
@@ -222,12 +228,13 @@ class StaleGroupInputError(StaleAnalysisError):
 
 
 class QQGroupLabelStage(ResultStore):
+    message_publication = True
     def __init__(self,owner,user,version,model_version,revision,identifier):
         self.owner,self.user,self.version=owner,user,version
         self.model_version,self.revision,self.identifier=model_version,revision,identifier
         self.requires_rebuild=False
         self.control_epoch=owner.base.analysis_epoch(owner.account,user)
-        super().__init__(owner.base.path,transaction_guard=self.guard)
+        super().__init__(owner.base.path,cipher=owner.base.cipher,transaction_guard=self.guard)
         self.profile_lock=owner.base.profile_lock
         self.scope=AnalysisScope(self)
 
@@ -250,11 +257,10 @@ class QQGroupLabelStage(ResultStore):
         return self.owner.base.cache_suspended(account,source_id)
 
     def save_fine(self,account,user,version,message,result):
-        from qq_group_analysis import current_basis
         if (account,user,version)!=(self.owner.account,self.user,self.version):
             raise StaleAnalysisError()
         with self.guard():
-            basis=current_basis(self.owner.source,account,user,self.model_version,message['id'])
+            basis=self.current_basis(account,user,message['id'])
             if basis is None or basis!=result.get('qqInputBasis'):
                 raise StaleGroupInputError()
             with self.owner.source.read_library(account) as (_,library):
@@ -275,6 +281,10 @@ class QQGroupLabelStage(ResultStore):
                 self.complete_resume_target(conn,account,user,version,message['id'])
             self.revision=revision
 
+    def current_basis(self,account,user,stable_id):
+        from qq_group_analysis import current_basis
+        return current_basis(self.owner.source,account,user,self.model_version,stable_id)
+
     def skip_fine(self,account,user,version,message,reason):
         from backend_contracts import FINE_LABEL_SCHEMA
         return self.save_fine(account,user,version,message,{'state':'skipped','reason':reason,
@@ -283,3 +293,9 @@ class QQGroupLabelStage(ResultStore):
     def publish(self,*,complete=False):
         with self.guard():
             return True
+
+
+class QQSingleLabelStage(QQGroupLabelStage):
+    def current_basis(self,account,user,stable_id):
+        from qq_single_analysis import current_basis
+        return current_basis(self.owner.source,account,user,self.model_version,stable_id)

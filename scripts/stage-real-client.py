@@ -33,6 +33,9 @@ BRIDGE = (
     "local_model_source.py", "model_install.py", "profile_signals.py", "profile_state.py",
     "backend_contracts.py", "backend_service.py", "message_results.py", "message_contracts.py",
     "message_input.py", "portrait_contracts.py", "api_tasks.py", "node_analysis.py",
+    "api_pool.py", "api_portrait_ledger.py", "api_portrait_statistics.py",
+    "payload_crypto.py", "payload_recovery.py", "process_lock.py", "installation_gate.py",
+    "guidance_contracts.py", "qq_single_analysis.py",
     "analysis_scheduler.py",
     "analysis_control.py",
     "result_store.py",
@@ -82,6 +85,7 @@ MODEL_PINS = {name: (entry["bytes"], entry["sha256"])
 if _model_manifest.get("schema") != 1 or set(MODEL_FILES) != set(MODEL_PINS):
     raise RuntimeError("pinned model manifest differs from stage allowlist")
 PUBLIC_FILES = (
+    "chatui/analysis-tools.js", "chatui/analysis-tools.css",
     "chatui/chatbean-tokens.css", "chatui/chatbean.css", "chatui/chatbean-ui.js", "chatui/chatbean-splitter.js",
     "docs/public/images/chatbean-overview.png", "docs/public/images/chatbean-portrait.png",
     "LICENSE", "THIRD_PARTY_NOTICES.md", "README.md", "licenses/jieba-0.42.1-LICENSE.txt",
@@ -106,6 +110,7 @@ PUBLIC_FILES = (
     "chatui/assets/qqvibe-icon.png", "chatui/assets/qqvibe-icon.ico", "chatui/assets/qqvibe-icon.svg",
     "electron/model-connectors.ts", "electron/api-insights.ts",
     "electron/api-message-insights.ts", "electron/api-portrait.ts", "electron/api-analysis-json.ts",
+    "electron/api-insight-stream.ts", "electron/api-portrait-classifier.ts", "electron/api-portrait-evidence.ts",
     "electron/local-message-insights.ts",
     "shared/contracts.ts", "shared/message-input.ts", "shared/group-context.ts", "src/lib/labels.ts",
     "native-reader/THIRD_PARTY_NOTICES.md",

@@ -195,12 +195,15 @@ it("does not force emotion or intent tags for insufficient evidence", () => {
 it("lands only complete streamed emotion and intent pairs", () => {
   const { ui } = harness();
   const parse = (text, ids) => JSON.parse(JSON.stringify(ui.parseApiPartialLabels(text, ids)));
+  assert.deepEqual(parse("情感：关切\n意图：询问\n", ["m1"]), {});
+  assert.deepEqual(parse("编号：unknown\n情感：关切\n意图：询问\n", ["m1"]), {});
+  assert.deepEqual(parse("编号：m1\n情感：关切\n意图：询问\n编号：m1\n情感：平静\n意图：说明\n", ["m1"]), {});
   assert.deepEqual(parse("姓名：小王\n情感：关", ["m1"]), {});
-  assert.deepEqual(parse("姓名：小王\n情感：关切\n意图：询问\n", ["m1"]), {
+  assert.deepEqual(parse("编号：m1\n姓名：小王\n情感：关切\n意图：询问\n", ["m1"]), {
     m1: { id: "m1", status: "ok", affect: { feeling: "关切" }, intents: ["询问"] },
   });
   assert.deepEqual(parse(
-    "情感：关切\n意图：询问\n情感：犹豫\n意图：改期\n整体总结：情感：平静 意图：说明",
+    "编号：m1\n情感：关切\n意图：询问\n编号：m2\n情感：犹豫\n意图：改期\n整体总结：情感：平静 意图：说明",
     ["m1", "m2"],
   ), {
     m1: { id: "m1", status: "ok", affect: { feeling: "关切" }, intents: ["询问"] },

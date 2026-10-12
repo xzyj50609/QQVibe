@@ -6,10 +6,12 @@ import json
 import time
 import uuid
 from collections import deque
+from copy import deepcopy
 
 from batch_state import BATCH_VERSION, BatchStateStore
 from profile_signals import keyword_counts
 from analysis_targets import SELF_SUBJECT, is_group, subject as target_subject, target
+from profile_state import empty_state
 
 
 class BatchEngine:
@@ -24,10 +26,15 @@ class BatchEngine:
         return target_subject(self.backend.source, user, member)
 
     def store(self, store):
-        key = str(store.path)
+        key = (str(store.path),getattr(store,'user',None),getattr(store,'control_epoch',None),
+               getattr(store,'identifier',None))
         if key not in self.stores:
             self.stores[key] = BatchStateStore(store)
         return self.stores[key]
+
+    def _commit(self, scope, operation, *args, **kwargs):
+        with self.backend._scope_commit(scope):
+            return operation(*args, **kwargs)
 
     def snapshot(self, account, user, version, store, member=None):
         return self.store(store).load(account, user, version, self.subject(user, member))
@@ -38,22 +45,98 @@ class BatchEngine:
         saved = batches.load(account, user, version, subject)
         if saved is not None:
             return saved
-        state = self.backend._legacy_profile_state(account, user, version, store, scope[1], subject or None)
-        previous = (store.progress(account, user, version) if member is None else
-                    {'cursor':None,'context':[],'complete':False})
+        reset = store.portrait_reset(account, user, subject)
+        refs = batches.recovery_refs(account, user, version, subject)
+        if refs:
+            self.backend._assert_scope(scope)
+            if hasattr(self.backend.source, "texts_for_refs"):
+                texts = dict(self.backend.source.texts_for_refs(user, refs, with_ids=True))
+            else:
+                texts, selected = {}, {stable_id for _shard, _local, stable_id in refs}
+                for page in self.backend._history_pages(user, self.backend.source.history_highwater(user), scope):
+                    texts.update((item["id"], item["text"]) for item in page
+                                 if item["id"] in selected and item["kind"] == "text")
+            self.backend._assert_scope(scope)
+            self._commit(scope, batches.restore_words, account, user, version, refs, texts)
+        state = (empty_state() if reset else
+                 self.backend._legacy_profile_state(account, user, version, store, scope[1], subject or None))
+        previous = ({"cursor": None, "context": [], "complete": False} if reset else
+                    (store.progress(account, user, version) if member is None else {"cursor":None,"context":[],"complete":False}))
         cursor, context = previous["cursor"], previous["context"]
         # Old oversized messages were never inferred. The new window protocol can split them.
-        skipped = store.first_skipped_position(account, user, version) if member is None else None
+        skipped = None if reset or member is not None else store.first_skipped_position(account, user, version)
         if skipped and (cursor is None or tuple(skipped) <= tuple(cursor)):
             cursor = (skipped[0], skipped[1], max(0, skipped[2]-1))
             context = []
         self.backend._assert_scope(scope)
-        saved = batches.seed(account, user, version, subject, state, cursor, list(context)[-3:])
+        saved = self._commit(scope, batches.seed, account, user, version, subject, state, cursor, list(context)[-3:])
         highwater = self.backend.source.history_highwater(user)
         if previous["complete"] and not skipped and (highwater is None or
-                (cursor is not None and tuple(cursor) >= tuple(highwater))):
-            saved = batches.mark_complete(account, user, version, subject)
+                (saved["cursor"] is not None and tuple(saved["cursor"]) >= tuple(highwater))):
+            saved = self._commit(scope, batches.mark_complete, account, user, version, subject)
         return saved
+
+    def reconcile_pending(self, account, user, version, store, member=None):
+        """Metadata changes trigger one cheap prefix aggregate before a historical scan."""
+        source = self.backend.source
+        if not callable(getattr(source, "history_revision", None)) or not callable(
+                getattr(source, "history_prefix_signature", None)):
+            return False
+        subject = self.subject(user, member)
+        batches = self.store(store)
+        saved = batches.load(account, user, version, subject)
+        if saved is None or saved["cursor"] is None:
+            return False
+        check = batches.source_check(account, user, version, subject)
+        revision = source.history_revision(user)
+        if check is not None and revision == check["revision"]:
+            return False
+        if check is None:
+            return True
+        signature = source.history_prefix_signature(user, check["ceiling"])
+        if signature != check["prefix"]:
+            return True
+        batches.save_source_check(account, user, version, subject, revision, signature, check["ceiling"])
+        return False
+
+    def reconcile(self, account, user, version, store, job, scope, member=None):
+        subject = self.subject(user, member)
+        batches = self.store(store)
+        saved = batches.load(account, user, version, subject)
+        ceiling = saved["cursor"]
+        source = self.backend.source
+        revision = source.history_revision(user)
+        signature = source.history_prefix_signature(user, ceiling)
+        after, context = None, []
+        job["phase"] = "reconcile"
+        while ceiling is not None:
+            self.backend._assert_scope(scope)
+            page, next_after = source.history_page(user, ceiling, after)
+            if next_after is None:
+                break
+            if after is not None and next_after <= after:
+                raise RuntimeError("history reconciliation cursor did not advance")
+            items = self.text_items(page)
+            while items:
+                known = self.known(account, user, version, store, subject, items)
+                first = next((index for index, item in enumerate(items)
+                              if item["id"] not in known and
+                              (member is None or item["senderId"] == member)), None)
+                if first is None:
+                    context = self.context([*context, *items])
+                    break
+                context = self.context([*context, *items[:first]])
+                items = items[first:]
+                cursor, offset, context = self.infer(account, user, version, store, scope,
+                                                    subject, items, context, advance=False)
+                job["processed"] = job["total"] = batches.load(account, user, version, subject)["state"]["count"]
+                items = [item for item in items if tuple(item["_sort"]) > cursor or
+                         (offset and tuple(item["_sort"]) == cursor)]
+                yield
+            after = next_after
+        self.backend._assert_scope(scope)
+        if source.history_revision(user) == revision:
+            self._commit(scope, batches.save_source_check, account, user, version, subject, revision, signature, ceiling)
 
     def target(self, item, subject, *, is_group=False):
         # A single-chat conversation key need not equal the peer's native sender ID.
@@ -69,9 +152,19 @@ class BatchEngine:
     @staticmethod
     def context(items):
         from qq_roles import group_context
-        return [{"id": item["id"], "side": item["side"], "text": item["text"],
-                 **({'groupContext':group_context(item)} if item.get('conversationKind')=='group' else {})}
-                for item in items if item.get("kind", "text") == "text"][-3:]
+        projected = []
+        for item in items:
+            if item.get("kind", "text") != "text":
+                continue
+            row = {"id": item["id"], "side": item["side"], "text": item["text"]}
+            # Older checkpoints retain the role but omit conversationKind and the
+            # raw sender fields. Preserve that role when projecting them again.
+            if "groupContext" in item or item.get("conversationKind") == "group":
+                row["conversationKind"] = "group"
+                row["groupContext"] = (deepcopy(item["groupContext"]) if "groupContext" in item
+                                       else group_context(item))
+            projected.append(row)
+        return projected[-3:]
 
     def known(self, account, user, version, store, subject, items):
         ids = [item["id"] for item in items]
@@ -91,13 +184,14 @@ class BatchEngine:
             result[stable_id] = {**(row.get("result") or {}), **marker}
         return result
 
-    def move(self, account, user, version, store, subject, cursor, context):
+    def move(self, account, user, version, store, subject, cursor, context, scope):
         """Advance only over already-covered or non-text rows; never invent model results."""
         if cursor is None:
             return
-        self.store(store).move_cursor(account, user, version, subject, cursor, context)
+        self._commit(scope, self.store(store).move_cursor, account, user, version, subject, cursor, context)
 
     def infer(self, account, user, version, store, scope, subject, items, context, *, advance):
+        context = self.context(context)
         batches = self.store(store)
         known = self.known(account, user, version, store, subject, items)
         offsets = batches.offsets(account, user, version, subject, [item["id"] for item in items])
@@ -107,18 +201,19 @@ class BatchEngine:
                  offsets[items[0]["id"]] > snapshot["charOffset"])):
             # A recent-window pass may already have durably consumed more of this fragment.
             self.backend._assert_scope(scope)
-            batches.move_cursor(account, user, version, subject, items[0]["_sort"], context,
-                                char_offset=offsets[items[0]["id"]])
+            self._commit(scope, batches.move_cursor, account, user, version, subject, items[0]["_sort"], context,
+                         char_offset=offsets[items[0]["id"]])
         payload = [{"id": item["id"], "text": item["text"], "side": item["side"],
                     **({key:item.get(key) for key in ('senderId','time','conversationKind','quote','mentions')} if item.get('conversationKind')=='group' else {}),
                     "target": self.target(item, subject, is_group=is_group(self.backend.source,user))
                               and item["id"] not in known,
                     "offset": offsets.get(item["id"], 0)} for item in items]
         started = time.perf_counter()
+        self.backend._assert_scope(scope)
         response = self.backend.analyzer.analyze_batch(
             f"{account}:{store.path}:{user}:{subject}", payload,
             [{"side": item["side"], "text": item["text"],
-              **({'groupContext':item['groupContext']} if item.get('groupContext') else {})} for item in context])
+              **({'groupContext':item['groupContext']} if 'groupContext' in item else {})} for item in context])
         inferred = time.perf_counter()
         records, words = [], {}
         for index, piece in enumerate(response["consumed"]):
@@ -141,7 +236,7 @@ class BatchEngine:
             ensure_ascii=False).encode()).hexdigest()
         self.backend._assert_scope(scope)
         verified = time.perf_counter()
-        batches.commit(account, user, version, subject, batch_id=batch_id, consumed=records,
+        self._commit(scope, batches.commit, account, user, version, subject, batch_id=batch_id, consumed=records,
             cursor=cursor if advance else snapshot["cursor"],
             char_offset=offset if advance else snapshot["charOffset"],
             context=next_context if advance else snapshot["context"], result=response["result"],
@@ -190,6 +285,11 @@ class BatchEngine:
         job["analysisUnit"] = "batch"
         job["processed"] = job["total"] = saved["state"]["count"]
         highwater = self.backend.source.history_highwater(user)
+        source = self.backend.source
+        revision = source.history_revision(user) if callable(getattr(source, "history_revision", None)) else None
+        if cursor is not None and self.reconcile_pending(account, user, version, store, member):
+            yield from self.reconcile(account, user, version, store, job, scope, member)
+            job["phase"] = "incremental" if saved["complete"] else "baseline"
         buffered_page, buffered_end = [], None
         while highwater is not None and (cursor is None or cursor < highwater or offset):
             if member is None:
@@ -211,7 +311,7 @@ class BatchEngine:
                 if first is None:
                     context = self.context([*context, *page_texts])
                     self.backend._assert_scope(scope)
-                    self.move(account, user, version, store, subject, next_cursor, context)
+                    self.move(account, user, version, store, subject, next_cursor, context, scope)
                     cursor, offset = next_cursor, 0
                     buffered_page = []
                     continue
@@ -219,7 +319,7 @@ class BatchEngine:
                 if first:
                     self.backend._assert_scope(scope)
                     cursor, offset = tuple(items[first-1]["_sort"]), 0
-                    self.move(account, user, version, store, subject, cursor, context)
+                    self.move(account, user, version, store, subject, cursor, context, scope)
                 items = items[first:]
             else:
                 # Only this member is TARGET; retain intervening speakers as ordered BACKGROUND.
@@ -229,7 +329,7 @@ class BatchEngine:
                 if not pending:
                     context = self.context([*context, *page_texts])
                     self.backend._assert_scope(scope)
-                    self.move(account, user, version, store, subject, next_cursor, context)
+                    self.move(account, user, version, store, subject, next_cursor, context, scope)
                     cursor, offset = next_cursor, 0
                     buffered_page = []
                     continue
@@ -244,7 +344,7 @@ class BatchEngine:
                 if before:
                     self.backend._assert_scope(scope)
                     cursor, offset = tuple(before[-1]["_sort"]), 0
-                    self.move(account, user, version, store, subject, cursor, context)
+                    self.move(account, user, version, store, subject, cursor, context, scope)
                 items = [item for item in page_texts if
                          start_position <= tuple(item["_sort"]) <= last_position]
             cursor, offset, context = self.infer(account, user, version, store, scope,
@@ -256,7 +356,11 @@ class BatchEngine:
             # Yield after a whole model window, never between individual message inferences.
             yield
         self.backend._assert_scope(scope)
-        batches.mark_complete(account, user, version, subject)
+        self._commit(scope, batches.mark_complete, account, user, version, subject)
+        if cursor is not None and revision is not None and callable(getattr(source, "history_prefix_signature", None)):
+            signature = source.history_prefix_signature(user, cursor)
+            if source.history_revision(user) == revision:
+                self._commit(scope, batches.save_source_check, account, user, version, subject, revision, signature, cursor)
         job["checkpointComplete"] = True
 
     def request_member(self, account, user, version, store, scope, member, text_count, retry=False):
@@ -273,7 +377,8 @@ class BatchEngine:
                 current = None
             if current and current["status"] in ("queued", "running", "error"):
                 return dict(current)
-            if saved["complete"] and saved["state"]["count"] >= text_count:
+            if (saved["complete"] and saved["state"]["count"] >= text_count and
+                    not self.reconcile_pending(account, user, version, store, member)):
                 return {"status": "done", "checkpointComplete": True, "analysisUnit": "batch"}
             job = {"id": uuid.uuid4().hex, "status": "queued", "phase": "baseline",
                    "checkpointComplete": False, "analysisUnit": "batch"}

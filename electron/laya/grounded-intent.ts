@@ -20,7 +20,8 @@ export type GroundedIntentLabel =
   | "explain"
   | "complain"
   | "status_report"
-  | "share_news";
+  | "share_news"
+  | "close_chat";
 
 export type IntentEvidenceKind =
   | "greeting_phrase"
@@ -39,6 +40,9 @@ export type IntentEvidenceKind =
   | "imperative_adjustment"
   | "delegated_action"
   | "first_person_intention"
+  | "concrete_reschedule"
+  | "conversation_pause"
+  | "conditional_acceptance"
   | "explicit_correction"
   | "causal_explanation"
   | "process_explanation"
@@ -60,19 +64,51 @@ const QUOTED = /“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’|"[^"]*"|
 const INVITATION_CONTEXT = /(?:要不要|一起|约|有空|安排|见面|出来|吃饭|看展|看电影|周六|周日|周末|明天|后天|下周)/u;
 const DEFERRAL_TEXT = /改天|以后再说|再说吧|再约|看情况|过(?:几|两)天|有空再说|晚点再说/u;
 const DENIAL_CONTEXT = /喜欢|爱|在乎|想我|暧昧|关系|要不要|是不是|会不会|是否/u;
+const CONCRETE_TIME = /今天|明天|后天|今晚|明早|周[一二三四五六日天]|周末|下周|下个月|\d{1,2}[号日点]|上午|下午|晚上/u;
+
+/** Transparent opinion framing does not change the action in the following clause. */
+export function normalizeIntentTarget(targetText: string): string {
+  if (typeof targetText !== "string") return "";
+  const quotedResponse = /^(?:他说|她说|他们说|有人说|[^，,。！？?]{1,12}说)[:：]?\s*(?:“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’|"[^"]*")[，,。.;；\s]*(?:但是|不过|可是|然而|但)?\s*((?:我|我们).+)$/u.exec(targetText.trim());
+  let text = (quotedResponse ? quotedResponse[1] : targetText).replace(QUOTED, " ").replace(/\s+/gu, " ").trim()
+    .replace(/^(?:qq_\d+|wxid_[\w-]+|[\w-]+@chatroom)\s*:\s*/u, "")
+    .replace(/^(?:我的(?:想法|建议|看法)是|我觉得|在我看来)[：:，,\s]+/u, "").trim();
+  const reported = /^(?:他说|她说|他们说|有人说|听说|转述|引用)/u.test(text)
+    || !/^我(?:们)?/u.test(text) && /^[^，,。！？?]{1,20}(?:说|问我|让我|表示|提到|请求我)[：:，,]/u.test(text);
+  if (reported && !/^[^，,。.;；]*[：:]\s*[^，,。.;；\s]/u.test(text)) {
+    const response = /(?:[，,]\s*(?:但是|不过|可是|然而|但)|[。.;；]\s*(?:但是|不过|可是|然而|但)?)\s*((?:我|我们).+)$/u.exec(text);
+    if (response) text = response[1].trim();
+  }
+  return text;
+}
+
+/** An explicitly reported or negated act does not authorize its positive label. */
+export function isUnattributableIntentTarget(targetText: string): boolean {
+  const text = normalizeIntentTarget(targetText);
+  return !text || /^(?:他说|她说|他们说|有人说|听说|转述|引用|比如|例如|假设|所谓)\s*[:：，,]?/u.test(text)
+    || /^(?:我不是在|并不是在)(?:说|问|请求|邀请|感谢|拒绝)/u.test(text)
+    || /^(?:我说的不是|我的意思不是|我不是说|并不是说)(?:请|让|帮|请求|邀请)/u.test(text)
+    || !/^我(?:们)?/u.test(text) && /^[^，,。！？?]{1,20}(?:说|问我|让我|表示|提到|请求我)[：:，,]/u.test(text);
+}
+
+/** Describing a question or concern is different from requesting its answer. */
+export function isEmbeddedQuestionStatement(targetText: string): boolean {
+  const text = normalizeIntentTarget(targetText);
+  if (/[？?]|[吗么呢][。！!\s]*$/u.test(text)) return false;
+  if (/^(?:我|我们)(?:想|想要|希望)(?:知道|了解|弄清楚|确认)/u.test(text)) return false;
+  return /(?:^|[，,。；;])(?:我|我们)(?:主要|更|最|也|很|已经|正在|先)?(?:在意|在乎|看重|关注|关心|担心|考虑|知道|明白|了解|清楚|讨论|研究|记录)[^。！？?]{0,24}(?:能不能|会不会|是否|怎么|为什么|哪里|如何|几|多少)/u.test(text)
+    || /(?:知道|明白|了解|清楚|解释|说明|告诉|发现|讨论|研究|记录)[^。！？?]{0,16}(?:怎么|为什么|哪里|哪儿|什么时候|如何|是否|几|多少)/u.test(text);
+}
 
 /** Return an evidenced generic intent, or abstain. This is deliberately a pure function. */
 export function groundedIntent(targetText: string): GroundedIntent | null {
   if (typeof targetText !== "string" || !targetText.trim() || targetText.length > 240) return null;
-  let text = targetText.replace(QUOTED, " ").replace(/\s+/gu, " ").trim();
+  let text = normalizeIntentTarget(targetText);
   if (!/[\p{L}\p{N}\p{Extended_Pictographic}]/u.test(text)) return null;
-  // Forwarded chat lines can carry a transport sender prefix; classify only
-  // the actual utterance after that prefix, never the identifier itself.
-  text = text.replace(/^(?:qq_\d+|wxid_[\w-]+|[\w-]+@chatroom)\s*:\s*/u, "").trim();
   if (!text) return null;
 
   // Reported speech, examples, and hypothetical premises are not the sender's act.
-  if (/^(?:他说|她说|他们说|有人说|听说|转述|引用|比如|例如|假设|如果|假如|所谓)\s*[:：，,]?/u.test(text)
+  if (isUnattributableIntentTarget(targetText) || /^(?:如果|假如)\s*[:：，,]?/u.test(text)
     || /^(?:我不是在(?:说|问|邀请|感谢|拒绝)|并不是(?:在)?(?:说|问|邀请|感谢|拒绝))/u.test(text)) return null;
 
   // The clause after an explicit turn normally carries the actionable decision.
@@ -128,10 +164,28 @@ export function groundedIntent(targetText: string): GroundedIntent | null {
 
   if (/^(?:不对|说错了|纠正一下|我更正一下|你说的.{1,30}不对|不是.{1,40}(?:而是|是)|不是这样(?:的)?|应该不是.{1,50}|应该是.{1,30}不是)/u.test(text)
     && !/[？?]$/u.test(text)) return result("correct", "explicit_correction");
+  if ((/^(?:我|我们)(?:并)?不是[^，,。！？?]{1,60}[，,]\s*(?:而是|只是|是)[^。！？?]{1,100}/u.test(text)
+      || /^(?:我|我们)(?:并)?(?:没有|没)说[^，,。！？?]{1,60}[，,]\s*(?:只是|而是|我说的是)[^。！？?]{1,100}/u.test(text))
+      && !/[？?]$/u.test(text)) return result("correct", "explicit_correction");
 
   // Asking someone to act differs from asking for information.
-  if (/^(?:请(?!问)|麻烦(?:你|您)?|帮我|请你|请您|能不能(?:帮我|替我|给我|把)|能否(?:帮我|替我|给我|把)|可以(?:帮我|替我|给我|把)|你能(?:帮我|替我|给我|把))[^。！？?]{1,70}/u.test(text)) {
+  const request = /(?:^|[，,。；;])\s*(?:请(?!问)|麻烦(?:你|您)?|帮我|请你|请您|(?:你|您)?能不能(?:帮我|替我|给我|把)|(?:你|您)?能否(?:帮我|替我|给我|把)|(?:你|您)?可以(?:帮我|替我|给我|把)|你能(?:帮我|替我|给我|把)|给我(?=(?:一|两|三|几|\d)[^。！？?]{1,30}))[^。！？?]{1,70}/u.exec(text);
+  if (request && !/(?:说|问我|让我|请求我|提到|转述)[：:，,。；;]\s*$/u.test(text.slice(0, request.index + 1))) {
     return result("seek_help", "action_request");
+  }
+
+  const reschedule = /(?:^|[，,。；;])\s*(?:只是|那就)?(?:(?:我|我们|咱们)(?:把(?:时间|日期|安排|会议|见面|聚会|活动))?|(?:把)?(?:时间|日期|安排|会议|见面|聚会|活动)|(?:那|要不|不如)(?:我们|咱们)?|)(?:改(?:到|成|为|在)|换(?:到|成|在))(?:了)?[^。！？?]{1,40}/u.exec(text);
+  if (reschedule && CONCRETE_TIME.test(reschedule[0]) && !/[？?]$/u.test(text)
+      && !/不同意|不接受|拒绝|只是举例|只是例子|没有发生|没发生/u.test(reschedule[0])) {
+    return result("plan", "concrete_reschedule");
+  }
+  if (/(?:^|[，,。；;])(?:(?:我)?(?:想|要)?先(?:去)?休息(?:一下|一会儿)?|先不聊了|先聊到这(?:里)?|今天就聊到这(?:里)?|明天再聊|下次再聊|回头再聊|晚点再聊)(?:[，,。！!\s]|$)/u.test(text)
+      && !/[？?]$/u.test(text)
+      && (/(?:不聊|聊到|再聊)/u.test(text) || /(?:明天|下次|改天|回头|晚点)再(?:接着|继续)?(?:说|聊|讨论)/u.test(text))) {
+    return result("close_chat", "conversation_pause");
+  }
+  if (/^(?:愿意|可以|同意|行|没问题)[，,]\s*(?:只要|前提是|条件是)[^。！？?]{2,80}[。！!]?$/u.test(text)) {
+    return result("agree", "conditional_acceptance");
   }
 
   if (/^(?:(?:明天|后天|今天|周末|下周|有空时|(?:这|本|下)?周[一二三四五六日天]|(?:这|本|下)?星期[一二三四五六日天]|(?:这|本|下)?礼拜[一二三四五六日天])[，,\s]*)?(?:要不要|你要不要|咱们|我们|一起|约个时间|我邀请你)[^。！？?]{0,60}(?:一起|吃|喝|看|玩|逛|去|见|聚|聊|打球)[^。！？?]{0,30}(?:[吧吗？?！!。]|$)/u.test(text)
@@ -144,7 +198,7 @@ export function groundedIntent(targetText: string): GroundedIntent | null {
   }
 
   // These forms normally request an answer. Rhetorical negatives were removed above.
-  const embeddedQuestionWord = /(?:知道|明白|了解|清楚|解释|说明|告诉|发现|讨论|研究|记录)[^。！？?]{0,16}(?:怎么|为什么|哪里|哪儿|什么时候|如何|是否|几|多少)/u.test(text);
+  const embeddedQuestionWord = isEmbeddedQuestionStatement(text);
   if (/[？?]$/u.test(text)
     || /^是[^。！？?]{1,50}还是[^。！？?]{1,50}(?:啊|呀|呢|吗)[。]?$/.test(text)
     || /^(?:谁|什么|哪里|哪儿|哪天|何时|什么时候|为什么|怎么|如何|是否|能否)[^。！？?]{1,90}[。]?$/.test(text)
@@ -154,10 +208,10 @@ export function groundedIntent(targetText: string): GroundedIntent | null {
     return result("ask_question", "answer_seeking_question");
   }
 
-  if (/^(?:我建议|建议|最好|不妨|可以先|你可以先|你最好|试着|试试)[^。！？?]{2,90}/u.test(text)) {
+  if (/(?:^|[，,。；;])\s*(?:我建议|建议|最好|不妨|可以先|你可以先|你最好|试着|试试|先(?:列出|整理|确认|检查|比较|完成))[^。！？?]{2,90}/u.test(text)) {
     return result("suggest_action", "advice_marker");
   }
-  if (/^(?:那就|那你|那我们|你)(?:先)?(?:把|将|去|做|试|看|检查|处理|改|发|上传|提交|部署|测试|确认|弄|等|备份)[^。！？?]{0,60}[。！!]?$/.test(text)
+  if (/(?:^|[，,。；;])\s*(?:那就|那你|那我们|你|大家|咱们)(?:先)?(?:把|将|去|做|试|看|检查|处理|改|发|上传|提交|部署|测试|确认|弄|等|备份)[^。！？?]{0,60}[。！!]?$/.test(text)
     || /^可以试试[^。！？?]{1,60}[。！!]?$/.test(text)) {
     return result("suggest_action", "advice_marker");
   }
@@ -175,6 +229,8 @@ export function groundedIntent(targetText: string): GroundedIntent | null {
     && !/^(?:我|我们)准备好(?:了|啦)/u.test(text)) return result("plan", "first_person_intention");
   if (/^我先(?:把|去|做|试|看|检查|处理|改|发|上传|提交|部署|测试|确认|弄|跑|等)[^。！？?]{0,60}[。！!]?$/.test(text)
     && !/(?:了|过)[。！!]?$/.test(text)) return result("plan", "first_person_intention");
+  if (/(?:^|[，,。；;])\s*(?:我|我们)(?:会(?:认真|先)?|负责|来)(?:改|修改|整理|检查|确认|保存|发送|发|准备|联系|查|订|带)[^。！？?]{0,60}[。！!]?$/.test(text)
+      && !/(?:已经|昨天|刚才|改完|做完|发过|发了)/u.test(text)) return result("plan", "first_person_intention");
 
   if (/^(?:因为|原因是|之所以)[^。！？?]{2,120}/u.test(text)
     || /因为[^。！？?]{2,90}(?:所以|导致)[^。！？?]{1,90}/u.test(text)) {
@@ -206,9 +262,21 @@ export function groundedIntent(targetText: string): GroundedIntent | null {
 
 /** Context-aware fine-message evidence. Portrait analysis remains target-only. */
 export function groundedIntentWithContext(targetText: string, contextHint = ""): GroundedIntent | null {
-  const target = typeof targetText === "string" ? targetText.replace(QUOTED, " ").trim() : "";
+  const target = normalizeIntentTarget(targetText);
   const context = String(contextHint || "").replace(QUOTED, " ").trim();
   if (!target || !context) return groundedIntent(targetText);
+  const direct = groundedIntent(targetText);
+  if (direct && !["greet", "thank", "confirm", "agree", "status_report"].includes(direct.label)) return direct;
+  if (direct?.evidenceKind === "conditional_acceptance") return direct;
+  const latestContext = context.split(/\n/u).at(-1) || "";
+  const latestQuestion = groundedIntent(latestContext);
+  if (/^(?:不是|并非)[，,]\s*我(?!没有|没说|不是)[^。！？?]{2,100}[。！!]?$/u.test(target) &&
+      latestQuestion?.label === "ask_question" &&
+      /^(?:(?:所以|那|那么)[，,\s]*)?(?:你|您|我们|咱们)/u.test(latestContext) &&
+      /是不是|是否|会不会|吗[？?。！!\s]*$/u.test(latestContext) &&
+      !/^(?:他说|她说|有人说|引用|比如|例如|假设|如果|假如)/u.test(latestContext)) {
+    return result("deny", "contextual_denial");
+  }
   if (INVITATION_CONTEXT.test(context) && DEFERRAL_TEXT.test(target) &&
       !/(?:今天|明天|后天|周[一二三四五六日天]|周末|下周).{0,12}(?:请|一起|约|见面)/u.test(target)) {
     return result("reject", "contextual_deferral");
@@ -216,5 +284,5 @@ export function groundedIntentWithContext(targetText: string, contextHint = ""):
   if (/^(?:木有|没有)[。！!？?\s]*$/u.test(target) && DENIAL_CONTEXT.test(context)) {
     return result("deny", "contextual_denial");
   }
-  return groundedIntent(targetText);
+  return direct;
 }

@@ -111,7 +111,7 @@ function personaHarness(apiImpl, storage) {
     sessions: new Map([["friend", { name: "合成联系人", isGroup: false }]]),
     currentAccount: "acct", currentUser: "friend", activeMember: "",
     view: "persona", modelSourceResolved: true,
-    modelSourceSnapshot: { mode: "api", sourceId: "api-a", api: { model: "synthetic", contextTokens: 8192 } },
+    modelSourceSnapshot: { mode: "api", sourceId: "api-a", api: { model: "synthetic", contextTokens: 16384 } },
     controller: new AbortController(), profileGeneration: 0, profilePending: false,
     profileCache: new Map(), profileSnapshotsRequireRefresh: new Set(),
     renderedProfileKey: null, renderedProfileSignature: null, memberRenderedScope: null,
@@ -254,6 +254,21 @@ it("uses the shared MBTI evidence state without an API-only unlock action", () =
   assert.match(card, /尚无足够证据/);
   assert.doesNotMatch(card, /解锁人格|重试 API 画像/);
   assert.doesNotMatch(card, /\?\?\?\?/);
+});
+
+it("explains the full portrait minimum and sends no request for a smaller context", async () => {
+  const posts = [];
+  const { ui, context, byId } = personaHarness(async (url, options) => {
+    if (options?.method === "POST") posts.push(url);
+    const data = payload("api-a", "未完成");
+    data.progress = { processed: 0, total: 8, complete: false };
+    data.job = { id: null, status: "idle", processed: 0, total: 8 };
+    return data;
+  });
+  context.modelSourceSnapshot = { mode: "api", sourceId: "api-a", api: { model: "synthetic", contextTokens: 8192 } };
+  await ui.loadProfile(); await tick();
+  assert.deepEqual(posts, []);
+  assert.match(byId("apiPortraitStatus").textContent, /12288/);
 });
 
 it("auto-continues an incomplete API portrait once, like local Laya, without looping", async () => {
@@ -706,7 +721,7 @@ it("clears the old portrait when the API source actually changes", async () => {
   await tick();
   assert.equal(byId("botSummaryText").textContent, "旧来源画像");
   context.modelSourceSnapshot = { mode: "api", sourceId: "api-b",
-    api: { model: "new-model", contextTokens: 8192 } };
+    api: { model: "new-model", contextTokens: 16384 } };
   await ui.loadProfile();
   assert.equal(byId("botSummaryText").textContent, "");
   assert.equal(byId("heroAvatar").children.length, 0);
@@ -745,7 +760,7 @@ it("drops a stale portrait response after an API source switch", async () => {
   });
   await ui.loadProfile();
   context.modelSourceSnapshot = { mode: "api", sourceId: "api-b",
-    api: { model: "new-model", contextTokens: 8192 } };
+    api: { model: "new-model", contextTokens: 16384 } };
   await ui.loadProfile();
   await tick();
   releaseOld(payload("api-a", "旧来源画像"));
@@ -816,7 +831,7 @@ it("keeps a saved portrait through a same-scope inventory refresh and clears on 
   }
   // A genuine source change must clear instead of showing the old conversation's portrait.
   context.modelSourceSnapshot = { mode: "api", sourceId: "api-b",
-    api: { model: "other", contextTokens: 8192 } };
+    api: { model: "other", contextTokens: 16384 } };
   await ui.loadProfile();
   assert.equal(byId("stripDbPath").textContent, "正在读取");
   assert.equal(ui.apiProfileRendered(), false);

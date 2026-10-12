@@ -116,6 +116,18 @@ function version(value) {
   return typeof value === "string" &&
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/.test(value);
 }
+function assertPayloadCompatible(clientRoot, targetVersion, productName = "WechatVibe") {
+  if (productName !== "QQVibe") return;
+  const marker = path.join(clientRoot, "QQVibeData", "real-client-runtime", "payload-format.json");
+  if (!present(marker)) return;
+  const value = readJson(marker, 4096);
+  if (value.schema !== 1 || value.payloadFormat !== "wv1:") fail("分析格式标记不可用，请保留数据后检查");
+  if (!version(targetVersion)) fail("invalid target version");
+  const [major, minor] = targetVersion.split(".").map(Number);
+  if (major < 1 || (major === 1 && minor < 1)) {
+    fail("已有加密分析结果，不能回退到 1.1.0 以前的版本；可保留现有版本并使用加密前恢复副本");
+  }
+}
 function validateOperation(op, operationFile, { recovery = false } = {}) {
   if (op?.productName !== undefined && !["WechatVibe", "QQVibe"].includes(op.productName)) fail("invalid update product");
   if (!op || typeof op !== "object" || Array.isArray(op) || op.schema !== 1 ||
@@ -853,6 +865,7 @@ async function runOperation(op, operationFile, overrides = {}) {
     launchFinalClient, waitForFinal, stopFinal: stopValidation,
     stopOwnedBridge, setRunOnce, clearRunOnce, runOnceAbsent, ...overrides };
   validateOperation(op, operationFile);
+  assertPayloadCompatible(path.join(op.installRoot, "resources", "client"), op.expectedVersion, op.productName);
   const journalFile = journalPath(op);
   const names = rollbackNames(op, operationFile);
   const priorFile = names.prior;
@@ -1001,7 +1014,7 @@ if (require.main === module) {
     .catch(error => { process.stderr.write("update helper: " + error.message + "\n"); process.exitCode = 1; });
 }
 
-module.exports = { validateOperation, validateCandidate, copyData, preserveBundledModel, atomicJournal,
+module.exports = { validateOperation, validateCandidate, assertPayloadCompatible, copyData, preserveBundledModel, atomicJournal,
   portVacant, healthy, startBridge, launchClient, launchValidation, waitForValidation,
   launchFinalClient, waitForFinal, waitValidationStopped, waitFinalStopped,
   runOnceAbsent, runOperation, recoverOperation, main };

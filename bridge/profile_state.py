@@ -11,8 +11,16 @@ def empty_state():
             "supported": 0}
 
 
+def covers_tail_emotions(state, tails):
+    labels = {entry.get("rawLabel") or entry["label"] for emotion in tails for entry in emotion}
+    return len(tails) <= state["moodCount"] and labels <= set(state["mood"])
+
+
 def add_result(state, result, score, side, position, words, tails=()):
     """Append normally in O(new evidence); tails are only for out-of-order backfill."""
+    tail_emotions = [item.get("emotion") for item, _score in tails if item.get("emotion")]
+    if not covers_tail_emotions(state, tail_emotions):
+        raise ValueError("profile statistics do not cover stored tail evidence")
     state["count"] += 1
     for field in ("emotion", "intent"):
         for entry in result.get(field) or []:
@@ -22,7 +30,6 @@ def add_result(state, result, score, side, position, words, tails=()):
         return
     state["targetCount"] += 1
     tail_scores = [value for _result, value in tails if value is not None]
-    tail_emotions = [item.get("emotion") for item, _score in tails if item.get("emotion")]
     if score is not None:
         state["scoreWeighted"] += (state["scoreCount"] - len(tail_scores)) * score + sum(tail_scores)
         state["scoreSum"] += score

@@ -156,13 +156,14 @@ class ApiTargetTests(unittest.TestCase):
             row=record('own'+str(index),time_ms=5000+index*1000,text='合成本人发言',direction='self',sender_uin='10001')
             row['sender_uid']='u_owner'
             self.fixture.ingest(row)
-        original=self.analyzer.model_portrait
+        original=self.analyzer.classify_portrait_batch
         def portrait(*args):
             result=original(*args)
-            messages=args[-1]
-            result['summary']='OWN_PORTRAIT' if any(row['target'] and row['sender']=='SELF' for row in messages) else 'PEER_PORTRAIT'
+            messages=args[4]
+            if any(row['target'] and row['sender']=='SELF' for row in messages):
+                result['result']['emotion']=[{'label':'忧虑','rawLabel':'sad','probability':1}]
             return result
-        self.analyzer.model_portrait=portrait
+        self.analyzer.classify_portrait_batch=portrait
 
     def test_api_counts_and_portrait_priors_belong_to_each_single_chat_target(self):
         for member in [None,SELF_SUBJECT]:
@@ -179,8 +180,12 @@ class ApiTargetTests(unittest.TestCase):
         insights=self.fixture.insights()
         self.assertEqual(set(insights['results']),{'late1','late2','own0','own1'})
         wire=self.analyzer.insight_payloads[-1]
+        expected={subject:self.backend._api_subject_summary(self.fixture.results,self.account,CONV,
+            self.backend.active_model_source_id,subject) for subject in (CONV,SELF_SUBJECT)}
+        self.assertNotEqual(expected[CONV],expected[SELF_SUBJECT])
+        self.assertIsNone(self.backend.model_portrait(CONV,SELF_SUBJECT)['nativeProfile']['affinity'])
         for message in wire:
-            self.assertEqual(message.get('portraitContext'),'OWN_PORTRAIT' if message['sender']=='SELF' else 'PEER_PORTRAIT')
+            self.assertEqual(message.get('portraitContext'),expected[SELF_SUBJECT if message['sender']=='SELF' else CONV])
 
 
 if __name__=='__main__':unittest.main()

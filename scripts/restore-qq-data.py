@@ -48,7 +48,12 @@ def main():
             environment.pop(name,None)
         subprocess.Popen([str(executable)],cwd=executable.parent,env=environment,
             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-    try:result=restore_backup(data,args.archive,args.sha256,client_root=client)
+    from installation_gate import InstallationGate
+    gate=InstallationGate(client)
+    claim=gate.claim(owner_pid=os.getpid(),parent_pid=None)
+    try:
+        try:result=restore_backup(data,args.archive,args.sha256,client_root=client)
+        finally:gate.release_claim(owner_pid=os.getpid(),token=claim)
     except Exception as error:
         if args.restart:
             runtime=data/'real-client-runtime';runtime.mkdir(parents=True,exist_ok=True)

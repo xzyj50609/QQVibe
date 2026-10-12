@@ -38,7 +38,7 @@ class ConstantIdentityTests(unittest.TestCase):
         self.assertIs(backend_contracts.api_portrait_scope, portrait_contracts.api_portrait_scope)
 
     def test_constant_values_and_cache_keys_are_unchanged(self):
-        self.assertEqual(message_contracts.FINE_LABEL_SCHEMA, "generic-v9")
+        self.assertEqual(message_contracts.FINE_LABEL_SCHEMA, "generic-v11")
         self.assertEqual(message_contracts.API_INSIGHT_REVISION, "free-label-v5-simple")
         self.assertEqual(portrait_contracts.API_PORTRAIT_REVISION, "portrait-v2")
         self.assertEqual(message_contracts.api_insight_scope("api:one"), "api:one:free-label-v5-simple")

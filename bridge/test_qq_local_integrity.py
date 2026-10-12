@@ -5,7 +5,7 @@ import json
 import sqlite3
 import threading
 import unittest
-from contextlib import closing
+from contextlib import closing, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -277,7 +277,8 @@ class CursorAndTextTests(Library):
                                   jobs_lock=threading.Lock(), performance={},
                                   _legacy_profile_state=lambda *args: empty_state(),
                                   _take_recent_priority=lambda key: None,
-                                  _assert_scope=lambda scope: self.assertEqual(scope, self.source.identity()))
+                                  _assert_scope=lambda scope: self.assertEqual(scope, self.source.identity()),
+                                  _scope_commit=lambda scope:nullcontext())
         args = (self.account, CONV, "synthetic-v1", result_store, {}, self.source.identity(), "key")
         first_engine = BatchEngine(backend)
         iterator = first_engine.incremental(*args)

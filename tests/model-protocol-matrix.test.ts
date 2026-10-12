@@ -67,8 +67,9 @@ async function fixture(protocol: Protocol, reply: (res: ServerResponse) => void,
     await task({ protocol, baseUrl: `http://127.0.0.1:${address.port}${prefix}`,
       model: "synthetic", apiKey: "synthetic-key" }, bodies);
   } finally {
+    const closed = new Promise<void>(resolve => server.close(() => resolve()));
     server.closeAllConnections();
-    await new Promise<void>(resolve => server.close(() => resolve()));
+    await closed;
   }
 }
 

@@ -1,7 +1,8 @@
 // Vendored from laya-mlx (Apache-2.0).
 // Source: https://github.com/mizchi/laya-mlx @ dc3aa6b150cb861d0788fbd421cfd1303de4ed57
 // Path: web/packages/laya-web/src/prompt.ts
-// Modified: relative imports made extensionless ("./x.ts" -> "./x"). Logic unchanged.
+// Modified: relative imports made extensionless ("./x.ts" -> "./x"). Optional precomputed
+// state ids adapted from nizitao's WechatVibe PR #26 @ bca5c5ab4258e16340b5a4ecea94d070011853a9.
 
 import { pyJson } from "./pyjson";
 import { renderOptions } from "./questions";
@@ -58,20 +59,24 @@ export function buildPrefix(
   return { ids, markers };
 }
 
-/** Python `build_sequence`: prefix + state tokens (right-truncated) + [SEP], capped at maxLen. */
+/**
+ * Python `build_sequence`: prefix + state tokens (right-truncated) + [SEP], capped at maxLen.
+ * Optional `stateIds` must encode this state's serialized text with the mask token blanked.
+ * They are only sliced, allowing one immutable encoding to be shared across questions.
+ */
 export function buildSequence(
   tokenizer: LayaTokenizer,
   state: State,
   q: InternalQuestion,
   maxLen: number,
   headMaxLen: number,
+  stateIds?: readonly number[],
 ): PreparedItem {
   const prefix = buildPrefix(tokenizer, q, headMaxLen);
   const room = Math.max(0, maxLen - prefix.ids.length - 1);
-  const stateIds = tokenizer
-    .encode(serializeState(state).replaceAll(tokenizer.maskToken, " "))
-    .slice(0, room);
-  const ids = [...prefix.ids, ...stateIds, tokenizer.sepTokenId].slice(0, maxLen);
+  const encoded = stateIds ?? tokenizer.encode(serializeState(state).replaceAll(tokenizer.maskToken, " "));
+  const stateSlice = encoded.slice(0, room);
+  const ids = [...prefix.ids, ...stateSlice, tokenizer.sepTokenId].slice(0, maxLen);
   return { ids, markers: prefix.markers.filter((m) => m < maxLen), qtype: QTYPES[q.t] };
 }
 

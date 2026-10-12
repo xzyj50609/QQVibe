@@ -22,7 +22,7 @@ class ConversationSelectionStoreTests(unittest.TestCase):
         return self.data_dir / (account_id(account) + ".sqlite3")
 
     def test_first_adoption_is_empty_without_creating_a_database(self):
-        expected = {"account": self.account_a, "initialized": False, "selectedSessions": []}
+        expected = {"account": self.account_a, "initialized": False, "selectedSessions": [], "requestedSessions": []}
         self.assertEqual(self.store.get(self.account_a), expected)
         self.assertFalse(self.path(self.account_a).exists())
 
@@ -41,7 +41,7 @@ class ConversationSelectionStoreTests(unittest.TestCase):
 
         selected = self.store.set_selected(self.account_a, "contact-a", True)
         self.assertEqual(selected, {"account": self.account_a, "initialized": True,
-                                    "selectedSessions": ["contact-a"]})
+                                    "selectedSessions": ["contact-a"], "requestedSessions": []})
         self.assertEqual(ConversationSelectionStore(self.data_dir).get(self.account_a), selected)
         self.assertEqual(self.store.get(self.account_b)["selectedSessions"], [])
 

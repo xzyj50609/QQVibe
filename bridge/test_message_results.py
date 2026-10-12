@@ -80,15 +80,15 @@ class PortraitResultTests(unittest.TestCase):
 
 class FineResultTests(unittest.TestCase):
     def test_requires_the_fine_schema_and_a_grounded_key(self):
-        payload = _response(labelSchema="generic-v9", groundedIntent=None)
+        payload = _response(labelSchema="generic-v11", groundedIntent=None)
         result = validate_fine_result(payload, "synthetic-version", "other")
-        self.assertEqual(result["labelSchema"], "generic-v9")
+        self.assertEqual(result["labelSchema"], "generic-v11")
         self.assertIsNone(result["groundedIntent"])
         self.assertEqual(result["state"], "done")
 
     def test_valid_grounded_intent_is_preserved(self):
         grounded = {"label": "confirm", "evidenceKind": "short_acknowledgement"}
-        payload = _response(labelSchema="generic-v9", groundedIntent=grounded)
+        payload = _response(labelSchema="generic-v11", groundedIntent=grounded)
         result = validate_fine_result(payload, "synthetic-version", "self")
         self.assertEqual(result["groundedIntent"], grounded)
 
@@ -101,7 +101,7 @@ class FineResultTests(unittest.TestCase):
 
     def test_missing_grounded_key_is_rejected(self):
         with self.assertRaisesRegex(RuntimeError, "missing grounded intent"):
-            validate_fine_result(_response(labelSchema="generic-v9"), "synthetic-version", "other")
+            validate_fine_result(_response(labelSchema="generic-v11"), "synthetic-version", "other")
 
     def test_invalid_grounded_intent_is_rejected(self):
         for grounded in (
@@ -111,7 +111,7 @@ class FineResultTests(unittest.TestCase):
         ):
             with self.subTest(grounded=grounded):
                 with self.assertRaisesRegex(RuntimeError, "invalid grounded intent"):
-                    validate_fine_result(_response(labelSchema="generic-v9", groundedIntent=grounded),
+                    validate_fine_result(_response(labelSchema="generic-v11", groundedIntent=grounded),
                                          "synthetic-version", "other")
 
     def test_fine_path_does_not_accept_portrait_requirements(self):
@@ -147,7 +147,7 @@ class DeferredDelegationTests(unittest.TestCase):
         analyzer.analyze.assert_called_once_with("acct:synthetic.sqlite3:user", [], "m1")
 
     def test_fine_defer_uses_the_fine_validator(self):
-        backend, analyzer = self._backend(_response(labelSchema="generic-v9", groundedIntent=None))
+        backend, analyzer = self._backend(_response(labelSchema="generic-v11", groundedIntent=None))
         store = Mock()
         store.path = "synthetic.sqlite3"
         item = {"id": "m2", "side": "other"}

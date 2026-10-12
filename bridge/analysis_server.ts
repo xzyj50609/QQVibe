@@ -27,6 +27,7 @@ import {
   analyzeObservedText,
   configureAnalysisRuntime,
   configureModelDir,
+  clearAnalysisCache,
   disposeAnalysisModel,
   forecastNextReply,
   getModelStatus,
@@ -43,6 +44,7 @@ import {
   type ModelConfig, type Protocol,
 } from "../electron/model-connectors";
 import { analyzeApiInsights, type ApiInsightMessage } from "../electron/api-message-insights";
+import { API_PORTRAIT_CLASSIFIER_VERSION, classifyApiPortraitBatch } from "../electron/api-portrait-classifier";
 import { refreshApiPortraitAxes, updateApiPortrait,
   type ApiPortrait, type ApiPortraitMessage } from "../electron/api-portrait";
 import { buildUnifiedInput, projectLegacyWire,
@@ -108,6 +110,14 @@ async function handleApiGeneration(id: unknown, cmd: ApiGenerationCommand,
     return;
   }
   if (cmd === "model:portrait") {
+    if (req.phase === "classify") {
+      const result = await classifyApiPortraitBatch(connectorConfig(req, true), {
+        messages: req.messages as import("../electron/api-portrait-evidence").ApiPortraitMessage[],
+        subjectKind: req.subjectKind as "person" | "group", contextTokens: req.contextTokens as number,
+      });
+      emit({ id, cmd, analysisVersion: ANALYSIS_VERSION, ...result });
+      return;
+    }
     if (!Array.isArray(req.messages) ||
         (req.previous !== null && (!req.previous || typeof req.previous !== "object" ||
                                    Array.isArray(req.previous)))) {
@@ -462,7 +472,7 @@ interface ApiGenerationLane {
 
 async function main(): Promise<void> {
   if (process.argv.includes("--analysis-version")) {
-    emit({ analysisVersion: ANALYSIS_VERSION });
+    emit({ analysisVersion: ANALYSIS_VERSION, apiPortraitVersion: API_PORTRAIT_CLASSIFIER_VERSION });
     return;
   }
   const providerFlag = process.argv.indexOf("--provider");
@@ -566,6 +576,11 @@ async function main(): Promise<void> {
       continue;
     }
     try {
+      if (cmd === "clear-analysis-cache") {
+        clearAnalysisCache();
+        emit({ id, cmd, analysisVersion: ANALYSIS_VERSION, cleared: true });
+        continue;
+      }
       if (cmd === "model:list") {
         const result = await listModels(connectorConfig(req, false));
         emit({ id, cmd, analysisVersion: ANALYSIS_VERSION, ...result });

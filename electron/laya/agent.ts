@@ -1,10 +1,11 @@
 // Vendored from laya-mlx (Apache-2.0).
 // Source: https://github.com/mizchi/laya-mlx @ dc3aa6b150cb861d0788fbd421cfd1303de4ed57
 // Path: web/packages/laya-web/src/agent.ts
-// Modified: relative imports made extensionless ("./x.ts" -> "./x"). Logic unchanged.
+// Modified: relative imports made extensionless ("./x.ts" -> "./x"). Shared state encoding
+// adapted from nizitao's WechatVibe PR #26 @ bca5c5ab4258e16340b5a4ecea94d070011853a9.
 
 import { formatAnswers } from "./calibration";
-import { buildSequence, collate } from "./prompt";
+import { buildSequence, collate, serializeState } from "./prompt";
 import { renderOptions, toInternal } from "./questions";
 import type { LayaTokenizer } from "./tokenizer";
 import type {
@@ -67,14 +68,20 @@ export class LayaAgent {
     }
     const items: PreparedItem[] = [];
     const internal: InternalQuestion[] = [];
+    let stateIds: readonly number[] | undefined;
     for (const [qid, definition] of Object.entries(questions)) {
       const q = toInternal(definition);
+      // Lazy initialization preserves the empty-question path without serializing state.
+      stateIds ??= this.tokenizer.encode(
+        serializeState(state).replaceAll(this.tokenizer.maskToken, " "),
+      );
       const item = buildSequence(
         this.tokenizer,
         state,
         q,
         this.config.max_len,
         this.config.head_max_len,
+        stateIds,
       );
       if (item.markers.length !== renderOptions(q).length) {
         throw new Error(

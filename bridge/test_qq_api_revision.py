@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch
 
 from backend_contracts import api_insight_scope, api_portrait_scope
+from api_portrait_ledger import ApiPortraitLedger, scope as ledger_scope
 from backend_service import Backend
 from conversation_selection import ConversationSelectionStore
 from model_source import ModelSourceStore
@@ -43,6 +44,10 @@ class Analyzer(BaseAnalyzer):
                                       *(row["id"] for row in messages)])
         return result
 
+    def classify_portrait_batch(self, *args):
+        self.gate("portrait")
+        return super().classify_portrait_batch(*args)
+
     def refresh_portrait_axes(self, *args):
         self.gate("axes")
         return super().refresh_portrait_axes(*args)
@@ -69,7 +74,7 @@ class ApiRevisionTests(Library):
     def activate(self, name):
         self.backend.model_source_activate({"mode": "api", "protocol": "responses",
             "baseUrl": "https://example.test/v1", "model": name, "apiKey": "synthetic-only",
-            "contextTokens": 8192})
+            "contextTokens": 32768})
         return self.backend.active_model_source_id
 
     def idle(self):
@@ -89,6 +94,11 @@ class ApiRevisionTests(Library):
         self.assertEqual(job["status"], expected, job)
         return self.results.api_portrait_get(self.account, CONV,
             api_portrait_scope(self.backend.active_model_source_id), CONV)
+
+    def ledger_ids(self):
+        selected=ledger_scope(self.account,CONV,api_portrait_scope(self.backend.active_model_source_id),
+                              CONV,self.analyzer.portrait_version())
+        return ApiPortraitLedger(self.results).known_ids(selected)
 
     def test_same_context_is_reused_but_appended_context_reanalyzes_existing_targets(self):
         self.assertEqual(set(self.insights()["results"]), {"late1", "late2"})
@@ -142,7 +152,8 @@ class ApiRevisionTests(Library):
             self.analyzer.gate_release.set()
         self.idle()
         after = self.results.api_portrait_get(self.account, CONV, api_portrait_scope(self.source_id), CONV)
-        self.assertEqual(after["portrait"]["summary"], "early:0|late1:0|late2:0")
+        self.assertEqual(self.ledger_ids(),{'early','late1','late2'})
+        self.assertEqual(after['resume']['portraitStatistics']['state']['targetCount'],3)
         self.assertEqual(after["processed"], 3)
         self.assertFalse(self.backend.model_portrait(CONV)["stale"])
 
@@ -156,8 +167,9 @@ class ApiRevisionTests(Library):
             self.backend.qq_api_stores.clear()
             start = len(self.analyzer.portrait_calls)
             after = self.portrait()
-        self.assertEqual(self.analyzer.portrait_calls[start][-1][0]["id"], "late1:0")
-        self.assertEqual(after["portrait"]["summary"], "early:0|late1:0|late2:0")
+        self.assertEqual(next(row['id'] for row in self.analyzer.portrait_calls[start][-1] if row['target']),"late1:0")
+        self.assertEqual(self.ledger_ids(),{'early','late1','late2'})
+        self.assertEqual(after['resume']['portraitStatistics']['state']['targetCount'],3)
 
     def test_inventory_counts_refresh_when_backfill_does_not_move_highwater(self):
         self.backend.model_portrait(CONV)
@@ -170,6 +182,17 @@ class ApiRevisionTests(Library):
         self.idle()
         self.assertEqual(self.backend.model_portrait(CONV)["available"]["textCount"], 3)
         self.assertEqual(self.analyzer.portrait_calls, [])
+
+    def test_qq_tail_append_reuses_published_ledger_and_classifies_only_new_targets(self):
+        before=self.portrait()
+        calls=len(self.analyzer.portrait_calls)
+        self.ingest(record('new',time_ms=5000))
+        after=self.portrait()
+        self.assertEqual(len(self.analyzer.portrait_calls),calls+1)
+        targets=[row['messageId'] for row in self.analyzer.portrait_calls[-1][-1] if row['target']]
+        self.assertEqual(targets,['new'])
+        self.assertEqual(self.ledger_ids(),{'late1','late2','new'})
+        self.assertEqual(after['resume']['portraitStatistics']['state']['targetCount'],3)
 
     def test_inventory_inflight_old_revision_cannot_be_saved_or_reused_as_pieces(self):
         entered, release = threading.Event(), threading.Event()
@@ -191,16 +214,19 @@ class ApiRevisionTests(Library):
         self.idle()
         self.assertEqual(self.backend.model_portrait(CONV)["available"]["textCount"], 3)
 
-    def test_late_axes_refresh_cannot_mutate_old_portrait_after_recall(self):
+    def test_late_classifier_refresh_cannot_mutate_old_portrait_after_recall(self):
         before = self.portrait()
-        self.analyzer.block_next = "axes"
+        self.ingest(record('new',time_ms=5000))
+        self.analyzer.block_next = "portrait"
         self.backend.start_model_portrait(self.account, CONV, refresh_axes=True)
         self.assertTrue(self.analyzer.gate_entered.wait(3))
         self.ingest(record("late1", time_ms=3000, text="后来的消息", status="recalled", recall_time="7"))
         self.analyzer.gate_release.set()
         self.idle()
         self.assertEqual(self.results.api_portrait_get(self.account, CONV, api_portrait_scope(self.source_id), CONV), before)
-        self.assertEqual(self.portrait()["portrait"]["summary"], "late2:0")
+        self.portrait()
+        self.assertEqual(self.ledger_ids(),{'late2','new'})
+        self.assertEqual(self.analyzer.axes_calls,0)
 
     def test_insight_publication_failure_preserves_old_and_retry_does_not_call_provider_again(self):
         self.insights()
@@ -240,7 +266,8 @@ class ApiRevisionTests(Library):
         self.portrait()
         self.assertEqual(self.backend.model_insights(CONV)["results"], {})
         self.insights()
-        expected = "late1:0|late2:0"
+        expected = self.backend._api_subject_summary(self.results,self.account,CONV,self.source_id,CONV)
+        self.assertTrue(expected)
         self.assertEqual(self.analyzer.insight_payloads[-1][0]["portraitContext"], expected)
         self.assertEqual(len(self.backend.model_insights(CONV)["results"]), 2)
 
@@ -273,16 +300,19 @@ class ApiRevisionTests(Library):
         self.assertEqual(new_job["status"], "done", new_job)
         self.assertEqual(set(self.backend.model_insights(CONV)["results"]), {"late1", "late2", "new", "newer"})
 
-    def test_first_partial_portrait_is_visible_but_axes_refresh_waits_for_completion(self):
+    def test_partial_native_portrait_is_visible_and_compatibility_refresh_resumes_statistics(self):
         self.analyzer.fail_portrait_at = 2
         with patch("backend_service.api_portrait_plan", side_effect=lambda pieces, _: list(range(1, len(pieces) + 1))):
             self.assertIsNone(self.portrait(expected="error"))
             data = self.backend.model_portrait(CONV)
-            self.assertEqual(data["portrait"]["summary"], "late1:0")
+            self.assertEqual(data['nativeProfile']['stats']['analyzedCount'],1)
             self.assertFalse(data["hasPublishedAnalysis"])
             self.assertFalse(data["progress"]["complete"])
-            with self.assertRaisesRegex(ValueError, "finish-portrait"):
-                self.backend.start_model_portrait(self.account, CONV, refresh_axes=True)
+            self.backend.start_model_portrait(self.account, CONV, refresh_axes=True)
+            self.idle()
+            resumed=self.backend.model_portrait(CONV)
+            self.assertTrue(resumed['progress']['complete'])
+            self.assertEqual(resumed['nativeProfile']['stats']['analyzedCount'],2)
             self.assertEqual(self.analyzer.axes_calls, 0)
 
     def test_portrait_publish_failure_preserves_old_and_retries_completed_stage_without_model_calls(self):
@@ -297,7 +327,8 @@ class ApiRevisionTests(Library):
             conn.execute("DROP TRIGGER block_portrait_publish")
         after = self.portrait()
         self.assertEqual(len(self.analyzer.portrait_calls), calls)
-        self.assertEqual(after["portrait"]["summary"], "early:0|late1:0|late2:0")
+        self.assertEqual(self.ledger_ids(),{'early','late1','late2'})
+        self.assertEqual(after['resume']['portraitStatistics']['state']['targetCount'],3)
 
     def test_large_history_reads_use_the_posted_context_instead_of_latest_window(self):
         self.ingest(*(record(str(i), time_ms=5000 + i, text="合成消息") for i in range(600)))

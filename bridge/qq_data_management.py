@@ -12,6 +12,7 @@ import zipfile
 from contextlib import ExitStack,closing
 from datetime import datetime,timezone
 from pathlib import Path,PurePosixPath
+from urllib.parse import quote
 
 from account_store import _check_root,_regular,_reparse
 from qq_message_store import _validate_database,SCHEMA_VERSION
@@ -19,11 +20,14 @@ from qq_message_store import _validate_database,SCHEMA_VERSION
 FORMAT='qqvibe-full-data-v1'
 MAX_FILES=50000
 MAX_BYTES=5*1024**3
-CONFIGS={'qq-connection.json','inference-settings.json','local-model-source.json','model-source.json','api-model-source.json'}
+CONFIGS={'qq-connection.json','inference-settings.json','local-model-source.json','model-source.json','api-model-source.json',
+         'analysis-key.bin','analysis-key.backup.bin','payload-format.json','analysis-workers.json','api-workers.json'}
 PATHS=[re.compile(r'accounts/[0-9a-f]{32}/messages\.sqlite'),
        re.compile(r'accounts/[0-9a-f]{32}/(?:analysis-staging|api-analysis-staging)/[0-9a-f]{32}\.sqlite3'),
        re.compile(r'accounts/[0-9a-f]{32}/api-analysis-staging/(?:inventory|[0-9a-f]{32})/[0-9a-f]{32}\.sqlite3'),
-       re.compile(r'real-client-data/[0-9a-f]{64}\.sqlite3')]
+       re.compile(r'real-client-data/[0-9a-f]{64}\.sqlite3'),
+       re.compile(r'real-client-data/[0-9a-f]{64}\.(?:pre-wv1|restore-undo)\.(?:sqlite3|json)'),
+       re.compile(r'real-client-data/[0-9a-f]{64}\.restore-undo\.key\.bin')]
 
 
 def allowed_file(value):
@@ -53,15 +57,29 @@ def checked_root(root):
     return root
 
 
+def filesystem_path(path):
+    """Use Windows extended paths for IO; public roots and registry paths stay logical."""
+    path=Path(os.path.abspath(path))
+    if os.name!='nt':return path
+    value=str(path)
+    if value.startswith('\\\\?\\'):return path
+    return Path('\\\\?\\UNC\\'+value[2:] if value.startswith('\\\\') else '\\\\?\\'+value)
+
+
+def read_database(path):
+    filename=filesystem_path(path)
+    return sqlite3.connect('file:'+quote(str(filename),safe='/:')+'?mode=ro',uri=True)
+
+
 def _sqlite_copy(source,target):
-    with closing(sqlite3.connect(source.as_uri()+'?mode=ro',uri=True)) as original,closing(sqlite3.connect(target)) as copied:
+    with closing(read_database(source)) as original,closing(sqlite3.connect(filesystem_path(target))) as copied:
         original.backup(copied)
         if copied.execute('PRAGMA integrity_check').fetchone()[0]!='ok':raise ValueError('backup-database-invalid')
 
 
 def _validate_file(file,relative):
     if relative.endswith(('.sqlite','.sqlite3')):
-        with closing(sqlite3.connect(file.as_uri()+'?mode=ro',uri=True)) as conn:
+        with closing(read_database(file)) as conn:
             if conn.execute('PRAGMA integrity_check').fetchone()[0]!='ok' or conn.execute('PRAGMA foreign_key_check').fetchall():
                 raise ValueError('backup-database-invalid')
             if conn.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' OR sql LIKE '%VIRTUAL TABLE%' LIMIT 1").fetchone():
@@ -71,6 +89,38 @@ def _validate_file(file,relative):
         if file.stat().st_size>2*1024*1024:raise ValueError('backup-json-too-large')
         value=json.loads(file.read_text(encoding='utf-8'))
         if not isinstance(value,dict):raise ValueError('backup-json-invalid')
+    elif relative.endswith('.bin'):
+        import base64
+        if not 0<file.stat().st_size<=16384:raise ValueError('backup-key-invalid')
+        try:base64.b64decode(file.read_bytes(),validate=True)
+        except ValueError as exc:raise ValueError('backup-key-invalid') from exc
+
+
+def validate_analysis_encryption(directory, *, same_user=True):
+    """Check ciphertext against its snapshot key before publishing or restoring."""
+    from payload_crypto import PayloadCipher, PayloadUnreadable
+    runtime=directory/'real-client-runtime'
+    key=runtime/'analysis-key.bin'
+    cipher=PayloadCipher(key)
+    encrypted=False
+    if (runtime/'payload-format.json').exists():
+        if not same_user:raise ValueError('backup-encryption-requires-original-windows-user')
+        marker=runtime/'payload-format.json'
+        if marker.stat().st_size>4096 or json.loads(marker.read_text(encoding='utf-8'))!={'schema':1,'payloadFormat':'wv1:'}:
+            raise ValueError('backup-analysis-format-invalid')
+        cipher._read_key()
+    for database in directory.rglob('*.sqlite3'):
+        with closing(read_database(database)) as conn:
+            for (table,) in conn.execute("SELECT name FROM sqlite_master WHERE type='table'"):
+                quoted='"'+table.replace('"','""')+'"'
+                for column in conn.execute('PRAGMA table_info('+quoted+')').fetchall():
+                    if column[2].upper()!='TEXT':continue
+                    field='"'+column[1].replace('"','""')+'"'
+                    for (value,) in conn.execute('SELECT '+field+' FROM '+quoted+' WHERE '+field+" LIKE 'wv1:%'"):
+                        encrypted=True
+                        if not same_user:raise ValueError('backup-encryption-requires-original-windows-user')
+                        cipher.unprotect(value)
+    return encrypted
 
 
 def rebase_account_registry(prepared,destination):
@@ -92,7 +142,7 @@ def rebase_account_registry(prepared,destination):
         seen.add(account)
         database=prepared/'accounts'/account[2:]/'messages.sqlite'
         if not database.is_file() or _reparse(database):raise ValueError('backup-account-library-missing')
-        with closing(sqlite3.connect(database.as_uri()+'?mode=ro',uri=True)) as conn:
+        with closing(read_database(database)) as conn:
             stored=_stored_accounts(conn)
             if stored and stored!={account}:raise ValueError('backup-account-library-mismatch')
         item['workdir']=str(destination/'accounts'/account[2:])
@@ -103,10 +153,11 @@ def _counts(directory):
     counts={'accounts':0,'messages':0,'labelCacheRows':0,'portraitCheckpoints':0}
     for file in directory.glob('accounts/*/messages.sqlite'):
         counts['accounts']+=1
-        with closing(sqlite3.connect(file.as_uri()+'?mode=ro',uri=True)) as conn:
+        with closing(read_database(file)) as conn:
             counts['messages']+=conn.execute('SELECT COUNT(*) FROM messages').fetchone()[0]
     for file in directory.glob('real-client-data/*.sqlite3'):
-        with closing(sqlite3.connect(file.as_uri()+'?mode=ro',uri=True)) as conn:
+        if not re.fullmatch(r'[0-9a-f]{64}\.sqlite3',file.name):continue
+        with closing(read_database(file)) as conn:
             tables={row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
             for table,key in [('fine_results_v1','labelCacheRows'),('api_insights_v1','labelCacheRows'),
                               ('batch_progress_v1','portraitCheckpoints'),('api_portrait_v1','portraitCheckpoints')]:
@@ -122,7 +173,7 @@ def create_backup(root,destination,*,app_version='0.1.0',lock_scope=None,ui_pref
     if destination.is_relative_to(root/'accounts') or destination.is_relative_to(root/'real-client-data') or destination.is_relative_to(root/'real-client-runtime'):
         raise ValueError('backup-destination-is-live-data')
     destination.parent.mkdir(parents=True,exist_ok=True)
-    work=root/'backups'/('.snapshot-'+uuid.uuid4().hex)
+    work=filesystem_path(root/'backups'/('.snapshot-'+uuid.uuid4().hex))
     _check_root(work.parent);work.mkdir(parents=True)
     temporary=destination.with_name('.'+destination.name+'.'+uuid.uuid4().hex+'.tmp')
     try:
@@ -132,10 +183,10 @@ def create_backup(root,destination,*,app_version='0.1.0',lock_scope=None,ui_pref
             for folder in ('accounts','real-client-data','real-client-runtime'):
                 origin=root/folder
                 if not origin.exists():continue
-                for source in origin.rglob('*'):
+                for source in filesystem_path(origin).rglob('*'):
                     if _reparse(source):raise ValueError('linked-backup-source')
                     if not source.is_file():continue
-                    relative=source.relative_to(root).as_posix()
+                    relative=source.relative_to(filesystem_path(root)).as_posix()
                     if allowed_file(relative):candidates.append((source,relative))
             if len(candidates)>MAX_FILES:raise ValueError('backup-file-limit')
             for source,relative in candidates:
@@ -143,17 +194,20 @@ def create_backup(root,destination,*,app_version='0.1.0',lock_scope=None,ui_pref
                 if relative.endswith(('.sqlite','.sqlite3')):_sqlite_copy(source,target)
                 else:shutil.copy2(source,target)
         # All application locks end before hashing/compression of the snapshot.
+        encrypted=validate_analysis_encryption(work)
         files=[]
         for file in sorted(work.rglob('*')):
             if not file.is_file():continue
-            relative=file.relative_to(work).as_posix();_validate_file(file,relative)
+            relative=file.relative_to(work).as_posix()
+            if not allowed_file(relative):continue
+            _validate_file(file,relative)
             files.append({'path':relative,'bytes':file.stat().st_size,'sha256':digest(file)})
         if sum(row['bytes'] for row in files)>MAX_BYTES:raise ValueError('backup-size-limit')
         if not any(row['path'].endswith('/messages.sqlite') for row in files):raise ValueError('backup-has-no-message-library')
-        manifest={'schema':FORMAT,'appVersion':app_version,'dataSchema':SCHEMA_VERSION,
+        manifest={'schema':FORMAT,'appVersion':app_version,'dataSchema':SCHEMA_VERSION,'encryptedAnalysis':encrypted,
             'createdUtc':datetime.now(timezone.utc).isoformat(),'windowsUserHash':windows_user(),
             'counts':_counts(work),'files':files,'uiPreferences':checked_preferences(ui_preferences or {}),
-            'includes':['message-libraries','analysis-results','durable-checkpoints','session-selection','local-model-and-connection-settings'],
+            'includes':['message-libraries','analysis-results','durable-checkpoints','session-selection','local-model-and-connection-settings','protected-analysis-keys','pre-encryption-recovery'],
             'excludes':['model-weights','browser-cache','application-binaries','logs','older-backups']}
         with zipfile.ZipFile(temporary,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6,allowZip64=True) as archive:
             archive.writestr('manifest.json',json.dumps(manifest,ensure_ascii=False))
@@ -231,11 +285,12 @@ def restore_backup(root,archive,expected_sha,*,client_root=None,fail_after=None)
     root=checked_root(root);root.mkdir(parents=True,exist_ok=True)
     archive=Path(archive).absolute()
     if digest(archive)!=expected_sha:raise ValueError('backup-changed-after-preview')
-    work=root/('.restore-'+uuid.uuid4().hex);stage=work/'prepared';rollback=work/'rollback'
+    work=filesystem_path(root/('.restore-'+uuid.uuid4().hex));stage=work/'prepared';rollback=work/'rollback'
     work.mkdir();stage.mkdir();rollback.mkdir()
     manifest=inspect_backup(archive,extract_to=stage)
     for row in manifest['files']:_validate_file(stage/row['path'],row['path'])
     same_user=manifest.get('windowsUserHash')==windows_user()
+    validate_analysis_encryption(stage,same_user=same_user)
     runtime=stage/'real-client-runtime';runtime.mkdir(exist_ok=True)
     config=runtime/'qq-connection.json'
     if config.is_file():
@@ -248,6 +303,9 @@ def restore_backup(root,archive,expected_sha,*,client_root=None,fail_after=None)
             value=json.loads(api.read_text(encoding='utf-8'))
             value['selectedMode']='local'
             if not same_user and isinstance(value.get('api'),dict):value['api']['encryptedKey']=None
+            if not same_user:
+                for profile in value.get('profiles',[]):
+                    if isinstance(profile,dict):profile['encryptedKey']=None
             api.write_text(json.dumps(value),encoding='utf-8')
     model=runtime/'local-model-source.json'
     if client_root and model.is_file():

@@ -267,6 +267,7 @@ export function configureModelDir(dir: string): void {
   if (modelDirOverride === dir) return;
   modelDirOverride = dir;
   const previous = loaded;
+  previous?.agent.tokenizer.clearEncodeCache();
   loaded = null;
   loadingPromise = null;
   loadProgress = undefined;
@@ -429,6 +430,7 @@ export async function configureAnalysisRuntime(provider: "cpu" | "gpu"): Promise
   generation++;
   const previous = loaded;
   const pending = loadingPromise;
+  previous?.agent.tokenizer.clearEncodeCache();
   loaded = null;
   loadingPromise = null;
   loadProgress = undefined;
@@ -450,6 +452,7 @@ export async function configureAnalysisRuntime(provider: "cpu" | "gpu"): Promise
 export async function disposeAnalysisModel(): Promise<void> {
   generation++;
   const current = loaded;
+  current?.agent.tokenizer.clearEncodeCache();
   loaded = null;
   loadingPromise = null;
   loadProgress = undefined;
@@ -474,6 +477,7 @@ export function __setAnalysisEngineForTest(engine: AnalysisEngine | null): void 
 /** Clear the whole analysis cache (also called on model reconfiguration/disposal). */
 export function clearAnalysisCache(): void {
   cacheEpoch++;
+  loaded?.agent.tokenizer.clearEncodeCache();
   messageCache.clear();
   selfQualityCache.clear();
 }
@@ -481,6 +485,8 @@ export function clearAnalysisCache(): void {
 /** Forget the cached analyses for one session (or all sessions when omitted). */
 export function resetAnalysisSession(sessionId?: string): void {
   cacheEpoch++;
+  // Tokenizer keys contain text, not session identity, so release the whole encode cache.
+  loaded?.agent.tokenizer.clearEncodeCache();
   if (sessionId === undefined) {
     messageCache.clear();
     selfQualityCache.clear();

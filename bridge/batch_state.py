@@ -16,7 +16,8 @@ from functools import wraps
 from pathlib import Path
 
 from profile_signals import STYLE_LABELS
-from profile_state import empty_state
+from profile_state import empty_state, add_result as add_profile_result, covers_tail_emotions
+from profile_signals import keyword_counts
 from analysis_targets import target as matches_target
 
 
@@ -118,6 +119,8 @@ def _merge(state, result, targets, latest, words, is_group, subject,
            tail_scores=(), tail_emotions=()):
     if not targets:
         return
+    if not covers_tail_emotions(state, tail_emotions):
+        raise ValueError("batch statistics do not cover stored tail evidence")
     state["count"] += targets
     state["targetCount"] += targets
     if state["latest"] is None or latest > tuple(state["latest"]):
@@ -253,6 +256,7 @@ class BatchStateStore:
     def __init__(self, result_store):
         self.path = Path(result_store.path)
         self.transaction_guard = getattr(result_store, "transaction_guard", nullcontext)
+        self.cipher = result_store.cipher
         if not self.path.is_file():
             raise ValueError("batch state requires an existing account result store")
         with self.transaction_guard(), closing(sqlite3.connect(self.path, timeout=15)) as conn, conn:
@@ -299,6 +303,138 @@ class BatchStateStore:
                          "ceiling_seq INTEGER NOT NULL,ceiling_shard TEXT NOT NULL,ceiling_local INTEGER NOT NULL,"
                          "cursor_seq INTEGER,cursor_shard TEXT,cursor_local INTEGER,complete INTEGER NOT NULL DEFAULT 0,"
                          "PRIMARY KEY(account,session,base_version,subject,backfill_version))")
+            conn.execute("CREATE TABLE IF NOT EXISTS batch_source_checks_v1 ("
+                         "account TEXT NOT NULL,session TEXT NOT NULL,base_version TEXT NOT NULL,"
+                         "subject TEXT NOT NULL,batch_version TEXT NOT NULL,revision TEXT NOT NULL,"
+                         "prefix_signature TEXT NOT NULL,ceiling_json TEXT,"
+                         "PRIMARY KEY(account,session,base_version,subject,batch_version))")
+
+    def source_check(self, account, session, base_version, subject):
+        scope = _scope(account, session, base_version, subject)
+        with closing(sqlite3.connect(self.path, timeout=15)) as conn:
+            row = conn.execute("SELECT revision,prefix_signature,ceiling_json FROM batch_source_checks_v1 "
+                               "WHERE account=? AND session=? AND base_version=? AND subject=? "
+                               "AND batch_version=?", scope).fetchone()
+        return ({"revision": row[0], "prefix": row[1],
+                 "ceiling": tuple(json.loads(row[2])) if row[2] else None} if row else None)
+
+    def save_source_check(self, account, session, base_version, subject, revision, signature, ceiling):
+        if not all(isinstance(value, str) and value for value in (revision, signature)):
+            raise ValueError("invalid history source signature")
+        position = _position(ceiling) if ceiling is not None else None
+        with closing(sqlite3.connect(self.path, timeout=15)) as conn, conn:
+            conn.execute("INSERT OR REPLACE INTO batch_source_checks_v1 VALUES (?,?,?,?,?,?,?,?)",
+                         (*_scope(account, session, base_version, subject), revision, signature,
+                          json.dumps(position) if position is not None else None))
+
+    def recovery_refs(self, account, session, base_version, subject):
+        """Lexical evidence missing from durable, already-counted batch messages."""
+        scope = _scope(account, session, base_version, subject)
+        with closing(sqlite3.connect(self.path, timeout=15)) as conn:
+            rows = conn.execute("SELECT c.shard,c.local_id,c.message_id,r.consumed_json "
+                                "FROM batch_coverage_v1 c JOIN batch_runs_v1 r ON "
+                                "r.account=c.account AND r.session=c.session AND r.base_version=c.base_version "
+                                "AND r.subject=c.subject AND r.batch_version=c.batch_version AND r.batch_id=c.batch_id "
+                                "LEFT JOIN profile_tokens_v1 t ON t.account=c.account AND t.session=c.session "
+                                "AND t.version=c.base_version AND t.id=c.message_id "
+                                "WHERE c.account=? AND c.session=? AND c.base_version=? AND c.subject=? "
+                                "AND c.batch_version=? AND c.counted=1 AND t.id IS NULL", scope).fetchall()
+            refs = {(shard, local, stable_id) for shard, local, stable_id, raw in rows
+                    if any(item["id"] == stable_id and item["side"] == "other" for item in json.loads(raw))}
+            if conn.execute("SELECT 1 FROM portrait_resets_v1 WHERE account=? AND session=? AND subject=?",
+                            (account, session, subject)).fetchone() is None:
+                sql = ("SELECT r.shard,r.local_id,r.id FROM results_v2 r LEFT JOIN profile_tokens_v1 t "
+                       "ON t.account=r.account AND t.session=r.session AND t.version=r.version AND t.id=r.id "
+                       "WHERE r.account=? AND r.session=? AND r.version=? AND r.side='other' AND t.id IS NULL")
+                args = (account, session, base_version)
+                if subject:
+                    sql += " AND r.sender=?"
+                    args += (subject,)
+                refs.update(conn.execute(sql, args).fetchall())
+        return sorted(refs)
+
+    def restore_words(self, account, session, base_version, refs, texts):
+        if any(stable_id not in texts for _shard, _local, stable_id in refs):
+            raise RuntimeError("saved portrait needs unavailable message text; reset this portrait to rebuild")
+        with closing(sqlite3.connect(self.path, timeout=15)) as conn, conn:
+            conn.executemany("INSERT OR IGNORE INTO profile_tokens_v1 VALUES (?,?,?,?,?)",
+                             [(account, session, base_version, stable_id,
+                               json.dumps(dict(keyword_counts([texts[stable_id]])), ensure_ascii=False))
+                              for _shard, _local, stable_id in refs])
+            if refs:
+                conn.execute("DELETE FROM profile_state_v1 WHERE account=? AND session=? AND version=?",
+                             (account, session, base_version))
+
+    @staticmethod
+    def _recover_state(conn, scope):
+        """Rebuild sufficient statistics from stored judgments, without model inference."""
+        account, session, version, subject, _batch_version = scope
+        runs = {row[0]: (json.loads(row[1]), json.loads(row[2])) for row in conn.execute(
+            "SELECT batch_id,consumed_json,result_json FROM batch_runs_v1 WHERE account=? AND session=? "
+            "AND base_version=? AND subject=? AND batch_version=?", scope)}
+        coverage = list(conn.execute("SELECT message_id,batch_id,counted,sort_seq,shard,local_id "
+                                    "FROM batch_coverage_v1 WHERE account=? AND session=? AND base_version=? "
+                                    "AND subject=? AND batch_version=?", scope))
+        if not runs and not coverage:
+            return None
+        fragments, fragment_ends, fragment_lengths = {}, {}, {}
+        for stable_id, batch_id, start, end, length in conn.execute(
+                "SELECT message_id,batch_id,start_offset,end_offset,text_length FROM batch_fragments_v1 "
+                "WHERE account=? AND session=? AND base_version=? AND subject=? AND batch_version=? "
+                "ORDER BY message_id,start_offset", scope):
+            if batch_id not in runs:
+                raise RuntimeError("saved batch judgment is missing; reset this portrait to rebuild")
+            if (start != fragment_ends.get(stable_id, 0) or not 0 <= start < end <= length or
+                    fragment_lengths.get(stable_id, length) != length):
+                raise RuntimeError("saved batch fragments are incomplete; reset this portrait to rebuild")
+            fragment_ends[stable_id], fragment_lengths[stable_id] = end, length
+            fragments.setdefault(stable_id, []).append((end-start, runs[batch_id][1]))
+        words = {stable_id: json.loads(raw) for stable_id, raw in conn.execute(
+            "SELECT id,words FROM profile_tokens_v1 WHERE account=? AND session=? AND version=?",
+            (account, session, version))}
+        contributions, batch_ids = [], set()
+        for stable_id, batch_id, counted, seq, shard, local in coverage:
+            if not counted:
+                continue
+            if batch_id not in runs:
+                raise RuntimeError("saved batch judgment is missing; reset this portrait to rebuild")
+            item = next((item for item in runs[batch_id][0] if item["id"] == stable_id), None)
+            if item is None:
+                raise RuntimeError("saved batch coverage is incomplete; reset this portrait to rebuild")
+            if fragment_ends.get(stable_id) != item["textLength"]:
+                raise RuntimeError("saved batch fragments are incomplete; reset this portrait to rebuild")
+            effective = _combined_result(fragments.get(stable_id, [])) if item["side"] == "other" else None
+            if item["side"] == "other" and (effective is None or stable_id not in words):
+                raise RuntimeError("saved batch evidence is incomplete; reset this portrait to rebuild")
+            batch_ids.add(stable_id)
+            contributions.append(((seq, shard, local, stable_id), "batch", item["side"], effective,
+                                  words.get(stable_id, {})))
+        sql = "SELECT id,result,score,side,sort_seq,shard,local_id FROM results_v2 WHERE account=? AND session=? AND version=?"
+        args = (account, session, version)
+        if conn.execute("SELECT 1 FROM portrait_resets_v1 WHERE account=? AND session=? AND subject=?",
+                        (account, session, subject)).fetchone() is not None:
+            sql += " AND 0"
+        if subject:
+            sql += " AND sender=?"
+            args += (subject,)
+        for stable_id, raw, score, side, seq, shard, local in conn.execute(sql, args):
+            if stable_id not in batch_ids:
+                if side == "other" and stable_id not in words:
+                    raise RuntimeError("saved legacy lexical evidence is incomplete; reset this portrait to rebuild")
+                result = json.loads(raw)
+                contributions.append(((seq, shard, local, stable_id), "legacy", side,
+                                      (result, score), words.get(stable_id, {})))
+        state = empty_state()
+        state["batchCount"] = sum(result is not None for _items, result in runs.values())
+        is_group = session.startswith("g:") or session.endswith("@chatroom")
+        for position, kind, side, result, lexical in sorted(contributions, key=lambda item: item[0]):
+            if kind == "legacy":
+                add_profile_result(state, result[0], result[1], side, position, lexical)
+            elif side == "other":
+                _merge(state, result, 1, position, lexical, is_group, subject)
+            elif is_group and not subject:
+                state["count"] += 1
+        return state
 
     def load(self, account, session, base_version, subject):
         scope = _scope(account, session, base_version, subject)
@@ -310,7 +446,7 @@ class BatchStateStore:
             return None
         seq, shard, local, offset, context, state, complete = row
         return {"cursor": (seq, shard, local) if seq is not None else None,
-                "charOffset": offset, "context": json.loads(context), "state": json.loads(state),
+                "charOffset": offset, "context": self.cipher.loads(context), "state": json.loads(state),
                 "complete": bool(complete)}
 
     def legacy_known(self, account, session, base_version, subject, ids):
@@ -339,7 +475,7 @@ class BatchStateStore:
             conn.execute("UPDATE batch_progress_v1 SET cursor_seq=?,cursor_shard=?,cursor_local=?,"
                          "char_offset=?,context_json=?,complete=0 WHERE account=? AND session=? "
                          "AND base_version=? AND subject=? AND batch_version=?",
-                         (*cursor, char_offset, json.dumps(context, ensure_ascii=False), *scope))
+                         (*cursor, char_offset, self.cipher.dumps(context), *scope))
 
     def quoted_backfill_pending(self, account, session, base_version, subject, cursor):
         if cursor is None:
@@ -467,11 +603,20 @@ class BatchStateStore:
                 legacy_args += (subject,)
             legacy_max = conn.execute("SELECT COALESCE(MAX(rowid),0) FROM results_v2 WHERE " + legacy_where,
                                       legacy_args).fetchone()[0]
+            if conn.execute("SELECT 1 FROM portrait_resets_v1 WHERE account=? AND session=? AND subject=?",
+                            (account, session, subject)).fetchone() is not None:
+                legacy_max = 0
+            exists = conn.execute("SELECT 1 FROM batch_progress_v1 WHERE account=? AND session=? "
+                                  "AND base_version=? AND subject=? AND batch_version=?", scope).fetchone()
+            if exists is None:
+                recovered = self._recover_state(conn, scope)
+                if recovered is not None:
+                    snapshot, position, previous = recovered, None, []
             conn.execute("INSERT OR IGNORE INTO batch_progress_v1 (account,session,base_version,subject,"
                          "batch_version,cursor_seq,cursor_shard,cursor_local,char_offset,context_json,state_json,"
                          "legacy_max_rowid) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                          (*scope, *(position or (None, None, None)), 0,
-                          json.dumps(previous, ensure_ascii=False), json.dumps(snapshot, ensure_ascii=False),
+                          self.cipher.dumps(previous), json.dumps(snapshot, ensure_ascii=False),
                           legacy_max))
         return self.load(account, session, base_version, subject)
 
@@ -587,6 +732,12 @@ class BatchStateStore:
             candidates = [item for item in targets if item["id"] not in existing and item["id"] not in legacy]
             tails = (_tail_evidence(conn, scope, legacy_max, subject,
                                     _position(candidates[0]["position"])) if candidates else [])
+            if not covers_tail_emotions(state, [emotion for _position_value, _score, emotion in tails if emotion]):
+                recovered = self._recover_state(conn, scope)
+                if recovered is None:
+                    raise ValueError("batch statistics cannot be recovered from stored evidence")
+                state = recovered
+                # The new run has fragments but no coverage yet; its call count is already included.
             # Full, new targets share one inference. They form one recency block only
             # when no previously counted score/mood signal falls between them.
             fast_batch = bool(candidates) and result is not None and len(candidates) == len(targets) and all(
@@ -641,6 +792,10 @@ class BatchStateStore:
                               effective.get("score") if counted and effective else None,
                               json.dumps(effective.get("emotion") or [], ensure_ascii=False)
                               if counted and effective else None))
+                if counted and effective is not None:
+                    conn.execute("INSERT OR IGNORE INTO profile_tokens_v1 VALUES (?,?,?,?,?)",
+                                 (account, session, base_version, stable_id,
+                                  json.dumps(words.get(stable_id, {}), ensure_ascii=False)))
             if fast_batch and fast_result is not None:
                 batch_words = {}
                 for item in candidates:
@@ -666,7 +821,7 @@ class BatchStateStore:
                 conn.execute("UPDATE batch_progress_v1 SET cursor_seq=?,cursor_shard=?,cursor_local=?,"
                              "char_offset=?,context_json=?,state_json=? WHERE account=? AND session=? "
                              "AND base_version=? AND subject=? AND batch_version=?",
-                             (*position, char_offset, json.dumps(context, ensure_ascii=False),
+                             (*position, char_offset, self.cipher.dumps(context),
                               json.dumps(state, ensure_ascii=False), *scope))
             else:
                 conn.execute("UPDATE batch_progress_v1 SET state_json=? WHERE account=? AND session=? "

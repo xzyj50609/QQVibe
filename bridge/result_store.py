@@ -7,16 +7,27 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import sqlite3
 import threading
-from contextlib import contextmanager, nullcontext
+import time
+import uuid
+from pathlib import Path
+from contextlib import closing, contextmanager, nullcontext
 
 from backend_contracts import (
     FINE_LABEL_SCHEMA, LOCAL_SOURCE_ID, ROOT, empty_api_portrait, valid_api_portrait,
 )
+from portrait_contracts import (empty_portrait_evidence, portrait_synthesis_fingerprint,
+                                valid_mbti_basis, valid_portrait_evidence, valid_synthesis_fingerprint)
 from profile_signals import keyword_counts
-from profile_state import empty_state as empty_profile_state, add_result as add_profile_result
+from profile_state import (empty_state as empty_profile_state, add_result as add_profile_result,
+                           covers_tail_emotions)
+from api_portrait_statistics import empty_statistics, valid_statistics
+from payload_crypto import PayloadCipher, PayloadUnreadable, default_cipher
+from process_lock import ProcessLock, checked_path
+from guidance_contracts import valid_guidance_payload
 from product_profile import current_product
 
 PRODUCT = current_product()
@@ -27,13 +38,39 @@ def project_result_store(account, _workdir):
     directory = PRODUCT.state_dir("real-client-data", ROOT)
     directory.mkdir(parents=True, exist_ok=True)
     filename = hashlib.sha256(account.encode("utf-8")).hexdigest() + ".sqlite3"
-    return ResultStore(directory / filename)
+    return ResultStore(directory / filename, cipher=default_cipher(ROOT))
+
+
+def _file_digest(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+class _BackedPayloadCipher:
+    def __init__(self, store, cipher):
+        self.store, self.cipher = store, cipher
+
+    def loads(self, value):
+        return self.cipher.loads(value)
+
+    def dumps(self, value):
+        sealed = self.cipher.dumps(value)
+        self.store._ensure_payload_backup(self.cipher)
+        return sealed
 
 
 class ResultStore:
-    def __init__(self, path, *, transaction_guard=None):
+    def __init__(self, path, *, cipher=None, transaction_guard=None):
         self.path = path
         self.transaction_guard = transaction_guard or nullcontext
+        # The production factory supplies the protected cipher. Injectable JSON
+        # keeps isolated synthetic repositories independent of Windows DPAPI.
+        self._payload_backup_ready = False
+        self.cipher = (_BackedPayloadCipher(self, cipher) if isinstance(cipher, PayloadCipher)
+                       else cipher if cipher is not None else json)
         self.profile_lock = threading.RLock()
         with self.connect() as conn:
             # Serialize first-time schema creation and nullable-column migration.
@@ -98,6 +135,11 @@ class ResultStore:
             conn.execute("CREATE TABLE IF NOT EXISTS api_source_meta_v1 (account TEXT NOT NULL, "
                          "source_id TEXT NOT NULL, protocol TEXT NOT NULL, model TEXT NOT NULL, "
                          "PRIMARY KEY(account,source_id))")
+            conn.execute("CREATE TABLE IF NOT EXISTS api_guidance_v1 (account TEXT NOT NULL, "
+                         "session TEXT NOT NULL, source_id TEXT NOT NULL, subject TEXT NOT NULL, "
+                         "revision TEXT NOT NULL, scenario TEXT NOT NULL, analyze_self INTEGER NOT NULL, "
+                         "payload_json TEXT NOT NULL, updated_at INTEGER NOT NULL, "
+                         "PRIMARY KEY(account,session,source_id,subject))")
             conn.execute("CREATE TABLE IF NOT EXISTS analysis_cache_suspended_v1 (account TEXT NOT NULL, "
                          "source_id TEXT NOT NULL, PRIMARY KEY(account,source_id))")
             conn.execute("CREATE TABLE IF NOT EXISTS progress_v1 (account TEXT NOT NULL, session TEXT NOT NULL, "
@@ -123,6 +165,8 @@ class ResultStore:
             conn.execute("CREATE TABLE IF NOT EXISTS profile_state_v1 (account TEXT NOT NULL, session TEXT NOT NULL, "
                          "version TEXT NOT NULL, subject TEXT NOT NULL, cursor INTEGER NOT NULL, state TEXT NOT NULL, "
                          "PRIMARY KEY(account,session,version,subject))")
+            conn.execute("CREATE TABLE IF NOT EXISTS portrait_resets_v1 (account TEXT NOT NULL,"
+                         "session TEXT NOT NULL,subject TEXT NOT NULL,PRIMARY KEY(account,session,subject))")
             conn.execute("CREATE INDEX IF NOT EXISTS results_profile_delta_v1 ON results_v2 (account,session,version)")
             conn.execute("CREATE INDEX IF NOT EXISTS results_member_delta_v1 ON results_v2 (account,session,version,sender)")
             conn.execute("CREATE TABLE IF NOT EXISTS qq_analysis_generations_v1 ("
@@ -138,6 +182,76 @@ class ResultStore:
                          "account TEXT NOT NULL,session TEXT NOT NULL,source_id TEXT NOT NULL,id TEXT NOT NULL,"
                          "revision INTEGER NOT NULL,context_hash TEXT NOT NULL,"
                          "PRIMARY KEY(account,session,source_id,id))")
+        # Establish the one-time rollback point before any caller can open a
+        # write transaction. SQLite.backup cannot run behind our own write lock.
+        if isinstance(cipher, PayloadCipher):
+            self._ensure_payload_backup(cipher)
+
+    def _ensure_payload_backup(self, cipher):
+        if self._payload_backup_ready or cipher.key_path is None:
+            return
+        path = checked_path(self.path)
+        backup = path.with_suffix(".pre-wv1.sqlite3")
+        manifest = path.with_suffix(".pre-wv1.json")
+        with ProcessLock(path.with_suffix(".payload-backup.lock")).acquire(timeout=10):
+            checked_path(backup)
+            checked_path(manifest)
+            key_backup = cipher.backup_key()
+            if manifest.exists():
+                try:
+                    value = json.loads(manifest.read_text(encoding="utf-8"))
+                    if (value.get("schema") != 1 or value.get("database") != backup.name or
+                            not backup.is_file() or value.get("sha256") != _file_digest(backup) or
+                            value.get("keyBackup") != os.path.relpath(key_backup, path.parent) or
+                            value.get("keySha256") != _file_digest(key_backup)):
+                        raise ValueError("invalid backup")
+                except (OSError, ValueError, TypeError, AttributeError) as exc:
+                    raise PayloadUnreadable("分析数据恢复备份不可用，原文件已保留") from exc
+            else:
+                temporary = backup.with_name(backup.name + "." + uuid.uuid4().hex + ".tmp")
+                pending_manifest = manifest.with_name(manifest.name + "." + uuid.uuid4().hex + ".tmp")
+                try:
+                    if not backup.exists():
+                        with closing(sqlite3.connect(path, timeout=15)) as source:
+                            destination = sqlite3.connect(temporary)
+                            try:
+                                source.backup(destination)
+                            finally:
+                                destination.close()
+                        with temporary.open("r+b") as stream:
+                            os.fsync(stream.fileno())
+                        os.link(temporary, backup)
+                    value = {"schema": 1, "database": backup.name, "sha256": _file_digest(backup),
+                             "keyBackup": os.path.relpath(key_backup, path.parent),
+                             "keySha256": _file_digest(key_backup), "createdAt": int(time.time()),
+                             "format": "pre-wv1", "containsLegacyPlaintext": True}
+                    with pending_manifest.open("x", encoding="utf-8") as stream:
+                        json.dump(value, stream, ensure_ascii=False)
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                    os.link(pending_manifest, manifest)
+                finally:
+                    temporary.unlink(missing_ok=True)
+                    pending_manifest.unlink(missing_ok=True)
+            self._payload_backup_ready = True
+
+    def analysis_progress_rows(self, account, version):
+        """Per-conversation scan state for the whole-account progress read.
+
+        Returns (session, subject, complete, state_json) rows: one per analysed subject,
+        where a group's overall row carries an empty subject.
+        """
+        with self.connect() as conn:
+            tables = {row[0] for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'")}
+            if "batch_progress_v1" in tables:
+                return conn.execute(
+                    "SELECT session,subject,complete,state_json FROM batch_progress_v1 "
+                    "WHERE account=? AND base_version=?", (account, version)).fetchall()
+            return [(row[0], row[0], row[1], None) for row in conn.execute(
+                "SELECT session,complete FROM progress_v1 WHERE account=? AND version=?",
+                (account, version))]
+
 
     @contextmanager
     def connect(self):
@@ -271,6 +385,20 @@ class ResultStore:
                     "SELECT r.rowid,r.id,r.result,r.score,r.side,r.sort_seq,r.shard,r.local_id,t.words "
                     "FROM results_v2 r LEFT JOIN profile_tokens_v1 t ON t.account=r.account AND t.session=r.session "
                     "AND t.version=r.version AND t.id=r.id WHERE " + conditions + " ORDER BY " + ordered, args).fetchall()
+                if saved and rows:
+                    prior_sql = "SELECT COUNT(*) FROM results_v2 WHERE account=? AND session=? AND version=? AND rowid<=?"
+                    prior_args = (*scope, cursor)
+                    if subject:
+                        prior_sql += " AND sender=?"
+                        prior_args += (subject,)
+                    if conn.execute(prior_sql, prior_args).fetchone()[0] != state["count"]:
+                        cursor, state, saved = 0, empty_profile_state(), None
+                        fresh_args = (*scope, 0, subject) if subject else (*scope, 0)
+                        rows = conn.execute(
+                            "SELECT r.rowid,r.id,r.result,r.score,r.side,r.sort_seq,r.shard,r.local_id,t.words "
+                            "FROM results_v2 r LEFT JOIN profile_tokens_v1 t ON t.account=r.account AND t.session=r.session "
+                            "AND t.version=r.version AND t.id=r.id WHERE " + conditions +
+                            " ORDER BY r.sort_seq,r.shard,r.local_id,r.id", fresh_args).fetchall()
                 for rowid, stable_id, raw, score, side, seq, shard, local_id, words in rows:
                     result, position = json.loads(raw), (seq, shard, local_id, stable_id)
                     tails = []
@@ -282,6 +410,25 @@ class ResultStore:
                             tail_args += (subject,)
                         tails = [(json.loads(raw_tail), tail_score) for raw_tail, tail_score in
                                  conn.execute("SELECT result,score FROM results_v2 WHERE " + tail_where, tail_args)]
+                    if not covers_tail_emotions(state, [item.get("emotion") for item, _score in tails
+                                                       if item.get("emotion")]):
+                        state = empty_profile_state()
+                        rebuild_sql = ("SELECT r.rowid,r.id,r.result,r.score,r.side,r.sort_seq,r.shard,r.local_id,t.words "
+                                       "FROM results_v2 r LEFT JOIN profile_tokens_v1 t ON t.account=r.account "
+                                       "AND t.session=r.session AND t.version=r.version AND t.id=r.id "
+                                       "WHERE r.account=? AND r.session=? AND r.version=?")
+                        rebuild_args = scope
+                        if subject:
+                            rebuild_sql += " AND r.sender=?"
+                            rebuild_args += (subject,)
+                        rebuild_sql += " ORDER BY r.sort_seq,r.shard,r.local_id,r.id"
+                        rebuilt_rows = conn.execute(rebuild_sql, rebuild_args).fetchall()
+                        for saved_id, message_id, saved_raw, saved_score, saved_side, saved_seq, saved_shard, saved_local, saved_words in rebuilt_rows:
+                            add_profile_result(state, json.loads(saved_raw), saved_score, saved_side,
+                                               (saved_seq, saved_shard, saved_local, message_id),
+                                               json.loads(saved_words or "{}"))
+                        cursor = max((row[0] for row in rebuilt_rows), default=0)
+                        break
                     add_profile_result(state, result, score, side, position, json.loads(words or "{}"), tails)
                     cursor = max(cursor, rowid)
                 if rows or not saved:
@@ -333,7 +480,7 @@ class ResultStore:
         if row is None:
             return {"cursor": None, "complete": False, "context": [], "eligible": 0}
         return {"cursor": tuple(row[:3]) if row[0] is not None else None,
-                "complete": bool(row[3]), "context": json.loads(row[4]), "eligible": row[5]}
+                "complete": bool(row[3]), "context": self.cipher.loads(row[4]), "eligible": row[5]}
 
     def advance(self, account, user, version, cursor, context, item=None, complete=False):
         """Commit only the scan cursor; result summaries are updated on first save."""
@@ -355,7 +502,7 @@ class ResultStore:
             conn.execute("UPDATE progress_v1 SET cursor_seq=?,cursor_shard=?,cursor_local=?,complete=?,"
                          "context_json=?,eligible_count=? WHERE account=? AND session=? AND version=?",
                          (seq, shard, local_id, int(complete),
-                          json.dumps(list(context), ensure_ascii=False), eligible, account, user, version))
+                          self.cipher.dumps(list(context)), eligible, account, user, version))
 
     def recent(self, account, user, version, limit=80):
         with self.connect() as conn:
@@ -486,6 +633,34 @@ class ResultStore:
             conn.execute("INSERT OR REPLACE INTO api_source_meta_v1 VALUES (?,?,?,?)",
                          (account, source_id, protocol, model))
 
+    def api_guidance_get(self, account, user, source_id, subject):
+        with self.connect() as conn:
+            row = conn.execute("SELECT revision,scenario,analyze_self,payload_json,updated_at "
+                               "FROM api_guidance_v1 WHERE account=? AND session=? AND "
+                               "source_id=? AND subject=?", (account, user, source_id, subject)).fetchone()
+        if row is None:
+            return None
+        # Decryption failure must propagate before any obsolete-shape cleanup.
+        guidance = self.cipher.loads(row[3])
+        if not valid_guidance_payload(guidance):
+            with self.connect() as conn:
+                conn.execute("DELETE FROM api_guidance_v1 WHERE account=? AND session=? AND "
+                             "source_id=? AND subject=? AND payload_json=?",
+                             (account, user, source_id, subject, row[3]))
+            return None
+        return {"revision": row[0], "scenario": row[1], "analyzeSelf": bool(row[2]),
+                "guidance": guidance, "updatedAt": row[4]}
+
+    def api_guidance_save(self, account, user, source_id, subject, guidance):
+        if not valid_guidance_payload(guidance):
+            raise ValueError("invalid API guidance")
+        with self.connect() as conn:
+            conn.execute("INSERT OR REPLACE INTO api_guidance_v1 "
+                         "(account,session,source_id,subject,revision,scenario,analyze_self,"
+                         "payload_json,updated_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                         (account, user, source_id, subject, guidance["version"], guidance.get("scenario", "auto"),
+                          int(guidance.get("analyzeSelf", False)), self.cipher.dumps(guidance), int(time.time())))
+
     def cache_suspended(self, account, source_id):
         with self.connect() as conn:
             return conn.execute("SELECT 1 FROM analysis_cache_suspended_v1 WHERE account=? AND source_id=?",
@@ -530,21 +705,41 @@ class ResultStore:
                                (account, user, source_id, subject)).fetchone()
         if row is None:
             return None
-        portrait = json.loads(row[9])
+        portrait = self.cipher.loads(row[9])
         if not valid_api_portrait(portrait):
             raise RuntimeError("invalid saved API portrait")
+        resume = self.cipher.loads(row[10]) if row[10] else None
+        if isinstance(resume, dict) and "portraitStatistics" in resume and not valid_statistics(
+                resume["portraitStatistics"], allow_historical_pending=resume.get("portraitLedgerVersion") == 1):
+            resume.pop("portraitStatistics", None)
+        if isinstance(resume, dict) and "portraitEvidence" in resume and not valid_portrait_evidence(
+                resume["portraitEvidence"]):
+            resume.pop("portraitEvidence", None)
+        if isinstance(resume, dict) and "mbtiBasis" in resume and not valid_mbti_basis(resume["mbtiBasis"]):
+            resume.pop("mbtiBasis", None)
+        if isinstance(resume, dict) and "synthesisFingerprint" in resume and not valid_synthesis_fingerprint(
+                resume["synthesisFingerprint"]):
+            resume.pop("synthesisFingerprint", None)
+        available = json.loads(row[3])
+        # Legacy MBTI is gated by observed target texts, not classified texts.
+        # Read only after validation: a rejected or absent ledger must count as zero.
+        available["mbtiEvidenceCount"] = (
+            resume["portraitEvidence"]["targetCount"]
+            if isinstance(resume, dict) and isinstance(resume.get("portraitEvidence"), dict)
+            else 0)
         return {"highwater": tuple(json.loads(row[0])) if row[0] else None,
                 "after": tuple(json.loads(row[1])) if row[1] else None,
-                "fingerprint": row[2], "available": json.loads(row[3]),
+                "fingerprint": row[2], "available": available,
                 "plan": json.loads(row[4]), "batchIndex": row[5],
                 "complete": bool(row[6]), "processed": row[7],
                 "processedChars": row[8], "portrait": portrait,
-                "resume": json.loads(row[10]) if row[10] else None}
+                "resume": resume}
 
     def api_portrait_begin(self, account, user, source_id, subject, highwater, after,
-                           fingerprint, available, plan):
+                           fingerprint, available, plan, *, rebuild=False, subject_kind="person",
+                           local_rules=False, classifier_version="api-local-rules-v1", ledger_begin=None):
         saved = self.api_portrait_get(account, user, source_id, subject)
-        if saved and not saved["complete"]:
+        if saved and not rebuild and not saved["complete"]:
             if (saved["highwater"] != highwater or saved["after"] != after or
                     saved["fingerprint"] != fingerprint):
                 raise ValueError("unfinished portrait source changed")
@@ -562,9 +757,48 @@ class ResultStore:
                         raise RuntimeError("API portrait plan changed concurrently")
                 saved["plan"] = plan
             return saved
-        if saved and (highwater is None or saved["highwater"] == highwater):
+        if (saved and not rebuild and saved["highwater"] == highwater and
+                saved["fingerprint"] == fingerprint):
             return saved
         portrait = saved["portrait"] if saved else empty_api_portrait()
+        previous_resume = saved.get("resume") if saved and not rebuild else None
+        evidence_resume = ({"portraitEvidence": previous_resume["portraitEvidence"]}
+                           if isinstance(previous_resume, dict) and
+                           isinstance(previous_resume.get("portraitEvidence"), dict)
+                           else {"portraitEvidence": empty_portrait_evidence(subject_kind)})
+        # The old display portrait survives a new job; retain its explanation,
+        # but never inherit the old cursor into this new incremental range.
+        saved_basis = (saved.get("resume") or {}).get("mbtiBasis") if saved else None
+        if valid_mbti_basis(saved_basis):
+            evidence_resume["mbtiBasis"] = saved_basis
+        if isinstance(previous_resume, dict):
+            last_synthesis = previous_resume.get("synthesisFingerprint")
+            if not valid_synthesis_fingerprint(last_synthesis) and saved["complete"]:
+                # Completed v3 rows predate the marker. Only these can safely be
+                # migrated; an unfinished row may still be awaiting synthesis.
+                last_synthesis = portrait_synthesis_fingerprint(previous_resume.get("portraitEvidence"))
+            if valid_synthesis_fingerprint(last_synthesis):
+                evidence_resume["synthesisFingerprint"] = last_synthesis
+        unchanged = (not plan and evidence_resume.get("synthesisFingerprint") is not None and
+                     evidence_resume["synthesisFingerprint"] ==
+                     portrait_synthesis_fingerprint(evidence_resume["portraitEvidence"]))
+        if local_rules:
+            # Reuse the source-scoped cursor transaction, never the legacy API's
+            # generated scores. Only compatible sufficient statistics carry forward.
+            statistics = (previous_resume or {}).get("portraitStatistics")
+            ledger_backed = previous_resume is not None and previous_resume.get("portraitLedgerVersion") == 1
+            evidence_resume = {"portraitStatistics": statistics if valid_statistics(
+                statistics, classifier_version, allow_historical_pending=ledger_backed)
+                else empty_statistics(classifier_version)}
+            if ledger_backed:
+                evidence_resume["portraitLedgerVersion"] = 1
+            display_statistics = (saved.get("resume") or {}).get("portraitStatistics") if saved and rebuild else (
+                (previous_resume or {}).get("portraitDisplayStatistics"))
+            if valid_statistics(display_statistics, allow_historical_pending=True):
+                evidence_resume["portraitDisplayStatistics"] = display_statistics
+            if valid_statistics(statistics, classifier_version, allow_historical_pending=ledger_backed) and isinstance(previous_resume.get("portraitContext"), list):
+                evidence_resume["portraitContext"] = previous_resume["portraitContext"][-3:]
+            unchanged = not plan
         with self.connect() as conn:
             conn.execute("INSERT OR REPLACE INTO api_portrait_v1 "
                          "(account,session,source_id,subject,highwater_json,after_json,fingerprint,"
@@ -574,7 +808,10 @@ class ResultStore:
                           json.dumps(highwater) if highwater else None,
                           json.dumps(after) if after else None, fingerprint,
                           json.dumps(available, ensure_ascii=False), json.dumps(plan), 0,
-                          int(not plan), 0, 0, json.dumps(portrait, ensure_ascii=False), None))
+                          int(unchanged), 0, 0, self.cipher.dumps(portrait),
+                          self.cipher.dumps(evidence_resume) if evidence_resume else None))
+            if ledger_begin is not None:
+                ledger_begin(conn)
         return self.api_portrait_get(account, user, source_id, subject)
 
     def api_portrait_upgrade_resume(self, account, user, source_id, subject,
@@ -585,42 +822,74 @@ class ResultStore:
                 "UPDATE api_portrait_v1 SET available_json=?,resume_json=? WHERE account=? AND "
                 "session=? AND source_id=? AND subject=? AND fingerprint=? AND batch_index=? "
                 "AND complete=0",
-                (json.dumps(available, ensure_ascii=False), json.dumps(resume), account, user,
+                (json.dumps(available, ensure_ascii=False), self.cipher.dumps(resume), account, user,
                  source_id, subject, fingerprint, batch_index)).rowcount
             if changed != 1:
                 raise RuntimeError("API portrait checkpoint changed during resume upgrade")
 
+    def api_portrait_update_metadata(self, account, user, source_id, subject, update):
+        with self.connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            if conn.execute("SELECT 1 FROM api_portrait_v1 WHERE account=? AND session=? AND source_id=? AND subject=?",
+                            (account, user, source_id, subject)).fetchone() is None:
+                raise RuntimeError("API portrait scope disappeared")
+            update(conn)
+
     def api_portrait_checkpoint(self, account, user, source_id, subject, batch_index,
                                 portrait, processed, processed_chars, complete,
-                                processed_target=None, resume=None):
+                                processed_target=None, resume=None, ledger_update=None):
         if (not valid_api_portrait(portrait) or type(processed) is not int or processed < 0 or
                 type(processed_chars) is not int or processed_chars < 0 or
                 processed_target is not None and (type(processed_target) is not int or processed_target < 0) or
                 resume is not None and (not isinstance(resume, dict) or
-                                        resume.get("batchIndex") != batch_index)):
+                                        resume.get("batchIndex") != batch_index or
+                                        "portraitEvidence" in resume and not valid_portrait_evidence(
+                                            resume["portraitEvidence"]) or
+                                        "portraitStatistics" in resume and not valid_statistics(
+                                            resume["portraitStatistics"],
+                                            allow_historical_pending=resume.get("portraitLedgerVersion") == 1))):
             raise ValueError("invalid API portrait checkpoint")
         with self.connect() as conn:
-            row = conn.execute("SELECT available_json FROM api_portrait_v1 WHERE account=? AND session=? "
+            row = conn.execute("SELECT available_json,resume_json FROM api_portrait_v1 WHERE account=? AND session=? "
                                "AND source_id=? AND subject=?",
                                (account, user, source_id, subject)).fetchone()
             if row is None:
                 raise RuntimeError("API portrait scope disappeared")
             available = json.loads(row[0])
+            if resume is not None:
+                resume = dict(resume)
+                previous_resume = self.cipher.loads(row[1]) if row[1] else None
+                if isinstance(previous_resume, dict) and not complete and "portraitDisplayStatistics" in previous_resume:
+                    resume["portraitDisplayStatistics"] = previous_resume["portraitDisplayStatistics"]
+                if not valid_synthesis_fingerprint(resume.get("synthesisFingerprint")):
+                    resume.pop("synthesisFingerprint", None)
+                    previous_fingerprint = (previous_resume.get("synthesisFingerprint")
+                                            if isinstance(previous_resume, dict) else None)
+                    if valid_synthesis_fingerprint(previous_fingerprint):
+                        resume["synthesisFingerprint"] = previous_fingerprint
+                if not valid_mbti_basis(resume.get("mbtiBasis")):
+                    resume.pop("mbtiBasis", None)
+                    previous_basis = (previous_resume.get("mbtiBasis")
+                                      if isinstance(previous_resume, dict) else None)
+                    if valid_mbti_basis(previous_basis):
+                        resume["mbtiBasis"] = previous_basis
             if processed_target is not None:
                 if processed_target > available.get("targetTextCount", processed_target):
                     raise ValueError("invalid API target progress")
                 available["processedTargetTextCount"] = processed_target
             resume_clause = ",resume_json=?" if resume is not None else ""
             args = (batch_index, int(complete), processed, processed_chars,
-                    json.dumps(portrait, ensure_ascii=False), json.dumps(available, ensure_ascii=False))
+                    self.cipher.dumps(portrait), json.dumps(available, ensure_ascii=False))
             if resume is not None:
-                args += (json.dumps(resume),)
+                args += (self.cipher.dumps(resume),)
             changed = conn.execute("UPDATE api_portrait_v1 SET batch_index=?,complete=?,processed=?,"
                                    "processed_chars=?,portrait_json=?,available_json=?" + resume_clause +
                                    " WHERE account=? AND session=? AND source_id=? AND subject=?",
                                    (*args, account, user, source_id, subject)).rowcount
             if changed != 1:
                 raise RuntimeError("API portrait scope disappeared")
+            if ledger_update is not None:
+                ledger_update(conn)
 
     def analysis_cache_sources(self, account):
         with self.connect() as conn:
@@ -644,7 +913,7 @@ class ResultStore:
                                                   "WHERE account=? AND source_id=?",
                                                   (account, LOCAL_SOURCE_ID)).fetchone() is not None}]
             ids = {row[0] for row in conn.execute("SELECT source_id FROM api_source_meta_v1 WHERE account=?", (account,))}
-            for table in ("api_insights_v1", "api_portrait_v1"):
+            for table in ("api_insights_v1", "api_portrait_v1", "api_guidance_v1"):
                 ids.update(raw.split(":", 1)[0] for (raw,) in conn.execute(
                     f"SELECT DISTINCT source_id FROM {table} WHERE account=?", (account,)))
             ids.update(row[0] for row in conn.execute("SELECT source_id FROM analysis_cache_suspended_v1 "
@@ -660,13 +929,15 @@ class ResultStore:
                 portraits = conn.execute("SELECT COUNT(*) FROM (SELECT session,subject FROM api_portrait_v1 "
                                          "WHERE account=? AND source_id LIKE ? GROUP BY session,subject)",
                                          (account, source_id + ":%")).fetchone()[0]
+                guidance = conn.execute("SELECT COUNT(*) FROM api_guidance_v1 WHERE account=? AND "
+                                        "source_id LIKE ?", (account, source_id + ":%")).fetchone()[0]
                 suspended = conn.execute("SELECT 1 FROM analysis_cache_suspended_v1 "
                                          "WHERE account=? AND source_id=?",
                                          (account, source_id)).fetchone() is not None
                 sources.append({"sourceId": source_id, "kind": "api",
                                 "label": meta[1] if meta else "旧 API 来源",
                                 **({"protocol": meta[0]} if meta else {}),
-                                "messageCount": insights, "portraitCount": portraits,
+                                "messageCount": insights, "portraitCount": portraits, "guidanceCount": guidance,
                                 "suspended": suspended})
         return sources
 
@@ -678,11 +949,11 @@ class ResultStore:
                               "progress_v1", "summary_v1", "profile_tokens_v1",
                               "profile_tokens_ready_v1", "profile_state_v1", "batch_progress_v1",
                               "batch_runs_v1", "batch_coverage_v1", "batch_fragments_v1",
-                              "quoted_backfill_v1", "qq_analysis_generations_v1"):
+                              "quoted_backfill_v1", "qq_analysis_generations_v1", "batch_source_checks_v1", "portrait_resets_v1"):
                     if table in present:
                         conn.execute(f"DELETE FROM {table} WHERE account=?", (account,))
             else:
-                for table in ("api_insights_v1", "api_portrait_v1", "qq_api_insight_basis_v1"):
+                for table in ("api_insights_v1", "api_portrait_v1", "qq_api_insight_basis_v1", "api_guidance_v1"):
                     conn.execute(f"DELETE FROM {table} WHERE account=? AND source_id LIKE ?",
                                  (account, source_id + ":%"))
                 # A saved source record with zero rows may still carry stale config/job
@@ -691,6 +962,87 @@ class ResultStore:
                              (account, source_id))
                 conn.execute("DELETE FROM qq_api_generations_v1 WHERE account=? AND source_id=?",
                              (account, source_id))
+                from api_portrait_ledger import clear_ledger
+                clear_ledger(conn, account=account, source_id=source_id)
+
+    def portrait_reset(self, account, user, subject):
+        with self.connect() as conn:
+            return conn.execute("SELECT 1 FROM portrait_resets_v1 WHERE account=? AND session=? AND subject=?",
+                                (account, user, subject)).fetchone() is not None
+
+    def clear_scope(self, account, user, source_id, *, subject=None):
+        """Clear one stopped analysis scope; preserve source databases and Advisor state."""
+        if not all(isinstance(value, str) and value for value in (account, user, source_id)):
+            raise ValueError("invalid analysis scope")
+        if source_id != LOCAL_SOURCE_ID and not re.fullmatch(r"[0-9a-f]{32}(?::[^\s]+)?", source_id):
+            raise ValueError("invalid analysis source")
+        if subject is not None:
+            group = user.endswith("@chatroom") or user.startswith("g:")
+            if not isinstance(subject, str) or not group and subject not in (user,"self"):
+                raise ValueError("invalid portrait subject")
+            if group:
+                if source_id == LOCAL_SOURCE_ID and subject == user:
+                    raise ValueError("local group portrait uses an empty subject")
+                if source_id != LOCAL_SOURCE_ID and not subject:
+                    raise ValueError("API group portrait requires a subject")
+        counts = {"messageRows": 0, "portraitRows": 0, "progressRows": 0}
+        with self.profile_lock, self.connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            present = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            if source_id == LOCAL_SOURCE_ID:
+                message_tables = ("results_v2", "analysis_skips", "fine_results_v1", "fine_skips_v1",
+                                  "profile_tokens_v1", "profile_tokens_ready_v1") if subject is None else ()
+                for table in message_tables:
+                    counts["messageRows"] += conn.execute(
+                        f"DELETE FROM {table} WHERE account=? AND session=?", (account, user)).rowcount
+                for table in ("progress_v1", "summary_v1", "profile_state_v1", "batch_progress_v1",
+                              "batch_runs_v1", "batch_coverage_v1", "batch_fragments_v1",
+                              "quoted_backfill_v1", "batch_source_checks_v1"):
+                    if table not in present or (subject is not None and table in ("progress_v1", "summary_v1")):
+                        continue
+                    query = f"DELETE FROM {table} WHERE account=? AND session=?"
+                    args = (account, user)
+                    if subject is not None:
+                        query += " AND subject=?"
+                        args += (subject,)
+                    key = "portraitRows" if table in ("profile_state_v1", "batch_progress_v1") else "progressRows"
+                    counts[key] += conn.execute(query, args).rowcount
+                if subject is None:
+                    conn.execute("DELETE FROM portrait_resets_v1 WHERE account=? AND session=?", (account, user))
+                    conn.execute("DELETE FROM qq_analysis_generations_v1 WHERE account=? AND session=?", (account,user))
+                else:
+                    conn.execute("INSERT OR IGNORE INTO portrait_resets_v1 VALUES (?,?,?)", (account, user, subject))
+            else:
+                source_query = "source_id=?" if ":" in source_id else "source_id LIKE ?"
+                source_value = source_id if ":" in source_id else source_id + ":%"
+                args = (account, user, source_value)
+                if subject is None:
+                    counts["messageRows"] = conn.execute(
+                        "DELETE FROM api_insights_v1 WHERE account=? AND session=? AND " + source_query, args).rowcount
+                query = "DELETE FROM api_portrait_v1 WHERE account=? AND session=? AND " + source_query
+                if subject is not None:
+                    query += " AND subject=?"
+                    args += (subject,)
+                counts["portraitRows"] = conn.execute(query, args).rowcount
+                conn.execute(query.replace("api_portrait_v1", "api_guidance_v1"), args)
+                from api_portrait_ledger import clear_ledger
+                clear_ledger(conn, account=account, user=user, source_id=source_id, subject=subject)
+                raw_source=source_id.split(":",1)[0]
+                query="DELETE FROM qq_api_generations_v1 WHERE account=? AND session=? AND source_id=?"
+                args=(account,user,raw_source)
+                if subject is not None:
+                    query+=" AND component='portrait' AND subject=?"
+                    args+=(subject,)
+                conn.execute(query,args)
+                if subject is None:
+                    conn.execute("DELETE FROM qq_api_insight_basis_v1 WHERE account=? AND session=? AND source_id LIKE ?",
+                        (account,user,raw_source+":%"))
+        return counts
+
+    def revoke_local_generation(self,account,user,version):
+        with self.profile_lock,self.connect() as conn:
+            conn.execute('DELETE FROM qq_analysis_generations_v1 WHERE account=? AND session=? AND version=?',
+                         (account,user,version))
 
     def skip_fine(self, account, user, version, message, reason):
         seq, shard, local_id = message["_sort"]
@@ -725,7 +1077,10 @@ class ResultStore:
                 summary["mood"][raw]["weighted"] += probability
         summary["moodCount"] += 1
 
-    def _ensure_summary(self, conn, account, user, version):
+    def _ensure_summary(self, conn, account, user, version, *, rebuild=False):
+        if rebuild:
+            conn.execute("DELETE FROM summary_v1 WHERE account=? AND session=? AND version=?",
+                         (account, user, version))
         row = conn.execute("SELECT score_count,score_sum,score_weighted,mood_count,mood_json "
                            "FROM summary_v1 WHERE account=? AND session=? AND version=?",
                            (account, user, version)).fetchone()
@@ -769,6 +1124,7 @@ class ResultStore:
             score = result.get("score") if message["side"] == "other" else None
             mood = (result.get("emotion") or []) if message["side"] == "other" else []
             rank = tail_score = 0
+            mood_rank = summary["moodCount"]
             tail_mood = {}
             if score is not None:
                 position = (seq, shard, local_id, message["id"])
@@ -793,9 +1149,19 @@ class ResultStore:
                     )
                     for tail_json, tail_score_value in tails:
                         tail_score += tail_score_value
-                        for entry in json.loads(tail_json).get("emotion") or []:
-                            raw = entry.get("rawLabel") or entry["label"]
-                            tail_mood[raw] = tail_mood.get(raw, 0.0) + entry["probability"]
+            if mood:
+                tail_count = 0
+                for (tail_json,) in conn.execute(
+                        "SELECT result FROM results_v2 WHERE account=? AND session=? AND version=? AND side='other' "
+                        "AND (sort_seq,shard,local_id,id)>(?,?,?,?)", (account, user, version, seq, shard, local_id, message["id"])):
+                    emotion = json.loads(tail_json).get("emotion") or []
+                    tail_count += bool(emotion)
+                    for entry in emotion:
+                        raw = entry.get("rawLabel") or entry["label"]
+                        tail_mood[raw] = tail_mood.get(raw, 0.0) + entry["probability"]
+                if tail_count > summary["moodCount"] or not set(tail_mood) <= set(summary["mood"]):
+                    summary = self._ensure_summary(conn, account, user, version, rebuild=True)
+                mood_rank = summary["moodCount"] - tail_count
             inserted = conn.execute("INSERT OR IGNORE INTO results_v2 VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                                     (account, user, message["id"], seq, shard, local_id, message["senderId"],
                                      message["side"], json.dumps(result, ensure_ascii=False), score, version))
@@ -809,7 +1175,7 @@ class ResultStore:
                 summary["scoreSum"] += score
                 summary["scoreCount"] += 1
             if mood:
-                self._add_emotion(summary, mood, rank, tail_mood)
+                self._add_emotion(summary, mood, mood_rank, tail_mood)
             conn.execute("UPDATE summary_v1 SET score_count=?,score_sum=?,score_weighted=?,mood_count=?,mood_json=? "
                          "WHERE account=? AND session=? AND version=?",
                          (summary["scoreCount"], summary["scoreSum"], summary["scoreWeighted"],

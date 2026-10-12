@@ -3,7 +3,7 @@ import copy
 import sqlite3
 import threading
 import unittest
-from contextlib import closing
+from contextlib import closing, nullcontext
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -95,7 +95,7 @@ class RevisionTests(Library):
         fresh = ResultStore(self.root / "golden.sqlite3")
         backend = SimpleNamespace(source=self.source, analyzer=Analyzer(), jobs_lock=threading.Lock(), performance={},
             _legacy_profile_state=lambda *_: empty_state(), _take_recent_priority=lambda _: None,
-            _assert_scope=lambda _: None)
+            _assert_scope=lambda _: None, _scope_commit=lambda _: nullcontext())
         engine = BatchEngine(backend)
         list(engine.incremental(self.account, CONV, VERSION, fresh, {}, self.source.identity(), "golden"))
         return engine.snapshot(self.account, CONV, VERSION, fresh)
@@ -182,10 +182,17 @@ class RevisionTests(Library):
         self.assertEqual(len(self.analyzer.calls), calls)
         self.assertEqual(self.snapshot()["state"], self.golden()["state"])
 
-    def test_recent_request_after_backfill_also_rebuilds_the_complete_portrait(self):
+    def test_recent_request_after_backfill_keeps_portrait_until_explicit_rebuild(self):
         self.seed()
+        previous=self.snapshot()['state']
+        calls=len(self.analyzer.calls)
         self.ingest(record("early", time_ms=1000))
         self.run_job(mode="recent")
+        self.assertEqual(self.snapshot()['state'],previous)
+        self.assertEqual(len(self.analyzer.calls),calls,'a label request must not broaden into portrait history')
+        self.assertTrue(self.backend.analysis(CONV)['stale'])
+        self.assertIn('early',self.backend.analysis(CONV)['results'])
+        self.run_job()
         self.assertEqual(self.snapshot()["state"], self.golden()["state"])
         self.assertFalse(self.backend.analysis(CONV)["stale"])
 

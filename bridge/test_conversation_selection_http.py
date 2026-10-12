@@ -70,7 +70,7 @@ class ConversationSelectionHTTPTests(unittest.TestCase):
         status, initial = self.request("GET")
         self.assertEqual(status, 200)
         self.assertEqual(initial, {"account": "wxid_real_a_abcd", "initialized": False,
-                                   "selectedSessions": []})
+                                   "selectedSessions": [], "requestedSessions": []})
         self.assertEqual(self.source.session_calls, 0)
 
         status, selected = self.request("POST", {"expectedAccount": self.source.account,

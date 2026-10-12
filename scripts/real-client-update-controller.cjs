@@ -6,6 +6,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { checkForUpdates, downloadAndStageUpdate } = require("./real-client-update.cjs");
 const { productProfile, stateDir } = require("./product-identity.cjs");
+const { assertPayloadCompatible } = require("./real-client-update-helper.cjs");
 
 const BUSY = new Set(["downloading", "verifying", "extracting", "installing", "restarting"]);
 const WORK_PREFIX = ".wechatvibe-update-";
@@ -121,6 +122,7 @@ function createUpdateController({ app, root, port, instanceId, onState, pauseRec
   }
 
   async function handoff(action, candidatePath, workDir, expectedVersion) {
+    assertPayloadCompatible(root, expectedVersion, productName);
     if (!app.isPackaged || process.platform !== "win32" || !directChild(workDir, parent) ||
         !samePath(path.dirname(candidatePath), workDir) ||
         !fs.existsSync(path.join(candidatePath, productName + ".exe"))) {

@@ -1,0 +1,13 @@
+.analysis-tools-dialog { margin: auto; color: var(--text-primary, #29332c); background: var(--bg-primary, #fff); border: 1px solid var(--border-color, #ddd); border-radius: 16px; padding: 24px; width: min(620px, calc(100vw - 48px)); max-height: 80vh; }
+.analysis-tools-dialog::backdrop { background: rgb(0 0 0 / 30%); }
+.analysis-tools-dialog h2 { font-size: 18px; margin: 0 0 16px; }
+.analysis-tools-content { display: flex; flex-direction: column; gap: 12px; }
+.analysis-target-list { max-height: 48vh; overflow: auto; }
+.analysis-target-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 4px; font-size: 13px; line-height: 1.6; }
+.analysis-target-row input { flex: none; margin-top: 5px; }
+.analysis-target-row span { overflow-wrap: anywhere; white-space: pre-wrap; }
+.analysis-rerun { display: block; align-self: flex-start; font: inherit; font-size: 11px; color: var(--text-secondary, #69766d); background: transparent; border: 0; padding: 4px 0; cursor: pointer; opacity: 0; }
+.msg-item:hover .analysis-rerun, .analysis-rerun:focus-visible, .analysis-rerun:disabled { opacity: 1; }
+.analysis-rerun:disabled { cursor: default; }
+.analysis-rerun-status { display: block; font-size: 11px; color: var(--text-secondary, #69766d); }
+@media (hover: none) { .analysis-rerun { opacity: 1; } }

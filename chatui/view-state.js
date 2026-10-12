@@ -11,6 +11,7 @@
       return {
         sessions: new Map(),
         selectedConversations: new Set(),
+        requestedConversations: new Set(),
         selectionLoadedAccount: null,
         conversationSelectionBusy: false,
         sessionCache: new Map(),

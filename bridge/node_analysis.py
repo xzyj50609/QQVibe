@@ -14,11 +14,21 @@ import uuid
 from pathlib import Path
 
 from backend_contracts import ROOT, valid_api_portrait, validate_personality_evidence
+from guidance_contracts import (GUIDANCE_REVISION, REPLY_OPTIONS_REVISION,
+                                valid_guidance, valid_reply_options)
 from local_model_source import ModelSource
 from product_profile import current_product
 from profile_signals import validate_style_evidence
+from portrait_contracts import valid_mbti_basis, valid_portrait_evidence
 
 PRODUCT = current_product()
+
+
+def node_executable():
+    bundled=ROOT/'runtime/node/node.exe'
+    if bundled.is_file():
+        return str(bundled)
+    return os.environ.get('QQVIBE_NODE') or os.environ.get('WECHATVIBE_NODE') or 'node'
 
 
 class NodeAnalysis:
@@ -35,6 +45,7 @@ class NodeAnalysis:
         self.model = {"state": "idle"}
         self.serial = 0
         self.version = None
+        self.portrait_classifier_version = None
         self.running_version = None
         self.api_only = api_only
         self.settings_path = Path(settings_path) if settings_path is not None else (
@@ -79,7 +90,7 @@ class NodeAnalysis:
         self.pending.clear()
         self.stream_callbacks.clear()
         self.expired_request_ids.clear()
-        command = ["node", "--import", "tsx", str(ROOT / "bridge/analysis_server.ts")]
+        command = [node_executable(), "--import", "tsx", str(ROOT / "bridge/analysis_server.ts")]
         command += ["--api-only"] if self.api_only else ["--provider", self.requested_provider]
         environment = os.environ.copy()
         environment["LAYA_MODEL_DIR"] = self.local_model_source.status()["path"]
@@ -158,20 +169,28 @@ class NodeAnalysis:
         with self.condition:
             if self.version is None:
                 probe = subprocess.run(
-                    ["node", "--import", "tsx", str(ROOT / "bridge/analysis_server.ts"), "--analysis-version"],
+                    [node_executable(), "--import", "tsx", str(ROOT / "bridge/analysis_server.ts"), "--analysis-version"],
                     cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=20,
                     check=False, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                 )
                 if probe.returncode != 0:
                     raise RuntimeError("analysis version unavailable")
                 try:
-                    version = json.loads(probe.stdout.strip()).get("analysisVersion")
+                    versions = json.loads(probe.stdout.strip())
+                    version = versions.get("analysisVersion")
                 except ValueError as exc:
                     raise RuntimeError("invalid analysis version response") from exc
                 if not isinstance(version, str) or not version:
                     raise RuntimeError("invalid analysis version")
                 self.version = version
+                self.portrait_classifier_version = versions.get("apiPortraitVersion")
             return self.version
+
+    def portrait_version(self):
+        self.analysis_version()
+        if not isinstance(self.portrait_classifier_version, str) or not self.portrait_classifier_version:
+            raise RuntimeError("portrait-state-invalid")
+        return self.portrait_classifier_version
 
     def _read(self, process):
         for line in process.stdout:
@@ -258,7 +277,12 @@ class NodeAnalysis:
                 self.stream_callbacks.pop(request_id, None)
                 raise
             response_timeout = (16 if payload.get("cmd") == "model:list" else
-                                18 if payload.get("cmd") == "model:test" else 180)
+                                18 if payload.get("cmd") == "model:test" else
+                                270 if payload.get("cmd") == "model:portrait" and
+                                payload.get("phase") == "classify" else
+                                # The guidance turn reasons over one conversation window
+                                # and writes a structured reading; it needs more than a label batch.
+                                240 if payload.get("cmd") == "model:guidance" else 180)
             deadline = time.monotonic() + response_timeout
             while request_id not in self.pending and time.monotonic() < deadline and process.poll() is None:
                 self.condition.wait(timeout=1)
@@ -270,7 +294,17 @@ class NodeAnalysis:
                     self.expired_request_ids.clear()
                 raise RuntimeError("timeout" if self.api_only else "analysis process timeout or exited")
             if response.get("error"):
-                raise RuntimeError(str(response["error"]))
+                error = str(response["error"])
+                # Preserve fixed local group-validation reasons without exposing
+                # arbitrary worker/provider messages or changing connector codes.
+                reason = response.get("message")
+                if (payload.get("conversationKind") == "group" and
+                        error in ("Error", "MessageBatchInputError") and isinstance(reason, str) and
+                        reason in {"group context required", "invalid group context", "invalid group speaker",
+                                   "invalid group quote", "invalid group mention",
+                                   "group portrait requires one target speaker"}):
+                    error += ": " + reason
+                raise RuntimeError(error)
             if response.get("analysisVersion") != version:
                 raise RuntimeError("analysis response version mismatch")
             return response, version
@@ -279,6 +313,14 @@ class NodeAnalysis:
         response, _ = self._request({"cmd": "model:list", "protocol": protocol,
                                      "baseUrl": base_url, "apiKey": api_key}, require_model=False)
         return {"models": response.get("models"), "supported": response.get("supported")}
+
+    def clear_caches(self):
+        with self.condition:
+            if self.process is None or self.process.poll() is not None:
+                return
+            response, _version = self._request({"cmd": "clear-analysis-cache"}, require_model=False)
+            if response.get("cleared") is not True:
+                raise RuntimeError("model cache clear failed")
 
     def model_test(self, protocol, base_url, api_key, model):
         response, _ = self._request({"cmd": "model:test", "protocol": protocol,
@@ -309,24 +351,100 @@ class NodeAnalysis:
         return {"insights": insights, "usage": response.get("usage"),
                 "responseId": response.get("responseId"), "timings": response.get("timings")}
 
-    def model_portrait(self, protocol, base_url, api_key, model, previous, messages):
-        response, _ = self._request({"cmd": "model:portrait", "protocol": protocol,
+    def model_guidance(self, protocol, base_url, api_key, model, messages, target_ids,
+                       scenario, analyze_self, context_tokens, other_portrait=None,
+                       self_summary=None, feedback=None, draft=None, reply_options=False, assistant=None):
+        """One provider turn for reply options or compatible legacy guidance.
+
+        The payload is re-validated here: Node already normalised it, so a shape that
+        reaches Python has been checked twice before it can be stored or displayed.
+        """
+        payload = {"cmd": "model:guidance", "protocol": protocol, "baseUrl": base_url,
+                   "apiKey": api_key, "model": model, "messages": messages,
+                   "contextTokens": context_tokens}
+        if reply_options:
+            payload["replyOptions"] = True
+            if assistant is not None:
+                payload["assistant"] = {key: assistant[key] for key in ("prompt", "skills")}
+        else:
+            payload.update(targetIds=target_ids, scenario=scenario, analyzeSelf=analyze_self,
+                           otherPortrait=other_portrait, selfSummary=self_summary,
+                           feedback=feedback, draft=draft)
+        response, _ = self._request(payload, require_model=False)
+        if reply_options:
+            if response.get("guidanceVersion") != REPLY_OPTIONS_REVISION:
+                raise RuntimeError("guidance-version-invalid")
+            if set(response) & {"scenario", "analyzeSelf", "subtexts", "advice"}:
+                raise RuntimeError("invalid-guidance")
+            guidance = {key: response[key] for key in ("kind", "version", "replies") if key in response}
+            if not valid_reply_options(guidance):
+                raise RuntimeError("invalid-guidance")
+            return {"guidance": guidance, "usage": response.get("usage"),
+                    "responseId": response.get("responseId")}
+        if response.get("guidanceVersion") != GUIDANCE_REVISION:
+            raise RuntimeError("guidance-version-invalid")
+        guidance = {key: response[key] for key in
+                    ("version", "scenario", "analyzeSelf", "subtexts", "advice")
+                    if key in response}
+        if not valid_guidance(guidance):
+            raise RuntimeError("invalid-guidance")
+        identifiers = [item["id"] for item in guidance["subtexts"]]
+        if len(set(identifiers)) != len(identifiers) or not set(identifiers) <= set(target_ids):
+            raise RuntimeError("invalid-guidance")
+        return {"guidance": guidance, "usage": response.get("usage"),
+                "responseId": response.get("responseId")}
+
+    def extract_portrait_observations(self, protocol, base_url, api_key, model, messages,
+                                     evidence=None, subject_kind="person"):
+        response, _ = self._request({"cmd": "model:portrait", "phase": "observe", "protocol": protocol,
                                      "baseUrl": base_url, "apiKey": api_key, "model": model,
-                                     "previous": previous, "messages": messages},
+                                      "messages": messages, "evidence": evidence,
+                                      "subjectKind": subject_kind},
+                                     require_model=False)
+        evidence = response.get("evidence")
+        if not valid_portrait_evidence(evidence):
+            raise RuntimeError("invalid-portrait")
+        return {"evidence": evidence, "usage": response.get("usage")}
+
+    def classify_portrait_batch(self, protocol, base_url, api_key, model, messages,
+                               subject_kind="person", context_tokens=None):
+        """One context-sized API call; scores are subsequently derived by local rules."""
+        response, _ = self._request({"cmd": "model:portrait", "phase": "classify",
+                                     "protocol": protocol, "baseUrl": base_url,
+                                     "apiKey": api_key, "model": model,
+                                     "messages": messages, "subjectKind": subject_kind,
+                                     "contextTokens": context_tokens}, require_model=False)
+        if "result" not in response:
+            raise RuntimeError("invalid-portrait")
+        if response.get("batchVersion") != self.portrait_version():
+            raise RuntimeError("portrait-state-invalid")
+        return {"result": response["result"], "usage": response.get("usage"),
+                "batchVersion": response["batchVersion"]}
+
+    def synthesize_portrait(self, protocol, base_url, api_key, model, evidence, context_tokens):
+        response, _ = self._request({"cmd": "model:portrait", "phase": "synthesize", "protocol": protocol,
+                                      "baseUrl": base_url, "apiKey": api_key, "model": model,
+                                      "evidence": evidence, "contextTokens": context_tokens},
                                     require_model=False)
         portrait = response.get("portrait")
         if not valid_api_portrait(portrait):
             raise RuntimeError("invalid-portrait")
-        return portrait
+        return {"portrait": portrait, "usage": response.get("usage"),
+                **({"mbtiBasis": response["mbtiBasis"]}
+                   if valid_mbti_basis(response.get("mbtiBasis")) else {})}
 
-    def refresh_portrait_axes(self, protocol, base_url, api_key, model, portrait):
+    def refresh_portrait_axes(self, protocol, base_url, api_key, model, portrait, evidence=None,
+                             context_tokens=None):
         response, _ = self._request({"cmd": "model:portrait-axes", "protocol": protocol,
                                      "baseUrl": base_url, "apiKey": api_key, "model": model,
-                                     "portrait": portrait},
+                                      "portrait": portrait, "evidence": evidence,
+                                      "contextTokens": context_tokens},
                                     require_model=False)
         update = response.get("axes")
         if not isinstance(update, dict):
             raise RuntimeError("invalid-portrait")
+        if "mbtiBasis" in update and not valid_mbti_basis(update["mbtiBasis"]):
+            update = {key: value for key, value in update.items() if key != "mbtiBasis"}
         return update
 
     @staticmethod
