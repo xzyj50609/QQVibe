@@ -412,6 +412,10 @@
       "target": "bridge/test_qce63_import.py"
     },
     {
+      "source": "bridge/test_qce_reply_import.py",
+      "target": "bridge/test_qce_reply_import.py"
+    },
+    {
       "source": "bridge/test_qq_accounts.py",
       "target": "bridge/test_qq_accounts.py"
     },

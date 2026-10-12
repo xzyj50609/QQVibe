@@ -8,6 +8,8 @@
 
 **1.1.0** 增加选句分析、单句重算、多模型档案、共同计分与统计恢复、并发设置，并修复群成员画像跨批次失败。现有界面与百分比显示保留，完整变化和升级边界见 [1.1.0 更新说明](docs/public/RELEASE-NOTES.md)。
 
+**1.1.1** 修复引用回复和 type_19 等消息的导入丢字。已导入过的受影响记录，请重新导入同一原文件，再运行该会话的标签分析和画像分析；无需清空数据，不会新增重复消息。
+
 ![句豆主界面：会话列表、QQ 风格消息气泡与情绪/意图标签](docs/public/images/overview.png)
 
 *截图使用合成聊天和演示分析缓存，仅展示实际界面，不包含真实用户聊天，也不作为模型判断质量的证明。*
@@ -16,10 +18,10 @@
 
 | 程序包 | 适合谁 |
 | --- | --- |
-| **[Windows x64 完整包（含 Laya）](https://github.com/xzyj50609/QQVibe/releases/download/v1.1.0/QQVibe-1.1.0-windows-x64-full.zip)** | 第一次使用，希望在本机分析 |
-| [Windows x64 标准包（不含模型）](https://github.com/xzyj50609/QQVibe/releases/download/v1.1.0/QQVibe-1.1.0-windows-x64.zip) | 已有模型，或自行配置 API / Ollama |
+| **[Windows x64 完整包（含 Laya）](https://github.com/xzyj50609/QQVibe/releases/download/v1.1.1/QQVibe-1.1.1-windows-x64-full.zip)** | 第一次使用，希望在本机分析 |
+| [Windows x64 标准包（不含模型）](https://github.com/xzyj50609/QQVibe/releases/download/v1.1.1/QQVibe-1.1.1-windows-x64.zip) | 已有模型，或自行配置 API / Ollama |
 
-[1.1.0 发布页与校验文件](https://github.com/xzyj50609/QQVibe/releases/tag/v1.1.0) · [更新日志](CHANGELOG.md) · [完整更新说明](docs/public/RELEASE-NOTES.md)
+[1.1.1 发布页与校验文件](https://github.com/xzyj50609/QQVibe/releases/tag/v1.1.1) · [更新日志](CHANGELOG.md) · [完整更新说明](docs/public/RELEASE-NOTES.md)
 
 下载 ZIP 后**全部解压**，打开 `win-unpacked/QQVibe.exe`。程序包自带运行环境，无需安装 Git、Python 或 Node，也不需要注册 GitHub 账号。绿色「Code」按钮和「Source code」下载的是源码，不能直接当程序运行。
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "product": "QQVibe",
-  "sourceCommit": "14b00e859b1b2129e79ddd3ab5cebfd118d5987c",
+  "sourceCommit": "f91f6bb7b584f7ed871aa4167e5d569e9d9232e9",
   "upstreamBaseline": "02b770821a1cf46b8ecc46b4f874ac6f922bd586",
   "gitHistoryExported": false,
   "allowlistReviewed": true,
@@ -345,8 +345,8 @@
     {
       "file": "bridge/qq_json_adapter.py",
       "source": "bridge/qq_json_adapter.py",
-      "bytes": 14994,
-      "sha256": "0a9406f0c96c62c69ab9d3075be4be23f4caac76465a37de30eb17efe65e4cb7"
+      "bytes": 15500,
+      "sha256": "1dccb6dca555985b1127d18385421de3f2dc133f40a63f197d00f94b40b404b1"
     },
     {
       "file": "bridge/qq_json_reader.py",
@@ -363,14 +363,14 @@
     {
       "file": "bridge/qq_message_store.py",
       "source": "bridge/qq_message_store.py",
-      "bytes": 50726,
-      "sha256": "10ed1c156f703a1e87ee7c0091c784bbd27695c7db679676047866983ff065bd"
+      "bytes": 53188,
+      "sha256": "6469b5bdecd82f6392d0a715b1c6090fc047b28dc44bae4fc561ef148bbe9c82"
     },
     {
       "file": "bridge/qq_normalize.py",
       "source": "bridge/qq_normalize.py",
-      "bytes": 28911,
-      "sha256": "386850d3c30112cc6aa1de1f5dc61eacd81c9fc97991d750d7bc3a832079ef63"
+      "bytes": 29087,
+      "sha256": "91e88308857485c21aa0f8c894123669a09d350f050d2479d0211e96768c3820"
     },
     {
       "file": "bridge/qq_roles.py",
@@ -617,6 +617,12 @@
       "source": "bridge/test_qce63_import.py",
       "bytes": 8392,
       "sha256": "7fb4bd5fb7e80c00eea0d8f8c1414d4bdfaa9e4552fa850fc2e2a57e1c4feae8"
+    },
+    {
+      "file": "bridge/test_qce_reply_import.py",
+      "source": "bridge/test_qce_reply_import.py",
+      "bytes": 11754,
+      "sha256": "6cfcfe448c2dc3d35f671a040cb6d836d4111e2147ea86ee00b5503a224673e4"
     },
     {
       "file": "bridge/test_qq_accounts.py",
@@ -873,8 +879,8 @@
     {
       "file": "CHANGELOG.md",
       "source": "CHANGELOG.md",
-      "bytes": 8512,
-      "sha256": "01ec7eab62b72c8302bf9d1efe258812829cf6c015f5b8202ff44cfea1de2a60"
+      "bytes": 9425,
+      "sha256": "d24671784b257d24b44493eb0efa495d9073492e4c02662041cb11ea468c8ea1"
     },
     {
       "file": "chatui/analysis-tools.css",
@@ -1149,8 +1155,8 @@
     {
       "file": "docs/public/JSON-IMPORT.md",
       "source": "docs/public/JSON-IMPORT.md",
-      "bytes": 4039,
-      "sha256": "52fd932579364001162c9b505ffee07dd4dde0a199da25856550a260166fa1cb"
+      "bytes": 4552,
+      "sha256": "1a4d74b52148ffad1112a625b82258eaf13002a8ac34845e181dc4f9f4909353"
     },
     {
       "file": "docs/public/KNOWN-ISSUES.md",
@@ -1179,8 +1185,8 @@
     {
       "file": "docs/public/RELEASE-NOTES.md",
       "source": "docs/public/RELEASE-NOTES.md",
-      "bytes": 4789,
-      "sha256": "0db40f8c04e3ae23b44794d0eb8897cf7e9b82b9661da8fc9dd0af031e3bb9e9"
+      "bytes": 6090,
+      "sha256": "bcf7a8845fda53acbeea2b9107e92e4223e151dae4f30e059a6b2707b6d7629f"
     },
     {
       "file": "docs/public/SETUP.md",
@@ -1191,14 +1197,14 @@
     {
       "file": "docs/public/USER-GUIDE.html",
       "source": "docs/public/USER-GUIDE.html",
-      "bytes": 612409,
-      "sha256": "00e2178b2facc242a2edf9bd32a051d552d73ec3fa05dea3112de36bb6163d98"
+      "bytes": 612791,
+      "sha256": "e782e9d11cc60a8ad6d2c0fcd3696c1da73baeb18b81d72b476d0ea67e9b7409"
     },
     {
       "file": "docs/public/USER-GUIDE.md",
       "source": "docs/public/USER-GUIDE.md",
-      "bytes": 11920,
-      "sha256": "ce359c09cf22f8270dd1e4a12dccb17c4f819a31c89d9319448036b110182c4a"
+      "bytes": 12338,
+      "sha256": "a2e4dbd67d4cb68016ccf950779c7c8c1206d0dded9c200805a735579ff9ec03"
     },
     {
       "file": "electron-builder.real-client.json",
@@ -1588,13 +1594,13 @@
       "file": "package-lock.json",
       "source": "package-lock.json",
       "bytes": 182026,
-      "sha256": "b6f561d15d09938a2edd018d1019dde0bef350d722d4e5561e1bd0675caacc43"
+      "sha256": "d39b97e4dee82c79321cbbc2544dd0e22078101674240d3d49d442c4c90c80bd"
     },
     {
       "file": "package.json",
       "source": "package.json",
       "bytes": 1944,
-      "sha256": "69725214a274c0fae18f61a159233d8922e62371fc212023163df3fbe6f1f408"
+      "sha256": "9a30294bc23001d3883c1e8d0e8ef974c841e4bfd6b2c5aed574d6218f54c405"
     },
     {
       "file": "probes/fake_qce_server.py",
@@ -1641,8 +1647,8 @@
     {
       "file": "README.md",
       "source": "README.md",
-      "bytes": 6413,
-      "sha256": "f3f410e7ccec40971d17133c8691995d2f6989f379cee6ec7f381519987f929d"
+      "bytes": 6649,
+      "sha256": "16e5145e2eb9bb9e8efcd9795ec7e9423c7e5c87e21478d656651918cf1dae68"
     },
     {
       "file": "scripts/analysis-catalog-source.json",
@@ -1785,8 +1791,8 @@
     {
       "file": "scripts/public-source-allowlist.json",
       "source": "scripts/public-source-allowlist.json",
-      "bytes": 45960,
-      "sha256": "8911219c859f6e1ebf8c5ee026245ba5cef328708b403c761ddd21b737a078b8"
+      "bytes": 46078,
+      "sha256": "95bd0a70a537c94e4843d6ee1caea5eaafb482ea8badda9508fad0d619a676dd"
     },
     {
       "file": "scripts/public-source-gitattributes.txt",

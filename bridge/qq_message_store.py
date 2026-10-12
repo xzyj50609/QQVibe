@@ -810,6 +810,18 @@ def _write_record(cursor, account, conversation_key, record, covered_until, now_
     if not _remember_observation(cursor, key, record):
         outcome["unchanged"] += 1
         return {"local_seq": existing["local_seq"], "affected": None}
+    if _qce_text_upgrade(existing, record):
+        # Same source evidence, corrected interpretation. Keep identity, raw
+        # evidence, sequence and recall state; the normal revision path below
+        # invalidates labels/portraits, including already-complete checkpoints.
+        cursor.execute("UPDATE messages SET kind=?,text=?,msg_type=?,normalize_version=?,"
+                       "revision=revision+1 WHERE message_key=?",
+                       (record['kind'], record['text'], record['msg_type'], record['normalize_version'], key))
+        outcome['revised'] += 1
+        if is_backfill:
+            outcome['backfilled'] += 1
+        return {'local_seq': existing['local_seq'],
+                'affected': (existing['time_ms'], existing['local_seq'])}
     changed = [name for name in BODY_FIELDS + IDENTITY_FIELDS
                if _identity_value(name, existing[name]) != _identity_value(name, record[name])
                and not (name == "native_seq" and (existing[name] is None or record[name] is None))]
@@ -837,6 +849,41 @@ def _write_record(cursor, account, conversation_key, record, covered_until, now_
     return {"local_seq": existing["local_seq"],
             "affected": min((existing["time_ms"], existing["local_seq"]),
                             (record["time_ms"], existing["local_seq"]))}
+
+
+def _qce_text_upgrade(existing, record):
+    """Only repair the v6 export text-loss bug with identical original evidence."""
+    from qq_normalize import QCE_EXPORT_NORMALIZE_VERSION
+    if (existing['normalize_version'] != 'qq-v3:qce-export-v6' or
+            record.get('normalize_version') != QCE_EXPORT_NORMALIZE_VERSION or
+            existing['native_id_kind'] != 'qce-msgId' or
+            existing['kind'] != 'unknown' or existing['text'] is not None or
+            record.get('kind') != 'text' or not isinstance(record.get('text'), str) or
+            not record['text'].strip() or existing['status'] not in ('normal', 'recalled')):
+        return False
+    for name in IDENTITY_FIELDS + ('sender_uid', 'send_type', 'quote', 'status', 'recall_time'):
+        if _identity_value(name, existing[name]) != _identity_value(name, record.get(name)):
+            return False
+    try:
+        original, incoming = json.loads(existing['raw']), json.loads(record['raw'])
+    except (ValueError, TypeError):
+        return False
+    if not isinstance(original, dict) or original != incoming:
+        return False
+    content = original.get('content')
+    elements = content.get('elements') if isinstance(content, dict) else None
+    if not isinstance(elements, list):
+        return False
+    parts = []
+    for element in elements:
+        if not isinstance(element, dict):
+            return False
+        if element.get('type') == 'text':
+            data = element.get('data')
+            if not isinstance(data, dict) or not isinstance(data.get('text'), str):
+                return False
+            parts.append(data['text'])
+    return bool(parts) and ''.join(parts) == record['text']
 
 
 def _observation_fingerprint(record):

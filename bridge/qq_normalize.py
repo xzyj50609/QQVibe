@@ -22,6 +22,7 @@ from pathlib import Path, PurePosixPath
 from qq_identity import canonical_uin
 
 NORMALIZE_VERSION = "qq-v3"
+QCE_EXPORT_NORMALIZE_VERSION = NORMALIZE_VERSION + ":qce-export-v7"
 SUPPORTED_QCE_VERSION = "6.3.0"
 UNKNOWN_PLACEHOLDER = "[未知类型]"
 
@@ -415,7 +416,7 @@ def normalize_export_row(row, owner, peer_uid, *, expected_kind='friend', self_u
     elements = content.get("elements")
     if elements is not None and not isinstance(elements, list):
         raise NormalizationError("invalid-body")
-    if elements:
+    if elements is not None:
         # QCE's content.text is a rendered preview (including media/reply labels).
         # Structured text data is the author's body; everything else stays raw.
         pieces = []
@@ -433,15 +434,16 @@ def normalize_export_row(row, owner, peer_uid, *, expected_kind='friend', self_u
     raw = {"msgId": row.get("messageId", row.get("id")), "msgSeq": None, "msgTime": str(timestamp // 1000),
            "chatType": 2 if expected_kind=='group' else 1, "peerUid": peer_uid, "senderUin": sender.get("uin"),
            "senderUid": sender.get("uid"), "sendType": "3" if system else None,
-           # QCE's parsed CleanMessage uses semantic `type`; raw msgType
-           # numbering remains untouched. Only its documented text type is
-           # promoted to analyzable text; other kinds remain placeholders.
-           "msgType": row.get("messageType", 2 if row.get("type") == "text" else None), "text": authored_text,
+           # CleanMessage's outer type describes the whole message (reply,
+           # type_19, mixed media, ...). Top-level text elements independently
+           # prove author speech; rendered previews and nested forwards do not.
+           "msgType": (2 if elements is not None and authored_text is not None else
+                       row.get("messageType", 2 if row.get("type") == "text" else None)), "text": authored_text,
            "quote": quote.get("content") if quote else None, "recallTime": None}
     record, flags = normalize_message(raw, self_uin=owner,expected_kind=expected_kind,self_uid=self_uid)
     record["time_ms"] = timestamp
     record["raw"] = json.dumps(row, ensure_ascii=False, sort_keys=True)
-    record["normalize_version"] = NORMALIZE_VERSION + ":qce-export-v6"
+    record["normalize_version"] = QCE_EXPORT_NORMALIZE_VERSION
     if recalled:
         record["status"] = "recalled"
     # The export contains a recall boolean, not a recall timestamp. Do not invent one.

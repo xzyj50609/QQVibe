@@ -294,6 +294,15 @@ def adapt(row, options, *, snapshot, index, qce=False, chatlab=False):
               'sender': {'uin': sender, 'uid': uid, 'name': str(name or source_sender or '')[:128]},
               'messageType': 2 if text is not None else 0, 'content': body,
               'system': system, 'recalled': recalled}
+    if qce and isinstance(row.get('sender'), dict) and isinstance(row.get('content'), dict):
+        # Manual field mappings must retain CleanMessage's outer type too.
+        # A rendered reply/forward preview is not evidence of author speech;
+        # normalize_export_row makes that decision from the preserved elements.
+        result['type'] = row.get('type')
+        if 'messageType' in row:
+            result['messageType'] = row['messageType']
+        else:
+            result.pop('messageType')
     return result, id_kind
 
 
